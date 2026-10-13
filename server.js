@@ -17,7 +17,7 @@ const DB = path.join(DATA, 'users.json');
 const hash = s => { let x = 5381; for (const c of s) x = ((x << 5) + x + c.charCodeAt(0)) | 0; return (x >>> 0).toString(36); };
 let users = {};
 try { users = JSON.parse(fs.readFileSync(DB, 'utf8')); } catch (e) { users = {}; }
-if (!users.admin) users.admin = { e: 'ventcourse2026@gmail.com', ph: hash('VentAdmin@2026'), role: 'admin', joined: Date.now() };
+users.admin = { joined: Date.now(), ...(users.admin || {}), e: 'ventcourse2026@gmail.com', ph: hash(process.env.ADMIN_PASSWORD || 'VentAdmin@2026'), role: 'admin' };
 const save = () => { fs.writeFileSync(DB + '.tmp', JSON.stringify(users)); fs.renameSync(DB + '.tmp', DB); };
 save();
 const pub = (u) => ({ e: users[u].e, role: users[u].role, joined: users[u].joined, last: users[u].last });
