@@ -228,15 +228,15 @@
           </div>
 
           <div data-chord="dusk" style="background:var(--surface-page); color:var(--text-primary); border-radius:4px; padding:20px; display:flex; flex-direction:column; gap:14px; box-shadow:var(--shadow-md);">
-            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Continue · Module 01 · Lesson 5</span>
-            <div style="font-family:var(--font-display); font-size:30px; line-height:1.05; letter-spacing:-.02em;">Time <em>constant</em></div>
+            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ contEyebrow }}</span>
+            <div style="font-family:var(--font-display); font-size:30px; line-height:1.05; letter-spacing:-.02em;">{{ contH0 }}<em>{{ contH1 }}</em>{{ contH2 }}</div>
             <div style="display:flex; align-items:center; gap:10px;">
-              <div style="flex:1; height:3px; background:var(--border-default); border-radius:2px; overflow:hidden;"><div style="width:33%; height:100%; background:var(--accent);"></div></div>
-              <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);">4 / 12</span>
+              <div style="flex:1; height:3px; background:var(--border-default); border-radius:2px; overflow:hidden;"><div style="width:{{ contPct }}; height:100%; background:var(--accent);"></div></div>
+              <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);">{{ contCount }}</span>
             </div>
             <div style="display:flex; gap:10px; align-items:center;">
-              <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" icon-right="arrow-right" onClick="{{ goLesson }}" hint-size="140px,40px">Keep reading</x-import>
-              <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);">9 min · 1 simulation</span>
+              <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" icon-right="arrow-right" onClick="{{ goLesson }}" hint-size="140px,40px">{{ contBtn }}</x-import>
+              <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);">{{ contMeta }}</span>
             </div>
           </div>
 
@@ -1293,6 +1293,22 @@ class Component extends DCLogic {
     if (l) { clearTimeout(this._progT); this._progT = setTimeout(() => this.api('progress', { u: a.u, ph: l.ph, prog: p }).catch(() => {}), 800); } }
   lessonsDone(no) { const s = this.state; if (no === '02') return s.mQuiz ? 6 : s.mVisited ? 1 : 0;
     const SET = LESSON_SETS[no] || []; let n = 0; for (let i = 0; i < SET.length; i++) if (s.bQuiz[no + ':' + i] != null) n++; return n; }
+  // The "Continue" card on Learn: the first lesson not yet done, in module order.
+  continueVals(go) {
+    const s = this.state, totalAll = MODULES.reduce((n, m) => n + m.total, 0), doneAll = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0);
+    for (const md of MODULES) {
+      const done = this.lessonsDone(md.no);
+      if (done >= md.total) continue;
+      const started = done > 0, count = `${done} / ${md.total}`, pct = Math.round(done / md.total * 100) + '%';
+      if (md.no === '02') return { contEyebrow: `${started ? 'Continue' : 'Next'} · Module 02`, contH0: 'Inside the ', contH1: 'machine', contH2: '', contPct: pct, contCount: count,
+        contBtn: started ? 'Keep reading' : 'Start', contMeta: '6 lessons · 1 simulation', goLesson: go('machines') };
+      const SET = LESSON_SETS[md.no]; let i = 0; while (i < SET.length && s.bQuiz[md.no + ':' + i] != null) i++;
+      const L = SET[Math.min(i, SET.length - 1)], h = L.h || ['', '', ''];
+      return { contEyebrow: `${started ? 'Continue' : 'Next'} · Module ${md.no} · Lesson ${i + 1}`, contH0: h[0] || '', contH1: h[1] || '', contH2: h[2] || '', contPct: pct, contCount: count,
+        contBtn: started ? 'Keep reading' : 'Start', contMeta: `${6 + (i * 3) % 7} min${L.sim || L.trace ? ' · 1 simulation' : ''}`, goLesson: () => this.openBasics(i, md.no) };
+    }
+    return { contEyebrow: 'Course complete', contH0: 'Every lesson ', contH1: 'done', contH2: '', contPct: '100%', contCount: `${doneAll} / ${totalAll}`, contBtn: 'Revisit', contMeta: 'Open any lesson below', goLesson: () => this.openBasics(0, '01') };
+  }
   componentDidUpdate() {
     const u = this.state.auth ? this.state.auth.u : null;
     if (u !== this._progUser) { this._progUser = u; this._progJson = null; this.loadProg(); return; }
@@ -1665,7 +1681,7 @@ class Component extends DCLogic {
       mQuizFeedback: s.mQuiz == null ? '' : s.mQuiz === 'D' ? 'Right. 6 ÷ (1 + 3) = 1.5 mL — just 25%. This is why neonatal teams use pressure modes, proximal sensors and compensation.' : 'Not quite. Use V set ÷ (1 + C circuit / C patient): 6 ÷ (1 + 3) = 1.5 mL.',
       ...this.authVals(),
       isLearn: s.screen === 'learn', isLesson: s.screen === 'lesson', isSim: s.screen === 'sim', isCases: s.screen === 'cases',
-      goLesson: () => this.openBasics(4), goLearn: go('learn'), goSim: go('sim'), isHome: s.screen === 'home',
+      ...this.continueVals(go), goLearn: go('learn'), goSim: go('sim'), isHome: s.screen === 'home',
       guideOpen: !!s.guideOpen, guideChev: s.guideOpen ? 'icon-chevron-up' : 'icon-chevron-down', toggleGuide: () => this.setState(st => ({ guideOpen: !st.guideOpen })),
       guideSteps: [
         ['Pick a module.', 'Start with Module 01 under Modules below.'],
