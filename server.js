@@ -26,10 +26,10 @@ const isAdmin = (b) => okUser(b) && users[b.u].role === 'admin';
 const admins = () => Object.values(users).filter(v => v.role === 'admin').length;
 function api(route, b) {
   switch (route) {
-    case 'exists': return [200, { exists: !!users[String(b.u || '').toLowerCase()] }];
+    case 'exists': return [200, { exists: !!users[String(b.u || '').trim().replace(/\s+/g, ' ').toLowerCase()] }];
     case 'register': {
-      const u = String(b.u || '').toLowerCase();
-      if (!/^[a-z0-9._]{3,24}$/.test(u) || typeof b.ph !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(b.e || ''))) return [400, { error: 'bad' }];
+      const u = String(b.u || '').trim().replace(/\s+/g, ' ').toLowerCase();
+      if (u.length < 2 || u.length > 40 || typeof b.ph !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(b.e || ''))) return [400, { error: 'bad' }];
       if (users[u]) return [409, { error: 'taken' }];
       users[u] = { e: String(b.e).toLowerCase(), ph: b.ph, role: 'student', joined: Date.now() }; save();
       return [200, { user: pub(u) }];
