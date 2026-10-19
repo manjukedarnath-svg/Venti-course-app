@@ -1,14 +1,31 @@
 # VentCourse
 
-Mechanical ventilation teaching for ICU clinicians — adult and paediatric.
+Paediatric mechanical-ventilation course app for PICU trainees (KIMS / Cuddles, Bengaluru): Learn modules, ventilator simulator, cases, admin, plus three teaching decks.
 
-- **App** — `index.html` · lessons, live ventilator simulator, cases
-- **Talk** — `talk/index.html` · Know Your Machine, Sessions 1–2
+This folder **is the live app**. There's no build step: what's here is what Railway serves.
 
-Each file is self-contained and runs offline.
+## Run locally
+```
+npm start          # http://localhost:3000
+```
+- App → `/`
+- Talks → `/talks/graphics.html`, `/talks/know-your-machine.html`, `/talks/complete.html` (← → to move, F for full screen)
+- Admin → sign in as `admin`
 
-## Publish on GitHub Pages
-Settings → Pages → Source: *Deploy from a branch* → `main` / `(root)` → Save.
+## Deploy
+Push to GitHub `main` → Railway redeploys automatically. Users are stored in `/data/users.json` (Railway volume).
+Railway variable `ADMIN_PASSWORD` sets the admin password (default `VentAdmin@2026`).
 
-- App: `https://manjukedarnath-svg.github.io/Venti-course-app/`
-- Talk: `https://manjukedarnath-svg.github.io/Venti-course-app/talk/`
+## Files
+| Path | What it is |
+|---|---|
+| `index.html` | The whole app: screens, lesson text, cases, practice guide, simulator |
+| `vent-graphics.js` | Waveform drawing (used by app and talks) |
+| `talks/*.html` | Slide decks (1920×1080) |
+| `server.js` | Static server + accounts API |
+| `support.js` | Page runtime. **Don't edit** |
+| `deck-stage.js` | Slide-deck shell |
+| `image-slot.js` | Image placeholder helper used by the talks |
+| `_ds/` | Solstice design system (colours, fonts, components) |
+| `assets/` | Logos, X-rays, sounds, videos, textbook figures |
+| `email/` | EmailJS template + setup notes |

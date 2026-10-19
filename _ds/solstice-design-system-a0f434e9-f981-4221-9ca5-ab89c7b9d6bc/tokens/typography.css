@@ -1,0 +1,10 @@
+:root{
+--font-display:"Instrument Serif","Iowan Old Style",Georgia,serif;
+--font-sans:"Hanken Grotesk","Helvetica Neue",Helvetica,sans-serif;
+--font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+--text-2xs:11px;--text-xs:12px;--text-sm:14px;--text-base:16px;--text-md:18px;--text-lg:21px;--text-xl:28px;--text-2xl:37px;--text-3xl:50px;--text-4xl:67px;--text-5xl:89px;--text-6xl:118px;
+--weight-light:300;--weight-regular:400;--weight-medium:500;--weight-semibold:600;
+--leading-none:0.92;--leading-tight:1.05;--leading-snug:1.25;--leading-normal:1.5;--leading-relaxed:1.65;
+--tracking-display:-0.02em;--tracking-tight:-0.01em;--tracking-normal:0;--tracking-eyebrow:0.14em;
+--measure:64ch;
+}

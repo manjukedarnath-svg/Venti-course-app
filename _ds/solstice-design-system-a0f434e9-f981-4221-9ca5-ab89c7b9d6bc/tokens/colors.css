@@ -1,0 +1,23 @@
+/* Solstice — base palette. Every hue is pulled from the same late-afternoon light: warm neutrals, terracotta, ochre, sage, tide, plum. */
+:root{
+--neutral-0:#FFFDF9;--neutral-50:#FAF6EF;--neutral-100:#F3EDE3;--neutral-200:#E7DECF;--neutral-300:#D2C5B1;--neutral-400:#ABA08D;--neutral-500:#776C5D;--neutral-600:#5E554B;--neutral-700:#413B34;--neutral-800:#2B2723;--neutral-900:#1B1A17;
+--ember-50:#FBEFE9;--ember-100:#F5D9CD;--ember-200:#EDB8A3;--ember-300:#E08F71;--ember-400:#CB6547;--ember-500:#B04428;--ember-600:#93351E;--ember-700:#742917;--ember-800:#521C10;--ember-900:#33110A;
+--ochre-100:#F8EACB;--ochre-300:#EBC77A;--ochre-500:#D9A441;--ochre-700:#9C7020;--ochre-900:#4D370F;
+--sage-100:#E4E8DC;--sage-300:#B3BDA3;--sage-500:#7E8C6A;--sage-700:#4E5A3F;--sage-900:#262D1F;
+--tide-100:#DCE6E8;--tide-300:#93AEB5;--tide-500:#4D7280;--tide-700:#23404A;--tide-900:#0F1E23;
+--plum-100:#EFDDE2;--plum-300:#C293A2;--plum-500:#8A4E62;--plum-700:#5A2E3E;--plum-900:#2D1520;
+--crimson-100:#F6DCD6;--crimson-600:#9E2B25;
+
+/* semantic — default chord "paper" */
+--surface-page:var(--neutral-100);--surface-raised:var(--neutral-50);--surface-card:var(--neutral-0);--surface-sunken:var(--neutral-200);--surface-inverse:var(--neutral-900);--surface-overlay:rgba(27,26,23,.48);
+--text-primary:var(--neutral-900);--text-secondary:var(--neutral-600);--text-tertiary:var(--neutral-500);--text-inverse:var(--neutral-100);--text-accent:var(--ember-600);
+--border-subtle:rgba(27,26,23,.10);--border-default:rgba(27,26,23,.20);--border-strong:var(--neutral-900);
+--accent:var(--ember-500);--accent-hover:var(--ember-600);--accent-press:var(--ember-700);--accent-fg:var(--neutral-50);--accent-soft:var(--ember-100);
+--focus-ring:var(--tide-500);
+--success:var(--sage-700);--success-soft:var(--sage-100);
+--warning:var(--ochre-700);--warning-soft:var(--ochre-100);
+--danger:var(--crimson-600);--danger-soft:var(--crimson-100);
+--info:var(--tide-700);--info-soft:var(--tide-100);
+/* image duotone — shadows / highlights */
+--duo-shadow:var(--neutral-800);--duo-light:var(--neutral-100);
+}

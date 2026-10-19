@@ -8,7 +8,7 @@ const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon', '.json': 'application/json', '.mp3': 'audio/mpeg', '.wav': 'audio/wav',
-  '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json'
+  '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json', '.mp4': 'video/mp4', '.webm': 'video/webm', '.md': 'text/plain; charset=utf-8'
 };
 const CSP = "default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; worker-src * blob: data:; img-src * data: blob:; media-src * data: blob:; font-src * data:; style-src * 'unsafe-inline'; connect-src * data: blob:";
 
@@ -20,7 +20,11 @@ try { users = JSON.parse(fs.readFileSync(DB, 'utf8')); } catch (e) { users = {};
 users.admin = { joined: Date.now(), ...(users.admin || {}), e: 'ventcourse2026@gmail.com', ph: hash(process.env.ADMIN_PASSWORD || 'VentAdmin@2026'), role: 'admin' };
 const save = () => { fs.writeFileSync(DB + '.tmp', JSON.stringify(users)); fs.renameSync(DB + '.tmp', DB); };
 save();
-const pub = (u) => ({ e: users[u].e, role: users[u].role, joined: users[u].joined, last: users[u].last });
+const lessonsOf = (p) => { if (!p) return 0; const q = p.q && typeof p.q === 'object' ? Object.keys(p.q).filter(k => !k.startsWith('02:')).length : 0; return q + (p.mq ? 6 : p.mv ? 1 : 0); };
+const pub = (u) => ({ e: users[u].e, role: users[u].role, joined: users[u].joined, last: users[u].last, lessons: lessonsOf(users[u].prog) });
+const mergeProg = (a, b) => { a = a && typeof a === 'object' ? a : {}; b = b && typeof b === 'object' ? b : {}; const o = { ...a };
+  for (const k of ['q', 'solved', 'finished']) if (b[k] && typeof b[k] === 'object') o[k] = { ...(a[k] || {}), ...b[k] };
+  if (b.mq) o.mq = String(b.mq).slice(0, 4); if (b.mv) o.mv = true; return o; };
 const okUser = (b) => b && typeof b.u === 'string' && users[b.u] && users[b.u].ph === b.ph;
 const isAdmin = (b) => okUser(b) && users[b.u].role === 'admin';
 const admins = () => Object.values(users).filter(v => v.role === 'admin').length;
@@ -35,6 +39,11 @@ function api(route, b) {
       return [200, { user: pub(u) }];
     }
     case 'login': return okUser(b) ? [200, { user: pub(b.u) }] : [401, { error: 'no' }];
+    case 'progress': {
+      if (!okUser(b)) return [401, { error: 'no' }];
+      if (b.prog && typeof b.prog === 'object' && JSON.stringify(b.prog).length < 2e4) { users[b.u].prog = mergeProg(users[b.u].prog, b.prog); save(); }
+      return [200, { prog: users[b.u].prog || {} }];
+    }
     case 'touch': if (!okUser(b)) return [401, { error: 'no' }]; users[b.u].last = Date.now(); save(); return [200, { user: pub(b.u) }];
     case 'admin/list': { if (!isAdmin(b)) return [403, { error: 'no' }]; const o = {}; for (const k in users) o[k] = pub(k); return [200, { users: o }]; }
     case 'admin/role': {
