@@ -67,6 +67,7 @@
     'ards-stiff-vs-normal': { C: 20, R: 12, vt: 400, rr: 15, ti: 1.0, pause: 0.3, peep: 5, window: 8, scale: { p: 48 }, marks: [{ lane: 'p', at: 'plat', text: 'High plateau' }, { lane: 'p', at: 'pip', text: 'Small gap' }] },
     'asthma-admit': { C: 50, R: 30, vt: 500, rr: 22, ti: 1.0, pause: 0.3, peep: 5, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'p', at: 'pip', text: 'PIP 44' }, { lane: 'p', at: 'plat', text: 'Plateau 22' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] },
     'asthma-fixed': { C: 50, R: 30, vt: 500, rr: 10, ti: 1.0, pause: 0.3, peep: 0, window: 12, scale: { p: 50, f: 90 }, marks: [{ lane: 'f', at: 'endexp', text: 'Empty before the next breath' }] },
+    'ri-drop': { C: 30, R: 12, vt: 400, rr: 15, ti: 1.0, pause: 0.25, peep: 15, window: 12, breaths: [0.3, 4.3, 8.3], peepDrop: { t: 5.3, to: 5, add: 0.55 }, scale: { p: 40, f: 90, v: 1000 }, marks: [{ lane: 'p', at: 2.0, text: 'PEEP 15' }, { lane: 'p', at: 7.0, text: 'PEEP 5 · one breath' }, { lane: 'v', at: 7.6, text: 'Exhaled 950 mL' }] },
     'asthma-pc': { mode: 'PC', C: 50, R: 30, pinsp: 20, peep: 5, ti: 1.0, rr: 22, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'v', at: 'endinsp', text: 'VT shrinks as gas traps' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] }
   };
 
@@ -83,8 +84,10 @@
       bi = 0; const last = pass === 3; if (last) ev = { cyc: [], start: [] };
       for (let i = 0; i < N; i++) {
         const t = i * dt, pm = pmAt(t);
+        const peepNow = (p.peepDrop && t >= p.peepDrop.t) ? p.peepDrop.to : p.peep;
+        if (p.peepDrop && i === Math.round(p.peepDrop.t / dt)) V += p.peepDrop.add || 0;
         if (bi < br.length && t >= br[bi]) { if (insp || t - tc > 0.15) vm = 0; insp = true; tb = t; pk = 0; bi++; if (last) ev.start.push(t); }
-        let f = 0, paw = p.peep;
+        let f = 0, paw = peepNow;
         if (insp) {
           const x = t - tb;
           if (p.mode === 'VC') {
@@ -93,12 +96,12 @@
               const u = x / tf;
               const on = Math.min(1, x / 0.06);
               f = on * (p.flow === 'decel' ? vt / (0.75 * tf) * (1 - 0.5 * u) : p.flow === 'sine' ? vt * Math.PI / (2 * tf) * Math.sin(Math.PI * u) : vt / tf);
-              paw = p.peep + R * f + pel(V) - pm;
-            } else if (x < p.ti) { f = 0; paw = p.peep + pel(V) - pm * 0.6; }
+              paw = peepNow + R * f + pel(V) - pm;
+            } else if (x < p.ti) { f = 0; paw = peepNow + pel(V) - pm * 0.6; }
             else { insp = false; vStart = V; tc = t; if (last) ev.cyc.push(t); }
           } else {
-            const lvl = p.mode === 'PS' ? p.ps : p.pinsp, set = p.peep + lvl * Math.min(1, x / p.rise);
-            f = (set - p.peep - pel(V) + pm) / R; pk = Math.max(pk, f);
+            const lvl = p.mode === 'PS' ? p.ps : p.pinsp, set = peepNow + lvl * Math.min(1, x / p.rise);
+            f = (set - peepNow - pel(V) + pm) / R; pk = Math.max(pk, f);
             paw = set + (pm < 0 ? -pm * 0.8 : 0);
             const cyc = p.mode === 'PS' ? (x > 0.12 && f < p.cycle / 100 * pk) || x > 2.5 : x >= p.ti;
             if (cyc) { insp = false; vStart = V; tc = t; if (last) ev.cyc.push(t); }
@@ -108,7 +111,7 @@
           let Rt = R * (1 + p.ev);
           if (p.efl && V < p.efl.k * vStart) Rt *= p.efl.m;
           f = (pm - pel(V)) / Rt; if (V <= 0 && f < 0) f = 0;
-          paw = p.peep + p.ev * R * Math.max(0, -f) - Math.max(0, pm) * 0.3;
+          paw = peepNow + p.ev * R * Math.max(0, -f) - Math.max(0, pm) * 0.3;
         }
         V = Math.max(0, V + f * dt);
         let fm = f * 60 + (insp ? p.leak * Math.max(0, paw) : 0);
