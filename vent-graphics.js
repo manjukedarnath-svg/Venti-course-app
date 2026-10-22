@@ -59,7 +59,15 @@
     'delayed': { mode: 'PS', ps: 12, cycle: 5, R: 20, C: 70, rr: 15, efforts: reg(15, 8).flatMap(t => [{ t: t - 0.08, amp: 6, dur: 0.8 }, { t: t + 0.85, amp: -9, dur: 0.6 }]), marks: [{ lane: 'p', at: 'spike', text: 'Pressure spike' }] },
     'infant-normal': { mode: 'PC', C: 3.3, R: 40, pinsp: 15, peep: 6, ti: 0.5, rr: 30, window: 4 },
     'bronchiolitis-obs': { mode: 'PC', C: 2.85, R: 370, pinsp: 20, peep: 5, ti: 0.5, rr: 30, window: 6, marks: [{ lane: 'f', at: 'endexp', text: 'Never empties' }] },
-    'bronchiolitis-fixed': { mode: 'PC', C: 2.85, R: 370, pinsp: 20, peep: 5, ti: 0.8, rr: 16, window: 8 }
+    'bronchiolitis-fixed': { mode: 'PC', C: 2.85, R: 370, pinsp: 20, peep: 5, ti: 0.8, rr: 16, window: 8 },
+    // Disease-specific talk: ARDS (62 kg, C 20 → 28 once recruited) and asthma (70 kg, R 30)
+    'ards-admit': { C: 20, R: 12, vt: 550, rr: 14, ti: 1.0, pause: 0.3, peep: 5, window: 8, scale: { p: 48, v: 650 }, marks: [{ lane: 'p', at: 'plat', text: 'Plateau 32' }, { lane: 'v', at: 'endinsp', text: '550 mL · 9 mL/kg' }] },
+    'ards-protective': { C: 28, R: 12, vt: 370, rr: 24, ti: 0.8, pause: 0.3, peep: 12, window: 6, scale: { p: 48, v: 650 }, marks: [{ lane: 'p', at: 'plat', text: 'Plateau 25' }, { lane: 'p', at: 'peep', text: 'PEEP 12' }] },
+    'ards-pc': { mode: 'PC', C: 28, R: 12, pinsp: 13, peep: 12, ti: 0.9, rr: 24, window: 6, scale: { p: 48 }, marks: [{ lane: 'f', at: 'zero', text: 'Flow reaches zero' }] },
+    'ards-stiff-vs-normal': { C: 20, R: 12, vt: 400, rr: 15, ti: 1.0, pause: 0.3, peep: 5, window: 8, scale: { p: 48 }, marks: [{ lane: 'p', at: 'plat', text: 'High plateau' }, { lane: 'p', at: 'pip', text: 'Small gap' }] },
+    'asthma-admit': { C: 50, R: 30, vt: 500, rr: 22, ti: 1.0, pause: 0.3, peep: 5, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'p', at: 'pip', text: 'PIP 44' }, { lane: 'p', at: 'plat', text: 'Plateau 22' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] },
+    'asthma-fixed': { C: 50, R: 30, vt: 500, rr: 10, ti: 1.0, pause: 0.3, peep: 0, window: 12, scale: { p: 50, f: 90 }, marks: [{ lane: 'f', at: 'endexp', text: 'Empty before the next breath' }] },
+    'asthma-pc': { mode: 'PC', C: 50, R: 30, pinsp: 20, peep: 5, ti: 1.0, rr: 22, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'v', at: 'endinsp', text: 'VT shrinks as gas traps' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] }
   };
 
   function simulate(input) {
