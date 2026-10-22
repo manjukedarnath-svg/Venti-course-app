@@ -27,6 +27,7 @@ This is a **live, working app**. Continue it; don't rebuild or migrate it.
 ## Accounts API (`server.js`)
 POST JSON: `/api/exists`, `/api/register`, `/api/login`, `/api/touch`, `/api/admin/list`, `/api/admin/role`, `/api/admin/delete`.
 `/api/progress` (POST `{u, ph, prog?}`) saves and returns the user's lesson progress; the app also keeps a copy in localStorage (`vc-progress-<user>`). A lesson counts as done when its quiz is answered; Module 02 is done when its quiz is answered.
+Seven modules, 42 lessons; Module 07 (Disease-specific ventilation) lives in `LESSON_SETS['07']`.
 Username 2–40 chars (trimmed, lower-cased), password ≥ 6. Admin re-seeded from `ADMIN_PASSWORD` on boot.
 EmailJS sends the sign-up code (service `service_po89bsd`, template `template_ndn664u`).
 

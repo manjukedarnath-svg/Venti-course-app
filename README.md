@@ -1,6 +1,6 @@
 # VentCourse
 
-Paediatric mechanical-ventilation course app for PICU trainees (KIMS / Cuddles, Bengaluru): Learn modules, ventilator simulator, cases, admin, plus three teaching decks.
+Paediatric mechanical-ventilation course app for PICU trainees (KIMS / Cuddles, Bengaluru): Learn modules (7), ventilator simulator, cases, admin, plus three teaching decks.
 
 This folder **is the live app**. There's no build step: what's here is what Railway serves.
 
