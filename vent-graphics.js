@@ -68,6 +68,9 @@
     'asthma-admit': { C: 50, R: 30, vt: 500, rr: 22, ti: 1.0, pause: 0.3, peep: 5, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'p', at: 'pip', text: 'PIP 44' }, { lane: 'p', at: 'plat', text: 'Plateau 22' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] },
     'asthma-fixed': { C: 50, R: 30, vt: 500, rr: 10, ti: 1.0, pause: 0.3, peep: 0, window: 12, scale: { p: 50, f: 90 }, marks: [{ lane: 'f', at: 'endexp', text: 'Empty before the next breath' }] },
     'ri-drop': { C: 30, R: 12, vt: 400, rr: 15, ti: 1.0, pause: 0.25, peep: 15, window: 12, breaths: [0.3, 4.3, 8.3], peepDrop: { t: 5.3, to: 5, add: 0.55 }, scale: { p: 40, f: 90, v: 1000 }, marks: [{ lane: 'p', at: 2.0, text: 'PEEP 15' }, { lane: 'p', at: 7.0, text: 'PEEP 5 · one breath' }, { lane: 'v', at: 7.6, text: 'Exhaled 950 mL' }] },
+    'nmd-weak': { mode: 'PS', ps: 6, C: 60, R: 8, rr: 30, window: 6, efforts: eff(reg(30, 6), 2.5, 0.6), marks: [{ lane: 'v', at: 'endinsp', text: 'Small breath, weak pull' }, { lane: 'p', at: 'dip', text: 'Trigger dip' }] },
+    'nmd-supported': { mode: 'PS', ps: 14, C: 60, R: 8, rr: 16, window: 6, efforts: eff(reg(16, 6), 2.5, 0.8), marks: [{ lane: 'v', at: 'endinsp', text: 'Full breath from a weak pull' }] },
+    'nmd-vc': { C: 60, R: 8, vt: 480, rr: 14, ti: 1.0, pause: 0.25, peep: 5, window: 8, scale: { p: 30 }, marks: [{ lane: 'p', at: 'plat', text: 'Plateau 13' }] },
     'asthma-pc': { mode: 'PC', C: 50, R: 30, pinsp: 20, peep: 5, ti: 1.0, rr: 22, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'v', at: 'endinsp', text: 'VT shrinks as gas traps' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] }
   };
 
