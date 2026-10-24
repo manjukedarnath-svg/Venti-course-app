@@ -493,7 +493,7 @@ class Component extends DCLogic {
       const mono = "font-family:'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;";
       const btn = 'border:1px solid rgba(243,237,227,.24);background:transparent;color:#F3EDE3;border-radius:999px;padding:10px 20px;font:500 15px Hanken Grotesk,sans-serif;cursor:pointer;';
       const lbl = '<div style="' + mono + 'font-size:11px;color:#8A7F70;margin-bottom:6px;">';
-      pop.document.write('<!doctype html><html><head><title>Disease-specific ventilation · presenter</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap"></head>'
+      pop.document.write('<!doctype html><html><head><title>' + (document.title || 'Deck') + ' · presenter</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap"></head>'
         + '<body style="margin:0;background:#1B1A17;color:#F3EDE3;font:400 16px/1.5 Hanken Grotesk,sans-serif;height:100vh;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;box-sizing:border-box;">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 24px;border-bottom:1px solid rgba(243,237,227,.12);">'
         + '<div style="display:flex;align-items:baseline;gap:14px;min-width:0;"><span id="pos" style="' + mono + 'font-size:13px;color:#E9A58E;white-space:nowrap;"></span><span id="lab" style="font:400 24px/1.1 Instrument Serif,serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span></div>'
