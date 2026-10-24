@@ -9,7 +9,7 @@ This folder **is the live app**. There's no build step: what's here is what Rail
 npm start          # http://localhost:3000
 ```
 - App → `/`
-- Talks → `/talks/graphics.html`, `/talks/know-your-machine.html`, `/talks/complete.html`, `/talks/disease-specific.html` (← → to move, F for full screen, N for notes, P for presenter window)
+- Talks → `/talks/graphics.html`, `/talks/know-your-machine.html`, `/talks/complete.html`, `/talks/basics.html` (30-min basics), `/talks/disease-specific.html` (← → to move, F for full screen, N for notes, P for presenter window)
 - Admin → sign in as `admin`
 
 ## Deploy
