@@ -86,6 +86,10 @@
               <span style="font-size:13px; line-height:1.5; color:var(--danger, #9E2B25);">{{ aErr }}</span>
             </sc-if>
             <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" icon-right="arrow-right" onClick="{{ authSubmit }}" style="width:100%;" hint-size="100%,44px">{{ authBtn }}</x-import>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px; padding-top:6px;">
+              <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="link" size="sm" icon-right="eye" onClick="{{ browseGuest }}" hint-size="170px,24px">Browse as a guest</x-import>
+              <span style="font-size:12px; line-height:1.5; color:var(--text-secondary); text-align:center;">Lessons, simulator and cases, read-only. Nothing is saved.</span>
+            </div>
           </div>
         </sc-if>
         <sc-if value="{{ authOtp }}" hint-placeholder-val="{{ false }}">
@@ -130,6 +134,12 @@
               <span>Short lessons, a live ventilator to practise on, and real cases.</span>
               <span>Built for PICU residents, fellows and nurses.</span>
             </div>
+            <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary);">Guest · nothing is saved</span>
+                <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="link" size="sm" icon-right="log-in" onClick="{{ leaveGuest }}" hint-size="70px,24px">Sign in</x-import>
+              </div>
+            </sc-if>
             <sc-if value="{{ authUser }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
                 <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary);">Signed in · {{ authUser }}</span>
@@ -2065,7 +2075,7 @@ class Component extends DCLogic {
   loadProg() { let p = null; try { p = JSON.parse(this.lsGet(this.progKey()) || 'null'); } catch (e) {} this.applyProg(p);
     const a = this.state.auth, l = a && this.users()[a.u];
     if (l) this.api('progress', { u: a.u, ph: l.ph }).then(r => { if (r.ok) this.applyProg(r.j.prog); }).catch(() => {}); }
-  saveProg() { const p = this.progOf(); this.lsSet(this.progKey(), JSON.stringify(p));
+  saveProg() { if (this.state.guest && !this.state.auth) return; const p = this.progOf(); this.lsSet(this.progKey(), JSON.stringify(p));
     const a = this.state.auth, l = a && this.users()[a.u];
     if (l) { clearTimeout(this._progT); this._progT = setTimeout(() => this.api('progress', { u: a.u, ph: l.ph, prog: p }).catch(() => {}), 800); } }
   lessonsDone(no) { const s = this.state; if (no === '02') return s.mQuiz ? 6 : s.mVisited ? 1 : 0;
@@ -2159,7 +2169,7 @@ class Component extends DCLogic {
   };
   signOut = () => { this.lsDel('vc-auth-session'); this.setState({ screen: 'home', auth: null, aStage: 'creds', aTab: 'in', aUser: '', aPass: '' }); };
   authVals() {
-    const s = this.state, need = (this.props.requireLogin ?? true) && !(s.auth && this.users()[s.auth.u]), otp = s.aStage === 'otp', up = s.aTab === 'up';
+    const s = this.state, need = (this.props.requireLogin ?? true) && !s.guest && !(s.auth && this.users()[s.auth.u]), otp = s.aStage === 'otp', up = s.aTab === 'up';
     const set = k => e => this.setState({ [k]: e.target.value, aErr: '' });
     return {
       authGate: need, authCreds: need && !otp, authOtp: need && otp, authSignup: up,
@@ -2173,7 +2183,7 @@ class Component extends DCLogic {
       aDemoCode: s.aOtp || '', mailDemo: !this.mailCfg(), mailLive: !!this.mailCfg(), mailStatus: s.aMail === 'sending' ? 'Sending code…' : s.aMail === 'sent' ? 'Code sent · check inbox and spam' : s.aMail === 'fail' ? 'Not sent' : '', mailStatusIcon: s.aMail === 'sent' ? 'icon-mail-check' : s.aMail === 'fail' ? 'icon-mail-x' : 'icon-mail', aResendWait: (s.aResend || 0) > 0, aResendLabel: (s.aResend || 0) > 0 ? 'Resend in ' + s.aResend + ' s' : 'Resend code',
       authSubmit: this.authSubmit, authVerify: this.authVerify, authResend: () => { if (!(s.aResend > 0) && s.aPending) this.setState(this.newCode(s.aPending.e, s.aPending.u)); },
       authBack: () => { clearInterval(this.otpTick); this.setState({ aStage: 'creds', aErr: '', aOtp: null }); },
-      authBtn: up ? 'Send code to email' : 'Sign in', authUser: s.auth ? s.auth.u : '', signOut: this.signOut, ...this.adminVals() };
+      authBtn: up ? 'Send code to email' : 'Sign in', authUser: s.auth ? s.auth.u : '', signOut: this.signOut, isGuest: !!s.guest && !s.auth, browseGuest: () => this.setState({ guest: true, aErr: '', screen: 'home' }), leaveGuest: () => this.setState({ guest: false, screen: 'home' }), ...this.adminVals() };
   }
   loadAdmin() { const me = this.state.auth && this.state.auth.u, l = me && this.users()[me]; if (!l) return;
     this.api('admin/list', { u: me, ph: l.ph }).then(r => { if (r.ok) this.setState({ srv: Object.entries(r.j.users) }); }).catch(() => {}); }
