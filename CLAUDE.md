@@ -7,6 +7,7 @@ This is a **live, working app**. Continue it; don't rebuild or migrate it.
 - Holes are plain names only. Compute values in `renderVals()` and expose them by name. No `{{ a + b }}`.
 - Styling is **inline `style="…"` only**. No new CSS classes or stylesheets.
 - Lesson, case and practice data are JS constants in the logic (`MODULES`, `LESSON_SETS`, `PRACTICE`, cases). Edit the text there.
+- `SCENARIOS` holds the evolving simulation scenarios (Cases screen → "Start scenario", screen `scen`). One patient, several stages; each stage has the bedside picture (`vit`, `exam`, `vent`, `abg`, optional `img`, `table`, `trace`), one question (`q`, `opts` = [label, 1 if right, feedback]), a `teach` take-away and a `lesson` link [module, index]. The last stage is a `debrief` list. Answers are saved with lesson progress (`sc`).
 - `support.js` is the runtime. Never edit it.
 - `vent-graphics.js` draws all waveforms (`<vent-trace scenario="…">`).
 - Talks in `talks/` use the same format; each slide is a `<section data-label>`.
