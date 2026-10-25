@@ -222,7 +222,7 @@
             <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.IconButton" icon="search" label="Search" hint-size="40px,40px"></x-import>
           </div>
           <div style="display:flex; flex-direction:column; gap:10px;">
-            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Course · 7 modules · 42 lessons</span>
+            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Course · 8 modules · 49 lessons</span>
             <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:46px; line-height:.98; letter-spacing:-.02em;">Every breath, <em>explained</em></h1>
             <p style="margin:0; font-weight:300; font-size:16px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">Physiology first, then the machine. Each lesson ends at the bedside of a simulated patient.</p>
           </div>
@@ -355,6 +355,21 @@
           <sc-for list="{{ bl.body }}" as="p" hint-placeholder-count="2">
             <p style="margin:0; font-size:16px; line-height:1.65; color:var(--text-secondary); text-wrap:pretty;">{{ p }}</p>
           </sc-for>
+          <sc-if value="{{ bl.vidCap }}" hint-placeholder-val="{{ false }}">
+            <div data-chord="night" style="background:var(--surface-page); color:var(--text-primary); border-radius:4px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+              <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ bl.vidCap }}</span>
+              <sc-if value="{{ bl.vid }}" hint-placeholder-val="{{ false }}">
+                <video src="{{ bl.vid }}" controls playsinline preload="metadata" style="width:100%; border-radius:4px; background:#000; display:block;"></video>
+              </sc-if>
+              <sc-if value="{{ bl.noVid }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex; align-items:center; justify-content:center; gap:10px; height:160px; border:1px dashed var(--border-default); border-radius:4px;">
+                  <i class="icon-circle-play" style="font-size:22px; color:var(--text-secondary);"></i>
+                  <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Video</span>
+                </div>
+              </sc-if>
+              <p style="margin:0; font-size:15px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">{{ bl.vidNote }}</p>
+            </div>
+          </sc-if>
           <sc-if value="{{ bl.trace }}" hint-placeholder-val="{{ false }}">
             <div data-chord="night" style="background:var(--surface-page); color:var(--text-primary); border-radius:4px; padding:14px; display:flex; flex-direction:column; gap:10px;">
               <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ bl.traceCap }}</span>
@@ -1210,6 +1225,109 @@ LESSON_SETS['07'] = [
     trace: 'nmd-weak', traceLanes: 'pfv', traceCap: 'PS 6 · weak effort: small, fast breaths', trace2: 'nmd-supported', trace2Lanes: 'pfv', trace2Cap: 'PS 14 · same effort: a full breath', sim: 'PS' }
 ];
 
+// Module 08 · Cardiopulmonary interactions: haemodynamics of the ventilated child, ventilation of the shocked child.
+LESSON_SETS['08'] = [
+  { h: ['Positive pressure meets the ', 'circulation', ''],
+    lede: 'The heart sits inside the chest, a pressure chamber within a pressure chamber. Every breath the ventilator gives changes the pressure around the heart, and therefore preload, afterload and cardiac output.',
+    body: ['Preload. Blood returns to the right atrium down a gradient from the mean systemic pressure to the right atrial pressure. A positive-pressure breath raises intrathoracic pressure, so right atrial pressure rises, the gradient narrows and venous return falls. The emptier or more vasodilated the child, the larger the fall.',
+      'Right ventricular afterload. Pulmonary vascular resistance is lowest at functional residual capacity. Below it, collapsed lung and hypoxia constrict the vessels; above it, distended alveoli squeeze the capillaries that run between them. Big breaths and high PEEP therefore load the right ventricle.',
+      'Left ventricular afterload. The LV ejects against its transmural pressure, aortic pressure minus intrathoracic pressure. Positive pressure lowers that transmural pressure and unloads the LV. This is why CPAP relieves cardiogenic pulmonary oedema from the first breath, and why weaning is a stress test for a weak LV.',
+      'Spontaneous breathing is exercise. A child in respiratory distress spends a large share of cardiac output and oxygen on the breathing muscles, and each big inspiratory swing pulls blood into the chest and raises LV afterload. Taking over the work can be a cardiac treatment in itself.',
+      'Put together: in the hypovolaemic or septic child, positive pressure mainly costs preload and cardiac output falls. In the child with a failing LV, positive pressure mainly removes afterload and work, and cardiac output often improves.'],
+    nums: [['↓', 'Preload · venous return'], ['↑', 'RV afterload · PVR'], ['↓', 'LV afterload']],
+    eq: 'Venous return ∝ Pms − PRA', eqCap: 'Guyton · right atrial pressure is the back pressure for venous return',
+    peds: 'Children have a narrow cardiopulmonary reserve: a compliant chest wall transmits more airway pressure to the pleural space, the resting heart rate is already high, and the stroke volume has little room to grow. The same PEEP that an adult shrugs off can drop an infant’s output.',
+    src: 'Pinsky, Ann Am Thorac Soc 2018, Cardiopulmonary interactions: physiologic basis and clinical applications · Fuhrman & Zimmerman, Pediatric Critical Care, heart–lung interactions · Rogers’ Textbook of Pediatric Intensive Care',
+    q: 'A 2-year-old with dilated cardiomyopathy and pulmonary oedema is tiring on high-flow oxygen. Why does CPAP often improve the circulation rather than worsen it?',
+    ans: 'C', opts: [['A', 'It raises venous return to the right heart'], ['B', 'It raises LV transmural pressure'], ['C', 'It lowers LV afterload and removes the work of breathing'], ['D', 'It increases pulmonary vascular resistance']],
+    fb: 'Positive pressure lowers the transmural pressure the LV ejects against and takes away the exercise of breathing. For a failing LV that is a treatment; for an empty circulation it is a cost.' },
+
+  { h: ['Over-distension and ', 'auto-PEEP', ''],
+    lede: 'A lung that is too full squeezes the heart. The child looks like shock, the monitor says hypovolaemia, and the cause is on the ventilator screen.',
+    body: ['Mechanism. Trapped gas or an over-distended lung raises end-expiratory lung volume and intrathoracic pressure. Venous return falls, pulmonary vascular resistance climbs, the right ventricle dilates and pushes the septum into the left ventricle. Cardiac output drops within minutes of a settings change.',
+      'Recognise it. Hypotension soon after raising the rate, tidal volume or PEEP, or after a bronchospasm. Narrow pulse pressure, rising CVP, falling end-tidal CO₂ while PaCO₂ rises, expiratory flow that never reaches zero, a plateau and driving pressure that rise when PEEP rises, a dark hyperinflated film. Measure auto-PEEP with an expiratory hold.',
+      'The test is the treatment. Disconnect for 20–30 seconds, or bag very slowly, and watch the blood pressure. If it recovers as the chest falls, the lung was squeezing the heart. Fluid helps briefly by restoring the venous return gradient, but it does not fix the cause.',
+      'Correct the settings. Lower the rate first: it gives the most expiratory time. Shorten the inspiratory time, lower the tidal volume, lower set PEEP if driving pressure rose with it, treat the bronchospasm, and accept a higher CO₂. In a stiff lung, go back to the PEEP where driving pressure was lowest.'],
+    nums: [['≠ 0', 'End-expiratory flow'], ['↑ ΔP', 'With PEEP = overdistension'], ['20–30 s', 'Disconnection test']],
+    peds: 'Stacked breaths is the S in DOPE-S. In a ventilated asthmatic or an infant with bronchiolitis, treat a falling blood pressure as trapping until proved otherwise: disconnect, let the chest fall, then reconnect at a lower rate. Adrenaline comes after that, not instead of it.',
+    src: 'Kedarnath, Disease-specific ventilation and DOPE-S · Tobin, Principles and Practice of Mechanical Ventilation 3e, ch. 36 · Pinsky 2018',
+    q: 'A ventilated 7-year-old with asthma, VC rate 24, Ti 0.9. Blood pressure 70/50 and falling, CVP 14, pulse pressure narrow, expiratory flow still −12 L/min when the next breath starts. First move?',
+    ans: 'B', opts: [['A', '20 mL/kg saline bolus'], ['B', 'Disconnect, let the chest fall, reconnect at rate 10–12 with a short Ti'], ['C', 'Raise PEEP to 10 to splint the airways'], ['D', 'Start adrenaline infusion']],
+    fb: 'Flow that does not return to zero plus a high CVP and a falling pressure is the heart being squeezed by a full lung. Empty the lung, then give it time to empty on every breath.',
+    trace: 'autopeep', traceLanes: 'pf', traceCap: 'Auto-PEEP · flow never returns to zero', trace2: 'autopeep-fixed', trace2Lanes: 'pf', trace2Cap: 'Same lung · lower rate, shorter Ti: emptying complete', sim: 'VC' },
+
+  { h: ['POCUS in the ', 'shocked', ' ventilated child'],
+    lede: 'Four windows answer four questions in two minutes: is the tank empty, is the pump failing, is the right heart obstructed, is the heart being compressed?',
+    body: ['The IVC. Subcostal long axis, measured about 2 cm from the right atrium, M-mode across the vessel. In a passively ventilated child the IVC gets bigger during inspiration, the reverse of spontaneous breathing. A distensibility index above 18% suggests the heart will respond to fluid, but in children this number is unreliable; read the extremes instead. A small IVC that nearly collapses means an empty tank. A plethoric IVC that does not move at all means stop filling and look at the right heart.',
+      'The left ventricle. Parasternal long and short axis and apical four-chamber. Eyeball the squeeze: walls that kiss mean empty and hyperdynamic; a dilated, barely moving LV means pump failure. A wide gap between the mitral leaflet and the septum (EPSS) confirms poor function. B-lines on the lung add the oedema.',
+      'The right ventricle. In the apical view a healthy RV is about two-thirds the size of the LV; equal or bigger is dilated. In the short axis the LV should be a circle: a D-shaped LV with a flattened septum is the right heart under pressure. Reduced TAPSE shows the RV is failing against that load. A plethoric fixed IVC completes the picture.',
+      'Compression. Pericardial fluid with a right atrium or ventricle that collapses in diastole and a fixed IVC is tamponade; a lung that has lost its sliding is pneumothorax. Both mimic hypovolaemia on the monitor and get worse with fluid and pressure.',
+      'Then act on the phenotype. Empty: fluid. Pump: inotrope, no bolus, lower afterload. Obstructed RV: lower the RV afterload, support systemic pressure, no bolus. Compressed: drain or decompress. Repeat the scan after every intervention.'],
+    vidCap: 'Video · IVC variability and cardiac function in a shocked ventilated child', vidNote: 'Shown in class. The clip walks through the subcostal IVC, parasternal, apical and lung windows on a ventilated child in shock.',
+    nums: [['> 18%', 'IVC distensibility · adults'], ['RV ≥ LV', 'Dilated right ventricle'], ['D-shape', 'Septal flattening · RV pressure']],
+    peds: 'Children fool the IVC: a compliant chest, small tidal volumes and any spontaneous effort all blunt the swing. Treat the IVC as a yes or no at the extremes and let the heart itself, with the aortic flow if you can measure it, make the fluid decision.',
+    src: 'Barbier et al, Intensive Care Med 2004 (IVC distensibility) · Gan et al, Anesth Analg 2013 (fluid responsiveness in children) · Vieillard-Baron, RV in ARDS · Kedarnath, POCUS haemodynamics',
+    q: 'A ventilated 6-year-old with pneumonia: BP 65/35 after PEEP was raised to 16. POCUS shows a dilated RV, a D-shaped LV in short axis and a plethoric IVC that does not move. Next step?',
+    ans: 'D', opts: [['A', '20 mL/kg bolus: the IVC is full so the heart will accept it'], ['B', 'Raise PEEP further to recruit the lung'], ['C', 'Pericardiocentesis'], ['D', 'No bolus. Lower the right ventricular afterload and support the systemic pressure']],
+    fb: 'A dilated RV, a flattened septum and a fixed IVC is a right heart failing against its load. Fluid pushes the septum further into the LV. Reduce mean airway pressure, correct hypoxia and acidosis, consider inhaled nitric oxide, and hold the systemic pressure with a vasopressor.' },
+
+  { h: ['Ventilating the failing ', 'right', ' ventricle'],
+    lede: 'The right ventricle is a thin-walled, flow pump that tolerates volume and hates pressure. Everything you do on the ventilator either adds to its load or takes it away.',
+    body: ['The spiral. Pulmonary vascular resistance rises, the RV dilates, the septum shifts and the LV fills less, systemic pressure falls, right coronary perfusion falls, the RV becomes ischaemic and dilates further. Fluid boluses accelerate the spiral; a falling systemic pressure is the trigger for the last turn.',
+      'Take the load off. Oxygen is a pulmonary vasodilator and hypoxia the strongest constrictor: keep SpO₂ 92–97% rather than the 88% you would accept in a stiff lung alone. Keep PaCO₂ under about 48 mmHg and pH above 7.25; hypercapnia and acidosis both raise PVR. Prone the ARDS lung: it recruits and lowers PVR without more pressure.',
+      'Pressure, just enough. Set PEEP where atelectasis and hypoxia are reversed and driving pressure is lowest, usually 8–12, and no higher; plateau ≤ 27, driving pressure ≤ 15, small tidal volumes. Avoid recruitment manoeuvres and high mean airway pressures on HFOV when the RV is dilated. Short time constants help: let expiration finish.',
+      'Drugs and fluid. Inhaled nitric oxide 5–20 ppm dilates only the ventilated vessels and spares the systemic pressure. Hold coronary perfusion with noradrenaline or vasopressin. Add inotropy with adrenaline, or milrinone if the pressure allows, paired with a vasopressor. Fluid only if the RV is small and the IVC collapses, 5 mL/kg at a time. Refer for ECMO early when the lung is reversible.'],
+    nums: [['≤ 27', 'Plateau cmH₂O'], ['< 48', 'PaCO₂ mmHg'], ['5–20', 'iNO ppm']],
+    peds: 'Leo, 6 years, severe influenza ARDS, PEEP raised from 14 to 18 to chase the saturation: BP 65/35, CVP 16, RV dilated with a D-shaped LV. The nurse asks whether to push 20 mL/kg. The answer is no: come down on PEEP a little, start inhaled nitric oxide and adrenaline, accept SpO₂ 88–90%, and call the ECMO team.',
+    src: 'Vieillard-Baron et al, Intensive Care Med 2016 (RV-protective ventilation) · Kedarnath, Crashing on the vent: severe PARDS and acute cor pulmonale · PALICC-2 2023 · Fuhrman & Zimmerman, pulmonary hypertension',
+    q: 'Which change lowers right ventricular afterload in a ventilated child with ARDS and a dilated RV?',
+    ans: 'A', opts: [['A', 'Correct hypoxia and acidosis and bring PEEP down to the point of lowest driving pressure'], ['B', 'Raise PEEP to 20 to recruit the lung fully'], ['C', 'A 20 mL/kg bolus to improve RV filling'], ['D', 'Switch to HFOV with a higher mean airway pressure']],
+    fb: 'PVR is driven by hypoxia, acidosis and lung volume. Reverse the first two and keep the lung at the volume where driving pressure is lowest; more pressure and more fluid both feed the spiral.',
+    trace: 'ards-protective', traceLanes: 'pfv', traceCap: 'RV-protective settings · small VT, plateau ≤ 27', sim: 'PC' },
+
+  { h: ['Arterial line, CVP and the ', 'ventilator', ' together'],
+    lede: 'Every change on the ventilator is a haemodynamic intervention. Read the two lines before and two minutes after, and let them tell you what the breath did to the heart.',
+    body: ['The arterial trace. Mean pressure is the perfusion pressure. Pulse pressure tracks stroke volume: narrow means a small stroke volume or tight vessels, wide with a low dicrotic notch means a vasodilated child. The swing of the trace with each breath is pulse pressure variation. A blunt, rounded upstroke is often a damped line, not a weak heart: flush and re-zero before you act.',
+      'The CVP. Read it at end-expiration with the transducer at the mid-axillary line. In a ventilated child it is the sum of filling and the pressure around the heart: with compliant lungs roughly a third to a half of PEEP is transmitted, less when the lungs are stiff. A single CVP does not predict fluid responsiveness. Its trend, read against the blood pressure and the ventilator, is the useful signal.',
+      'Pair the changes. CVP up and pressure down after a ventilator change means the heart is being obstructed: trapping, over-distension, RV failure, tamponade, pneumothorax. CVP down and pressure down means preload loss or vasodilation. CVP up and pressure up with more PEEP is a stiff chest transmitting pressure, not a fuller heart.',
+      'Adequacy, not just pressure. Central venous saturation, lactate, urine output and capillary refill tell you whether the output is enough. A normal blood pressure on a high dose of noradrenaline with a lactate that is climbing is not adequate; a mean pressure of 50 with a warm, passing, clearing child may be.'],
+    nums: [['End-exp', 'Read CVP here'], ['⅓–½', 'PEEP transmitted · compliant lungs'], ['↑ CVP ↓ BP', 'Obstruction, not hypovolaemia']],
+    peds: 'In the ventilated child, chase the pair of numbers after each ventilator change: the mean pressure and the CVP. If PEEP goes up and the pair moves apart, with CVP rising and pressure falling, undo the change before you reach for fluid or a pressor.',
+    src: 'Marik & Cavallazzi, Crit Care Med 2013 (CVP and fluid responsiveness) · Pinsky 2018 · Magder, functional haemodynamic monitoring · Rogers’ Textbook, haemodynamic monitoring',
+    q: 'PEEP is raised from 8 to 14 for hypoxaemia. Five minutes later MAP has fallen from 70 to 52, CVP has risen from 7 to 14 and pulse pressure variation reads 20%. What has happened and what do you do?',
+    ans: 'B', opts: [['A', 'Hypovolaemia unmasked by PEEP: give 20 mL/kg because PPV is 20%'], ['B', 'The RV is obstructed by the higher lung volume: return PEEP to 8 and reassess'], ['C', 'Sepsis progressing: start noradrenaline'], ['D', 'Damped arterial line: flush and re-zero']],
+    fb: 'A rising CVP with a falling pressure after a PEEP change is obstruction of the right heart, not an empty tank. PPV is falsely high when the RV fails against its afterload. Undo the change first.' },
+
+  { h: ['The post-intubation ', 'crash', ''],
+    lede: 'The shocked child who is intubated loses three things at once: the sympathetic drive that was holding the pressure, the negative pressure that was pulling blood into the chest, and the time the lung had to empty.',
+    body: ['Why it happens. Induction drugs remove catecholamine tone, dilate veins and depress the myocardium. The first positive-pressure breath raises intrathoracic pressure and venous return falls. Apnoea, hypoxia and hypercarbia raise pulmonary vascular resistance. Fast bagging traps gas. A displaced tube or a pneumothorax finishes the job.',
+      'Resuscitate before you intubate. Fluid if the child is responsive, a peripheral adrenaline or noradrenaline infusion running before induction, push-dose adrenaline drawn up (1 mcg/kg, that is 0.1 mL/kg of a 10 mcg/mL solution), ketamine 1–2 mg/kg with rocuronium 1–1.2 mg/kg, no propofol, pre-oxygenate on high-flow or NIV, and brief the team on exactly when the rescue adrenaline is pushed.',
+      'The crash. Disconnect and bag slowly at 8–10 a minute: if the pressure recovers as the chest falls, it was trapping. Confirm the tube with end-tidal CO₂ and chest rise, work through DOPE-S. Push adrenaline 1 mcg/kg and repeat every 1–2 minutes, give 10 mL/kg fast, raise the infusion. Reconnect with a lower rate, a small tidal volume, PEEP 5 and a short inspiratory time, then scan the heart.',
+      'Bradycardia in a child is hypoxia or lost sympathetic drive until proved otherwise. Oxygenate and give adrenaline; atropine does not fix an empty, unloaded heart. Start compressions if the rate is below 60 with poor perfusion.'],
+    nums: [['1 mcg/kg', 'Push-dose adrenaline'], ['10 mL/kg', 'Fast bolus'], ['8–10/min', 'Bag slowly']],
+    peds: 'Maya, 3 years, 15 kg, fluid-refractory septic shock, intubated for exhaustion. Tube in, ventilator on: HR 80, BP 40/20. Push-dose adrenaline, hold the ventilator for a few breaths, 10 mL/kg, infusion up, reconnect at rate 20 with PEEP 5. Had the infusion and the syringe been ready before induction, the crash would have been a dip.',
+    src: 'Kedarnath, The haemodynamic cliff: refractory septic shock and the physiologically difficult airway · Mosier et al, the physiologically difficult airway · Surviving Sepsis Campaign paediatric guideline 2020 · Kedarnath, DOPE-S',
+    q: 'Immediately after intubating a 3-year-old in septic shock, HR falls to 80 and BP to 40/20. SpO₂ 85%. Which sequence fits?',
+    ans: 'C', opts: [['A', 'Atropine, then raise PEEP to 10 for the saturation'], ['B', 'Deepen sedation, the child is fighting the tube'], ['C', 'Push-dose adrenaline, bag slowly, 10 mL/kg, raise the infusion, then DOPE-S'], ['D', 'Start compressions and give 20 mL/kg before any adrenaline']],
+    fb: 'The circulation has lost its drive and its preload at the same moment. Replace the drive with adrenaline, give the venous return back with slow breaths and fluid, and check the tube. Pressure and sedation make it worse.',
+    sim: 'VC' },
+
+  { h: ['Will fluid ', 'help', '? Testing responsiveness'],
+    lede: 'About half of shocked children do not raise their output with fluid, and the ones who do not are harmed by it. The ventilator is the test: each breath is a small, reversible preload challenge.',
+    body: ['Pulse pressure variation. In a passively ventilated child the arterial pulse pressure falls during inspiration; the swing, as a percentage of the mean, is PPV. In adults a PPV above 13% predicts a response. It needs a controlled breath of at least 8 mL/kg, no spontaneous effort, a regular rhythm, a normal chest wall and abdomen, and a right ventricle that is not failing. Most ventilated children meet none of these: at 6 mL/kg and a high rate the swing is too small to read.',
+      'What works in children. The respiratory variation in aortic peak velocity (ΔVpeak) on pulsed Doppler at the LV outflow, above about 12%, is the one dynamic index with consistent paediatric evidence. PPV, systolic pressure variation and IVC collapsibility perform poorly in children and should not decide a bolus on their own.',
+      'Tidal volume challenge. Raise the tidal volume from 6 to 8 mL/kg for one minute and watch PPV: a rise of 3.5% or more, or a rise in ΔVpeak, means preload reserve. Then return to 6. The end-expiratory occlusion test needs a 15-second hold that most children cannot give.',
+      'Passive leg raising and the mini-bolus. From 45° semi-recumbent, lower the trunk and lift the legs to 45°: a reversible bolus of the child’s own blood. Read a cardiac output signal, the aortic VTI or ΔVpeak, within 60–90 seconds, not the blood pressure; a rise of 10–12% predicts a response. Or give 3–4 mL/kg over five minutes and measure the same signal. Responsiveness is not need: give fluid when there is hypoperfusion, a positive test and no sign the lung or the right heart cannot take it.'],
+    eq: 'PPV = (PPmax − PPmin) ÷ PPmean × 100', eqCap: 'Pulse pressure variation over three to four breaths · Michard 2000',
+    nums: [['> 13%', 'PPV · adults, VT ≥ 8'], ['> 12%', 'ΔVpeak · children'], ['≥ 10%', 'VTI rise after PLR']],
+    peds: 'Before any bolus in a ventilated child, ask three questions. Is there hypoperfusion? Is there a positive dynamic test, ideally ΔVpeak or a VTI change with leg raising or a mini-bolus? Is there room, with no B-lines, no plethoric IVC and no dilated RV? Three yeses, then 10 mL/kg, then ask again.',
+    src: 'Gan et al, Anesth Analg 2013 · Michard et al, AJRCCM 2000 · Myatra et al, Crit Care Med 2017 (tidal volume challenge) · Monnet et al, Crit Care Med 2006 (passive leg raising) · Pinsky 2018',
+    q: 'A ventilated 4-year-old in septic shock on VT 6 mL/kg, rate 30, has PPV 8% on the arterial line. Does this mean fluid will not help?',
+    ans: 'D', opts: [['A', 'Yes: PPV below 13% rules out fluid responsiveness'], ['B', 'Yes: children respond less to fluid than adults'], ['C', 'No: give 20 mL/kg and see'], ['D', 'No: at 6 mL/kg PPV cannot be read. Do a tidal volume challenge, or lift the legs and measure the aortic VTI']],
+    fb: 'A low PPV at a low tidal volume and a high rate means nothing. Make the test valid, with a one-minute 8 mL/kg challenge, or use a test that works in children: ΔVpeak or VTI with passive leg raising or a mini-bolus.',
+    sim: 'VC' }
+];
+
 const MODULES = [
   { no: '01', title: 'Basics of ventilation and mechanical ventilation', total: 12, lessons: B_LESSONS.map(l => l.h.join('').trim()) },
   { no: '02', title: 'How machines work', total: 6, screen: 'machines', lessons: ['The ventilator as a black box', 'Inputs, compressors and blowers', 'Inside the gas path', 'Effects of the patient circuit', 'ICU vs standalone NIV', 'Machines on your unit'] },
@@ -1217,7 +1335,8 @@ const MODULES = [
   { no: '04', title: 'Indications and NIV', total: 5, lessons: LESSON_SETS['04'].map(l => l.h.join('').trim()) },
   { no: '05', title: 'Beyond conventional', total: 4, lessons: LESSON_SETS['05'].map(l => l.h.join('').trim()) },
   { no: '06', title: 'Ventilator graphics', total: 5, lessons: LESSON_SETS['06'].map(l => l.h.join('').trim()) },
-  { no: '07', title: 'Disease-specific ventilation', total: 6, lessons: LESSON_SETS['07'].map(l => l.h.join('').trim()) }
+  { no: '07', title: 'Disease-specific ventilation', total: 6, lessons: LESSON_SETS['07'].map(l => l.h.join('').trim()) },
+  { no: '08', title: 'Cardiopulmonary interactions', total: 7, lessons: LESSON_SETS['08'].map(l => l.h.join('').trim()) }
 ];
 
 const VMODES = [
@@ -1501,7 +1620,7 @@ class Component extends DCLogic {
       adminStats: [{ v: String(list.length), l: 'Accounts' }, { v: String(admins), l: 'Admins' }, { v: String(list.length - admins), l: 'Students' }],
       adminUsers: list.map(([u, v]) => { const adm = v.role === 'admin', self = u === me, lastAdm = adm && admins <= 1;
         return { u, e: v.e, role: adm ? 'Admin' : 'Student', roleTone: adm ? 'accent' : 'neutral', you: self ? ' · you' : '',
-          meta: 'Joined ' + d(v.joined) + ' · Last sign-in ' + d(v.last) + (v.lessons != null ? ' · ' + v.lessons + ' of 42 lessons' : ''),
+          meta: 'Joined ' + d(v.joined) + ' · Last sign-in ' + d(v.last) + (v.lessons != null ? ' · ' + v.lessons + ' of 49 lessons' : ''),
           roleLabel: adm ? 'Remove admin' : 'Make admin', canRole: !lastAdm, canRemove: !self,
           toggleRole: upd(u, x => { x[u].role = adm ? 'student' : 'admin'; }, 'role', { role: adm ? 'student' : 'admin' }),
           remove: upd(u, x => { delete x[u]; }, 'delete') }; }) };
@@ -1588,7 +1707,7 @@ class Component extends DCLogic {
     const s = this.state, i = s.bIdx, mod = s.bMod || '01', SET = LESSON_SETS[mod], L = SET[i], qk = mod + ':' + i, pick = s.bQuiz[qk];
     return {
       bl: { eyebrow: `Module ${mod} · Lesson ${i + 1} of ${SET.length}`, h1: L.h[0], h2: L.h[1], h3: L.h[2], lede: L.lede, body: L.body,
-        eq: L.eq || '', eqCap: L.eqCap || '', trace: L.trace || '', traceLanes: L.traceLanes || 'pfv', traceCap: L.traceCap || '', trace2: L.trace2 || '', trace2Lanes: L.trace2Lanes || 'pfv', demos: L.demos || [], trace2Cap: L.trace2Cap || '', nums: L.nums.map(([v, l]) => ({ v, l })), peds: L.peds, src: L.src, q: L.q },
+        eq: L.eq || '', eqCap: L.eqCap || '', trace: L.trace || '', traceLanes: L.traceLanes || 'pfv', traceCap: L.traceCap || '', trace2: L.trace2 || '', trace2Lanes: L.trace2Lanes || 'pfv', demos: L.demos || [], trace2Cap: L.trace2Cap || '', vid: L.vid || '', noVid: !L.vid, vidCap: L.vidCap || '', vidNote: L.vidNote || '', nums: L.nums.map(([v, l]) => ({ v, l })), peds: L.peds, src: L.src, q: L.q },
       bDots: SET.map((_, j) => ({ bg: j === i ? 'var(--accent)' : j < i ? 'var(--text-secondary)' : 'var(--border-default)', go: () => this.openBasics(j, mod) })),
       bQuizOpts: L.opts.map(([key, label]) => {
         const show = pick != null, st = show && key === L.ans ? 'ok' : pick === key ? 'bad' : '';
@@ -1784,7 +1903,7 @@ class Component extends DCLogic {
       startRun: () => this.setState({ fpRun: true }), toggleRun: () => !s.caseId && this.setState(st => ({ fpRun: !st.fpRun })),
       ledColor: (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? '#E9B54A' : '#6FBF73', ledLabel: (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? 'STANDBY' : 'ON',
       simParts: [['Free practice', !s.caseId, () => this.setState({ caseId: null, ventOn: true, fpRun: false, su: { ...SU_RESET } })], ['Cases', !!s.caseId, () => this.setState({ screen: 'cases' })]].map(([label, on, go]) => ({ label, go, bg: on ? 'var(--surface-page)' : 'transparent', color: on ? 'var(--text-primary)' : 'var(--text-secondary)' })),
-      homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `7 modules · ${d} of 42 lessons done` : '7 modules · 42 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
+      homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `8 modules · ${d} of 49 lessons done` : '8 modules · 49 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
       simRef: this.simRef, lessonRef: this.lessonRef,
       tabs: [['learn', 'Learn', 'icon-book-open'], ['sim', 'Simulator', 'icon-activity'], ['cases', 'Cases', 'icon-clipboard-list']].map(([id, label, icon]) => ({
         label, icon, go: go(id), color: (s.screen === id || (id === 'cases' && s.screen === 'waves') || (id === 'learn' && (s.screen === 'lesson' || s.screen === 'machines' || s.screen === 'basics'))) ? 'var(--accent)' : 'var(--text-secondary)' })),
