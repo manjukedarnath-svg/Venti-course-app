@@ -355,7 +355,7 @@
       </sc-if>
 
 <sc-if value="{{ isBasics }}" hint-placeholder-val="{{ false }}">
-        <div style="padding:4px 20px 40px; display:flex; flex-direction:column; gap:20px;">
+        <div style="padding:{{ pagePad }}; display:flex; flex-direction:column; gap:20px;">
           <div style="display:flex; align-items:center; gap:8px; margin-left:-8px;">
             <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.IconButton" icon="chevron-left" label="Back" onClick="{{ goLearn }}" hint-size="40px,40px"></x-import>
             <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ bl.eyebrow }}</span>
@@ -365,11 +365,15 @@
               <div onClick="{{ d.go }}" style="flex:1; height:3px; border-radius:2px; background:{{ d.bg }}; cursor:pointer;"></div>
             </sc-for>
           </div>
+          <div style="display:{{ wGrid }}; grid-template-columns:{{ lessonCols }}; grid-template-rows:none; gap:40px; align-items:start;">
+          <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:1; grid-row:1;">
           <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:42px; line-height:1; letter-spacing:-.02em; text-wrap:pretty;">{{ bl.h1 }}<em>{{ bl.h2 }}</em>{{ bl.h3 }}</h1>
           <p style="margin:0; font-weight:300; font-size:18px; line-height:1.55; text-wrap:pretty;">{{ bl.lede }}</p>
           <sc-for list="{{ bl.body }}" as="p" hint-placeholder-count="2">
             <p style="margin:0; font-size:16px; line-height:1.65; color:var(--text-secondary); text-wrap:pretty;">{{ p }}</p>
           </sc-for>
+          </div>
+          <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:2; grid-row:1;">
           <sc-if value="{{ bl.vidCap }}" hint-placeholder-val="{{ false }}">
             <div data-chord="night" style="background:var(--surface-page); color:var(--text-primary); border-radius:4px; padding:14px; display:flex; flex-direction:column; gap:10px;">
               <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ bl.vidCap }}</span>
@@ -440,6 +444,8 @@
             <sc-if value="{{ bQuizFeedback }}" hint-placeholder-val="{{ false }}">
               <p style="margin:0; font-size:15px; line-height:1.6; color:var(--text-secondary); text-wrap:pretty;">{{ bQuizFeedback }}</p>
             </sc-if>
+          </div>
+          </div>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <sc-if value="{{ bHasNext }}" hint-placeholder-val="{{ true }}">
@@ -556,7 +562,7 @@
       </sc-if>
 
 <sc-if value="{{ isScen }}" hint-placeholder-val="{{ false }}">
-        <div style="padding:4px 20px 40px; display:flex; flex-direction:column; gap:18px;">
+        <div style="padding:{{ pagePad }}; display:flex; flex-direction:column; gap:18px;">
           <div style="display:flex; align-items:center; gap:8px; margin-left:-8px;">
             <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.IconButton" icon="chevron-left" label="Back" onClick="{{ goCases }}" hint-size="40px,40px"></x-import>
             <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ sc.eyebrow }}</span>
@@ -566,6 +572,8 @@
               <div onClick="{{ d.go }}" style="flex:1; height:3px; border-radius:2px; background:{{ d.bg }}; cursor:pointer;"></div>
             </sc-for>
           </div>
+          <div style="display:{{ wGrid }}; grid-template-columns:{{ halfCols }}; grid-template-rows:auto 1fr; gap:40px; align-items:start;">
+          <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:1; grid-row:1;">
           <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-accent);">{{ sc.stageNo }}</span>
           <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:36px; line-height:1; letter-spacing:-.02em; text-wrap:pretty;">{{ sc.t }}</h1>
           <sc-if value="{{ sc.hasStory }}" hint-placeholder-val="{{ true }}">
@@ -586,6 +594,8 @@
             <div style="display:flex; flex-direction:column; gap:6px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Blood gas · arterial</span>
               <div style="display:flex; flex-wrap:wrap; gap:6px 16px;"><sc-for list="{{ sc.abg }}" as="g" hint-placeholder-count="4"><span style="font-family:var(--font-mono); font-size:13px;">{{ g.l }} {{ g.v }}</span></sc-for></div></div>
           </sc-if>
+          </div>
+          <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:2; grid-row:1 / span 2;">
           <sc-if value="{{ sc.hasImg }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex; flex-direction:column; gap:6px;">
               <div role="img" aria-label="Chest X-ray" style="width:100%; aspect-ratio:1 / 1.1; border-radius:2px; background-color:#0E1012; background-image:url({{ sc.img }}); background-size:contain; background-position:center; background-repeat:no-repeat;"></div>
@@ -607,6 +617,8 @@
               <x-import component-from-global-scope="vent-trace" scenario="{{ sc.traceSc }}" lanes="{{ sc.traceLanes }}" theme="night" font="10" lw="1.6" marks="off" style="width:100%; height:200px;" hint-size="100%,200px"></x-import>
             </div>
           </sc-if>
+          </div>
+          <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:1; grid-row:2; align-self:start;">
           <sc-if value="{{ sc.hasQ }}" hint-placeholder-val="{{ true }}">
             <div style="display:flex; flex-direction:column; gap:12px; border-top:1px solid var(--border-subtle); padding-top:14px;">
               <span style="font-family:var(--font-display); font-size:24px; line-height:1.1; text-wrap:pretty;">{{ sc.q }}</span>
@@ -644,6 +656,8 @@
               <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Badge" tone="success" dot="{{ true }}" hint-size="150px,22px">Scenario complete</x-import>
             </sc-if>
           </sc-if>
+          </div>
+          </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap; padding-top:6px;">
             <sc-if value="{{ scHasNext }}" hint-placeholder-val="{{ true }}">
               <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" icon-right="arrow-right" onClick="{{ scNext }}" hint-size="140px,40px">{{ scNextLabel }}</x-import>
@@ -785,7 +799,9 @@
       </sc-if>
 
       <sc-if value="{{ isSim }}" hint-placeholder-val="{{ false }}">
-        <div style="padding:4px 16px 24px; display:flex; flex-direction:column; gap:14px;">
+        <div style="padding:{{ simPad }}; display:flex; flex-direction:column; gap:14px;">
+          <div style="display:{{ wGrid }}; grid-template-columns:{{ simCols }}; grid-template-rows:none; gap:40px; align-items:start;">
+          <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:2; grid-row:1;">
           <sc-if value="{{ freePlay }}" hint-placeholder-val="{{ true }}">
             <p style="margin:0; font-size:15px; font-weight:300; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">Specifically, we are interested in the pressure necessary to cause a flow of gas to enter the airway and increase the volume of the lungs.</p>
           </sc-if>
@@ -998,6 +1014,8 @@
               </sc-for>
             </div>
           </sc-if>
+          </div>
+          <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:1; grid-row:1; position:{{ wSticky }}; top:16px;">
 
           <div style="background:linear-gradient(180deg,#D9D6CF,#BDB9B1); border-radius:18px; padding:12px 12px 16px; box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 6px 18px rgba(43,39,35,.25); display:flex; flex-direction:column; gap:14px;">
             <div style="display:flex; justify-content:space-between; align-items:center; padding:0 6px;">
@@ -1100,6 +1118,8 @@
             <span style="font-family:var(--font-mono); font-size:9px; letter-spacing:.08em; color:#4A4740; text-align:center;">Drag a knob up or down to turn it</span>
           </div>
           <p style="margin:0; font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;"><span style="color:{{ modeTrigColor }}; font-weight:600; border-bottom:2px solid {{ modeTrigColor }};">{{ modeTrig }}</span>{{ modeRest }}</p>
+          </div>
+          </div>
         </div>
       </sc-if>
 
@@ -2731,7 +2751,7 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this.otpTick); try { this._mq.removeEventListener('change', this._onMq); } catch (e) {} }
   // Shell: a phone frame below 900px; on a desktop the same app runs as a full-height column with a navigation rail on the left.
-  shellVals() { const w = !!this.state.wide; return { isWide: w, isPhone: !w, shellPad: w ? '0' : '40px 16px', frameW: w ? 'min(100vw, 1000px)' : '390px', frameH: w ? '100vh' : '844px', frameR: w ? '0' : '52px', frameShadow: w ? '0 0 0 1px var(--border-subtle)' : '0 0 0 10px #1B1A17, 0 30px 80px rgba(43,39,35,.35)', frameDir: w ? 'row-reverse' : 'column', gateTop: w ? '0' : '50px', gatePad: w ? '48px calc((100% - 520px) / 2) 40px' : '32px 24px 40px',
+  shellVals() { const w = !!this.state.wide; return { isWide: w, isPhone: !w, shellPad: w ? '0' : '40px 16px', frameW: w ? 'min(100vw, 1320px)' : '390px', wGrid: w ? 'grid' : 'contents', wCol: w ? 'flex' : 'contents', wSticky: w ? 'sticky' : 'static', simCols: 'minmax(0,1.25fr) minmax(0,1fr)', lessonCols: 'minmax(0,1.1fr) minmax(0,1fr)', halfCols: 'minmax(0,1fr) minmax(0,1fr)', simPad: w ? '28px 40px 48px' : '4px 16px 24px', pagePad: w ? '28px 40px 48px' : '4px 20px 40px', frameH: w ? '100vh' : '844px', frameR: w ? '0' : '52px', frameShadow: w ? '0 0 0 1px var(--border-subtle)' : '0 0 0 10px #1B1A17, 0 30px 80px rgba(43,39,35,.35)', frameDir: w ? 'row-reverse' : 'column', gateTop: w ? '0' : '50px', gatePad: w ? '48px calc((100% - 520px) / 2) 40px' : '32px 24px 40px',
       tabH: w ? 'auto' : '72px', tabW: w ? '96px' : 'auto', tabBorderTop: w ? 'none' : '1px solid var(--border-subtle)', tabBorderRight: w ? '1px solid var(--border-subtle)' : 'none', tabCols: w ? '1fr' : 'repeat(3,1fr)', tabAlign: w ? 'start' : 'stretch', tabGap: w ? '8px' : '0', tabPad: w ? '20px 8px' : '8px 12px 0', goHome: () => this.setState({ screen: 'home' }) }; }
 
   sweep(ctx, w, y0, h, lane, sample, t, W, pos) {
