@@ -2600,7 +2600,7 @@ class Component extends DCLogic {
     el.height = Math.round((r.height || parseFloat(el.style.height)) * d);
   }
   componentDidMount() {
-    try { this._mq = window.matchMedia('(min-width: 900px)'); this._onMq = () => this.setState({ wide: this._mq.matches }); this._mq.addEventListener('change', this._onMq); if (this._mq.matches) this.setState({ wide: true }); } catch (e) {}
+    try { this._mq = window.matchMedia('(min-width: 700px)'); this._mq2 = window.matchMedia('(min-width: 1100px)'); this._onMq = () => this.setState({ wide: this._mq.matches, twoCol: this._mq2.matches }); this._mq.addEventListener('change', this._onMq); this._mq2.addEventListener('change', this._onMq); this._onMq(); } catch (e) {}
     const loop = () => { this.draw(); this.raf = requestAnimationFrame(loop); };
     const a0 = this.state.auth, l0 = a0 && this.users()[a0.u];
     if (l0) this.api('login', { u: a0.u, ph: l0.ph }).then(r => { if (r.st === 401) this.signOut(); else if (r.ok) { const db = this.users(); db[a0.u] = { ...db[a0.u], role: r.j.user.role }; this.saveUsers(db); } }).catch(() => {});
@@ -2749,9 +2749,9 @@ class Component extends DCLogic {
           toggleRole: upd(u, x => { x[u].role = adm ? 'student' : 'admin'; }, 'role', { role: adm ? 'student' : 'admin' }),
           remove: upd(u, x => { delete x[u]; }, 'delete') }; }) };
   }
-  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this.otpTick); try { this._mq.removeEventListener('change', this._onMq); } catch (e) {} }
-  // Shell: a phone frame below 900px; on a desktop the same app runs as a full-height column with a navigation rail on the left.
-  shellVals() { const w = !!this.state.wide; return { isWide: w, isPhone: !w, shellPad: w ? '0' : '40px 16px', frameW: w ? 'min(100vw, 1320px)' : '390px', wGrid: w ? 'grid' : 'contents', wCol: w ? 'flex' : 'contents', wSticky: w ? 'sticky' : 'static', simCols: 'minmax(0,1.25fr) minmax(0,1fr)', lessonCols: 'minmax(0,1.1fr) minmax(0,1fr)', halfCols: 'minmax(0,1fr) minmax(0,1fr)', simPad: w ? '28px 40px 48px' : '4px 16px 24px', pagePad: w ? '28px 40px 48px' : '4px 20px 40px', frameH: w ? '100vh' : '844px', frameR: w ? '0' : '52px', frameShadow: w ? '0 0 0 1px var(--border-subtle)' : '0 0 0 10px #1B1A17, 0 30px 80px rgba(43,39,35,.35)', frameDir: w ? 'row-reverse' : 'column', gateTop: w ? '0' : '50px', gatePad: w ? '48px calc((100% - 520px) / 2) 40px' : '32px 24px 40px',
+  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this.otpTick); try { this._mq.removeEventListener('change', this._onMq); this._mq2.removeEventListener('change', this._onMq); } catch (e) {} }
+  // Shell: a phone frame below 700px; wider, the app fills the window with a navigation rail on the left, and from 1100px the simulator, lessons and scenarios split into two columns.
+  shellVals() { const w = !!this.state.wide, t = !!this.state.twoCol; return { isWide: w, isPhone: !w, shellPad: w ? '0' : '40px 16px', frameW: w ? 'min(100vw, 1320px)' : '390px', wGrid: w && t ? 'grid' : 'contents', wCol: w && t ? 'flex' : 'contents', wSticky: w && t ? 'sticky' : 'static', simCols: 'minmax(0,1.25fr) minmax(0,1fr)', lessonCols: 'minmax(0,1.1fr) minmax(0,1fr)', halfCols: 'minmax(0,1fr) minmax(0,1fr)', simPad: w ? '28px 40px 48px' : '4px 16px 24px', pagePad: w ? '28px 40px 48px' : '4px 20px 40px', frameH: w ? '100vh' : '844px', frameR: w ? '0' : '52px', frameShadow: w ? '0 0 0 1px var(--border-subtle)' : '0 0 0 10px #1B1A17, 0 30px 80px rgba(43,39,35,.35)', frameDir: w ? 'row-reverse' : 'column', gateTop: w ? '0' : '50px', gatePad: w ? '48px calc((100% - 520px) / 2) 40px' : '32px 24px 40px',
       tabH: w ? 'auto' : '72px', tabW: w ? '96px' : 'auto', tabBorderTop: w ? 'none' : '1px solid var(--border-subtle)', tabBorderRight: w ? '1px solid var(--border-subtle)' : 'none', tabCols: w ? '1fr' : 'repeat(3,1fr)', tabAlign: w ? 'start' : 'stretch', tabGap: w ? '8px' : '0', tabPad: w ? '20px 8px' : '8px 12px 0', goHome: () => this.setState({ screen: 'home' }) }; }
 
   sweep(ctx, w, y0, h, lane, sample, t, W, pos) {
