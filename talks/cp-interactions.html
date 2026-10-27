@@ -677,7 +677,17 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  componentDidMount() { setTimeout(() => this.setupNotes(), 0); }
+  componentDidMount() { setTimeout(() => this.setupNotes(), 0); setTimeout(() => this.setupVideos(), 0); }
+  setupVideos() {
+    const sync = () => document.querySelectorAll('deck-stage video').forEach(v => {
+      const sec = v.closest('section'); v.muted = true; v.loop = true; v.playsInline = true;
+      if (!v._tap) { v._tap = 1; v.addEventListener('click', e => { e.stopPropagation(); v.paused ? v.play().catch(() => {}) : v.pause(); }); }
+      if (sec && sec.hasAttribute('data-deck-active')) { if (v.paused) { try { v.currentTime = 0; } catch (x) {} v.play().catch(() => {}); } } else if (!v.paused) v.pause();
+    });
+    document.addEventListener('slidechange', () => setTimeout(sync, 60));
+    new MutationObserver(() => setTimeout(sync, 60)).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['data-deck-active'] });
+    setTimeout(sync, 800);
+  }
   setupNotes() {
     if (this._notesSetup) return; this._notesSetup = true;
     const deck = () => document.querySelector('deck-stage');
