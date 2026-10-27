@@ -964,10 +964,17 @@
                       <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.45;"><i class="{{ r.icon }}" style="font-size:15px; color:{{ r.color }}; flex:none; margin-top:2px;"></i><span style="flex:1; text-wrap:pretty;"><strong style="font-weight:600;">{{ r.l }}</strong> {{ r.v }}</span></div>
                     </sc-for>
                   </div>
+                  <sc-if value="{{ hasScenTeach }}" hint-placeholder-val="{{ false }}">
+                    <div style="border-left:3px solid var(--accent); padding:2px 0 2px 12px; display:flex; flex-direction:column; gap:10px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">What was going on · stage by stage</span>
+                      <sc-for list="{{ scenTeach }}" as="x" hint-placeholder-count="4"><div style="display:flex; flex-direction:column; gap:2px;"><span style="font-size:13px; font-weight:600; line-height:1.4;">{{ x.t }}</span><span style="font-size:13px; line-height:1.55; text-wrap:pretty;">{{ x.e }}</span></div></sc-for>
+                    </div>
+                  </sc-if>
                   <sc-if value="{{ caseTeach }}" hint-placeholder-val="{{ false }}">
                     <div style="border-left:3px solid var(--accent); padding:2px 0 2px 12px; display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">What was going on</span><span style="font-size:13px; line-height:1.55; text-wrap:pretty;">{{ caseTeach }}</span></div>
                   </sc-if>
+                  <sc-if value="{{ caseDx }}" hint-placeholder-val="{{ true }}">
                   <div style="display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Diagnosis</span><span style="font-size:14px; line-height:1.5; text-wrap:pretty;">{{ caseDx }}</span></div>
+                  </sc-if>
                   <sc-for list="{{ goals }}" as="g" hint-placeholder-count="3">
                     <div style="display:flex; gap:10px; align-items:center; font-size:13px;">
                       <i class="{{ g.icon }}" style="font-size:16px; color:{{ g.color }};"></i>
@@ -3229,7 +3236,7 @@ class Component extends DCLogic {
       simTitle: c ? c.title : pat.label, patC: pat.C, patR: pat.R, tau: m.tau.toFixed(2), showMech: !c,
       caseActive: !!c, freePlay: !c,
       caseChart: !!c && s.casePhase === 'chart', caseBedside: !!c && s.casePhase !== 'chart',
-      caseStory: c ? c.story : '', caseSetting: c ? c.setting : '', caseDx: c ? c.dx : '',
+      caseStory: c ? c.story : '', caseSetting: c ? c.setting : '', caseDx: c && (!c.scen || (!stageOf(c) && c.goals(m, acts, s).every(g => g[1]))) ? c.dx : '',
       takeOver: () => this.setState({ casePhase: 'bedside' }), showChart: () => this.setState({ casePhase: 'chart' }),
       ...(c ? (() => {
         const gasSt = s.gas[c.id] || {}, live = this.computeGas(c, s, m), fin = !!(s.finished || {})[c.id];
@@ -3245,7 +3252,10 @@ class Component extends DCLogic {
       hasNextCase: !!c && (c.scen ? !!stageOf(c) : CASES.indexOf(c) < CASES.filter(x => !x.scen).length - 1),
       nextLabel: c && c.scen ? 'Next stage' : 'Next case',
       nextCase: () => { const n = c.scen ? stageOf(c) : CASES[CASES.indexOf(c) + 1]; if (n && n.keep) { this.setState(st => ({ patient: n.patient, caseId: n.id, casePhase: 'bedside', ventOn: true, rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, acts: { ...(st.acts || {}), [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); return; } if (n) this.setState(st => ({ ...(PATIENTS[n.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: n.patient, caseId: n.id, sel: 'vt', casePhase: 'chart', rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); },
-      caseEvent: c && c.keep ? c.story : '', caseTeach: c && (s.finished || {})[c.id] ? (c.event || '') : '',
+      caseEvent: c && c.keep ? c.story : '', caseTeach: c && !c.scen && (s.finished || {})[c.id] ? (c.event || '') : '',
+      ...(() => { const fin = c && c.scen && !stageOf(c) && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1]);
+        const list = fin ? CASES.filter(x => x.scen === c.scen && x.event).sort((a, b) => a.stage - b.stage).map(x => ({ t: 'Stage ' + x.stage + ' · ' + x.t, e: x.event })) : [];
+        return { scenTeach: list, hasScenTeach: list.length > 0 }; })(),
       figAge: c ? AGE_BAND(c.title) : 'child', figSup: !c ? 'ett' : c.fig ? c.fig : (acts.prone || c.id === 'sa7') ? 'prone' : (!c.keep && !s.ventOn) ? 'bag' : 'ett',
       ...(c ? (() => { const P = (s.perf || {})[c.id] || {}, gl = c.goals(m, acts, s), looks = ['exam', 'cxr', 'gas', 'vent'];
         const extra = c.actions && c.actions.some(a => !a.bad) ? [[c.actions.filter(a => !a.bad).every(a => acts[a.id]), 'Bedside orders.', c.actions.filter(a => acts[a.id]).map(a => a.label).join(', ') || 'None given.', 0]] : [];
