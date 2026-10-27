@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="_ds/solstice-design-system-a0f434e9-f981-4221-9ca5-ab89c7b9d6bc/styles.css">
   <script src="_ds/solstice-design-system-a0f434e9-f981-4221-9ca5-ab89c7b9d6bc/_ds_bundle.js"></script>
   <script src="./vent-graphics.js"></script>
+  <script src="./patient-figure.js"></script>
   <style>
     html,body{margin:0;background:#E7DECF;}
     a{color:#0F6E77;} a:hover{color:#1B1A17;}
@@ -476,6 +477,7 @@
             </sc-for>
           </div>
           <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:38px; line-height:1; letter-spacing:-.02em; text-wrap:pretty;">{{ w.t }}</h1>
+          <div style="width:100%; max-width:440px;"><x-import component-from-global-scope="patient-figure" age="{{ w.age }}" support="{{ w.sup }}" style="width:100%; aspect-ratio:480 / 302;" hint-size="100%,190px"></x-import></div>
           <p style="margin:0; font-size:15px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">{{ w.story }}</p>
           <div style="display:flex; flex-direction:column; gap:12px; border-top:1px solid var(--border-subtle); padding-top:12px;">
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -548,6 +550,15 @@
               <sc-if value="{{ wFb }}" hint-placeholder-val="{{ false }}">
                 <p style="margin:0; font-size:15px; line-height:1.6; color:var(--text-secondary); text-wrap:pretty;">{{ wFb }}</p>
               </sc-if>
+              <sc-if value="{{ wPerf }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; flex-direction:column; gap:8px; background:var(--surface-sunken); border-radius:4px; padding:12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Your performance · this case</span><span style="font-family:var(--font-mono); font-size:12px; white-space:nowrap;">{{ wPerfScore }}</span></div>
+                  <span style="font-family:var(--font-display); font-size:20px; line-height:1.1;">{{ wPerfBand }}</span>
+                  <sc-for list="{{ wPerfRows }}" as="r" hint-placeholder-count="5">
+                    <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.45;"><i class="{{ r.icon }}" style="font-size:15px; color:{{ r.color }}; flex:none; margin-top:2px;"></i><span style="flex:1; text-wrap:pretty;"><strong style="font-weight:600;">{{ r.l }}</strong> {{ r.v }}</span></div>
+                  </sc-for>
+                </div>
+              </sc-if>
             </div>
           </sc-if>
           <div style="display:flex; gap:10px; flex-wrap:wrap; padding-top:6px;">
@@ -577,7 +588,18 @@
           <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-accent);">{{ sc.stageNo }}</span>
           <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:36px; line-height:1; letter-spacing:-.02em; text-wrap:pretty;">{{ sc.t }}</h1>
           <sc-if value="{{ sc.hasStory }}" hint-placeholder-val="{{ true }}">
+            <div style="width:100%; max-width:440px;"><x-import component-from-global-scope="patient-figure" age="{{ sc.age }}" support="{{ sc.sup }}" style="width:100%; aspect-ratio:480 / 302;" hint-size="100%,190px"></x-import></div>
             <p style="margin:0; font-size:15px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">{{ sc.story }}</p>
+          </sc-if>
+          <sc-if value="{{ scHasChips }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border-subtle); padding-top:12px;">
+              <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Ask for what you need</span>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <sc-for list="{{ scChips }}" as="p" hint-placeholder-count="5">
+                  <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Tag" selected="{{ p.on }}" onClick="{{ p.go }}" hint-size="90px,32px">{{ p.label }}</x-import>
+                </sc-for>
+              </div>
+            </div>
           </sc-if>
           <sc-if value="{{ sc.hasVit }}" hint-placeholder-val="{{ true }}">
             <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; border-top:1px solid var(--border-subtle); padding-top:12px;">
@@ -632,6 +654,7 @@
                 <p style="margin:0; font-size:15px; line-height:1.6; color:var(--text-secondary); text-wrap:pretty;">{{ scFb }}</p>
               </sc-if>
               <sc-if value="{{ scRight }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.45; color:var(--text-secondary);"><i class="icon-clock" style="font-size:15px; flex:none; margin-top:2px;"></i><span style="flex:1; text-wrap:pretty;">{{ scStagePerf }}</span></div>
                 <div style="border-left:3px solid var(--accent); padding:4px 0 4px 14px; display:flex; flex-direction:column; gap:8px;">
                   <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Take away</span>
                   <p style="margin:0; font-size:15px; line-height:1.6; text-wrap:pretty;">{{ sc.teach }}</p>
@@ -655,6 +678,16 @@
             <sc-if value="{{ scSolved }}" hint-placeholder-val="{{ false }}">
               <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Badge" tone="success" dot="{{ true }}" hint-size="150px,22px">Scenario complete</x-import>
             </sc-if>
+              <sc-if value="{{ scPerf }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; flex-direction:column; gap:8px; background:var(--surface-sunken); border-radius:4px; padding:12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Your performance · whole scenario</span><span style="font-family:var(--font-mono); font-size:12px; white-space:nowrap;">{{ scPerfScore }}</span></div>
+                  <span style="font-family:var(--font-display); font-size:20px; line-height:1.1;">{{ scPerfBand }}</span>
+                  <sc-for list="{{ scPerfRows }}" as="r" hint-placeholder-count="5">
+                    <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.45;"><i class="{{ r.icon }}" style="font-size:15px; color:{{ r.color }}; flex:none; margin-top:2px;"></i><span style="flex:1; text-wrap:pretty;"><strong style="font-weight:600;">{{ r.l }}</strong> {{ r.v }}</span></div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
           </sc-if>
           </div>
           </div>
@@ -819,9 +852,10 @@
                 <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary); white-space:nowrap;">Patient chart · history</span>
                 <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="link" size="sm" onClick="{{ endCase }}" hint-size="70px,24px">Exit</x-import>
               </div>
+              <x-import component-from-global-scope="patient-figure" age="{{ figAge }}" support="{{ figSup }}" style="width:100%; aspect-ratio:480 / 302;" hint-size="100%,190px"></x-import>
               <p style="margin:0; font-size:15px; line-height:1.6; text-wrap:pretty;">{{ caseStory }}</p>
               <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">{{ caseSetting }}</span>
-              <p style="margin:0; font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">The patient is being ventilated by hand while the ventilator is prepared. The referring team's settings are in the handover. Nothing else is known yet.</p>
+              <p style="margin:0; font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">That is all you are told. Take over, then ask for what you need: examine, image, send a gas, read the handover. Everything you ask for and do is timed and scored.</p>
               <div><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="arrow-right" onClick="{{ takeOver }}" hint-size="170px,32px">Take over the patient</x-import></div>
             </div>
           </sc-if>
@@ -838,7 +872,8 @@
               <div data-chord="night" style="background:var(--surface-page); color:var(--text-primary); border-radius:4px; padding:12px 14px; display:flex; flex-direction:column; gap:6px;">
                 <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ caseStageLabel }}</span>
                 <span style="font-family:var(--font-display); font-size:22px; line-height:1.05;">{{ caseStageTitle }}</span>
-                <p style="margin:0; font-size:13px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">{{ caseEvent }}</p>
+                <x-import component-from-global-scope="patient-figure" age="{{ figAge }}" support="{{ figSup }}" style="width:100%; aspect-ratio:480 / 302;" hint-size="100%,190px"></x-import>
+                <p style="margin:0; font-size:14px; line-height:1.55; text-wrap:pretty;">{{ caseEvent }}</p>
               </div>
             </sc-if>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -897,6 +932,14 @@
                 <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--border-subtle); padding-top:12px;">
                   <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">{{ taskHead }}</span>
                   <span style="font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">{{ taskText }}</span>
+                  <sc-if value="{{ hasHint }}" hint-placeholder-val="{{ false }}">
+                    <sc-if value="{{ hintShown }}" hint-placeholder-val="{{ false }}">
+                      <div style="border-left:3px solid var(--accent); padding:2px 0 2px 12px; display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Senior on the phone</span><span style="font-size:13px; line-height:1.5; text-wrap:pretty;">{{ hintText }}</span></div>
+                    </sc-if>
+                    <sc-if value="{{ hintHidden }}" hint-placeholder-val="{{ true }}">
+                      <div><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="ghost" size="sm" icon-left="phone" onClick="{{ askSenior }}" hint-size="140px,32px">Call a senior</x-import></div>
+                    </sc-if>
+                  </sc-if>
                   <sc-if value="{{ hasActs }}" hint-placeholder-val="{{ false }}">
                     <div style="display:flex; flex-direction:column; gap:8px; padding-top:4px;">
                       <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Bedside actions</span>
@@ -914,6 +957,16 @@
               <sc-if value="{{ caseShown }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--border-subtle); padding-top:12px;">
                   <span style="font-size:14px; font-weight:500;">{{ caseVerdict }}</span>
+                  <div style="display:flex; flex-direction:column; gap:8px; background:var(--surface-sunken); border-radius:4px; padding:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Your performance · this stage</span><span style="font-family:var(--font-mono); font-size:12px; white-space:nowrap; color:var(--text-primary);">{{ perfScore }}</span></div>
+                    <span style="font-family:var(--font-display); font-size:20px; line-height:1.1;">{{ perfBand }}</span>
+                    <sc-for list="{{ perfRows }}" as="r" hint-placeholder-count="5">
+                      <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.45;"><i class="{{ r.icon }}" style="font-size:15px; color:{{ r.color }}; flex:none; margin-top:2px;"></i><span style="flex:1; text-wrap:pretty;"><strong style="font-weight:600;">{{ r.l }}</strong> {{ r.v }}</span></div>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{ caseTeach }}" hint-placeholder-val="{{ false }}">
+                    <div style="border-left:3px solid var(--accent); padding:2px 0 2px 12px; display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">What was going on</span><span style="font-size:13px; line-height:1.55; text-wrap:pretty;">{{ caseTeach }}</span></div>
+                  </sc-if>
                   <div style="display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Diagnosis</span><span style="font-size:14px; line-height:1.5; text-wrap:pretty;">{{ caseDx }}</span></div>
                   <sc-for list="{{ goals }}" as="g" hint-placeholder-count="3">
                     <div style="display:flex; gap:10px; align-items:center; font-size:13px;">
@@ -926,6 +979,14 @@
                       <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent); padding-top:10px;">Debrief</span>
                       <sc-for list="{{ caseDebrief }}" as="d" hint-placeholder-count="6">
                         <div style="display:flex; gap:12px; padding:8px 0; border-bottom:1px solid var(--border-subtle);"><span style="font-family:var(--font-display); font-size:20px; line-height:1; color:var(--text-accent); width:20px; flex:none;">{{ d.n }}</span><span style="font-size:13px; line-height:1.5; text-wrap:pretty;">{{ d.t }}</span></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ hasScenPerf }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; gap:0; border-top:1px solid var(--border-subtle); margin-top:4px;">
+                      <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent); padding:10px 0 4px;">Whole scenario · your run</span>
+                      <sc-for list="{{ scenPerf }}" as="r" hint-placeholder-count="5">
+                        <div style="display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--border-subtle); font-size:13px;"><span style="color:var(--text-secondary);">{{ r.l }}</span><span style="font-family:var(--font-mono);">{{ r.v }}</span></div>
                       </sc-for>
                     </div>
                   </sc-if>
@@ -975,20 +1036,24 @@
                         <span style="font-size:14px; font-weight:500; line-height:1.4;">{{ t.who }}</span>
                         <span style="font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">{{ t.story }}</span>
                         <div style="display:flex; flex-direction:column; gap:12px;">
-                          <div style="display:flex; flex-direction:column; gap:4px;">
-                            <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-secondary);">Look · at the bedside</span>
-                            <div style="aspect-ratio:16/10; border-radius:2px; overflow:hidden; background:var(--surface-page);"><div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--text-tertiary);"><i class="icon-image" style="font-size:22px;"></i><span style="font-size:12px;">Photo or video of the child</span></div></div>
+                          <x-import component-from-global-scope="patient-figure" age="{{ t.figAge }}" support="ett" style="width:100%; aspect-ratio:480 / 302;" hint-size="100%,170px"></x-import>
+                          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <sc-for list="{{ t.chips }}" as="p" hint-placeholder-count="2">
+                              <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Tag" selected="{{ p.on }}" onClick="{{ p.go }}" hint-size="90px,32px">{{ p.label }}</x-import>
+                            </sc-for>
                           </div>
-                          <sc-if value="{{ t.hasSound }}" hint-placeholder-val="{{ false }}">
+                          <sc-if value="{{ t.showSound }}" hint-placeholder-val="{{ false }}">
                             <div style="display:flex; flex-direction:column; gap:4px;">
                               <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-secondary);">Listen · {{ t.soundCap }}</span>
                               <audio controls="" preload="none" src="{{ t.sound }}" style="width:100%; height:36px;"></audio>
                             </div>
                           </sc-if>
+                          <sc-if value="{{ t.showCxr }}" hint-placeholder-val="{{ false }}">
                           <div style="display:flex; flex-direction:column; gap:4px;">
                             <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-secondary);">Chest X-ray · {{ t.cxrCap }}</span>
                             <div style="aspect-ratio:1/1; border-radius:2px; overflow:hidden; background:#1B1A17;">{{ t.cxrImg }}</div>
                           </div>
+                          </sc-if>
                         </div>
                         <span style="font-size:13px; line-height:1.5; text-wrap:pretty;"><strong style="font-weight:600;">Your job: </strong>{{ t.goal }}</span>
                         <sc-if value="{{ t.ptLoaded }}" hint-placeholder-val="{{ true }}">
@@ -1736,6 +1801,12 @@ const SIM_SCEN = [
     blurb: 'Known asthmatic, drowsy with a silent chest, intubated in the ER on ketamine. Set a ventilator that lets him exhale, accept the CO₂, add the right PEEP once he triggers, survive the sudden desaturation, and get him to day 2 without trapping.',
     review: 'sc-asthma', stages: ['sb1', 'sb2', 'sb3', 'sb4', 'sb5'] }
 ];
+// Patient illustration: age band from the title, airway from the stage.
+const AGE_BAND = t => { const m = /(\d+)[- ]?(month|year|y\b)/i.exec(t || ''); if (!m) return 'child'; if (/month/i.test(m[2])) return 'infant'; const y = +m[1]; return y <= 1 ? 'infant' : y <= 4 ? 'toddler' : y <= 11 ? 'child' : 'teen'; };
+const mmss = ms => { const t = Math.max(0, Math.round(ms / 1000)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+const SC_FIG = { 'sc-ards': ['mask', 'niv', 'bag', 'ett', 'ett', 'ett', 'ett', 'ett', 'ett', 'prone'], 'sc-asthma': ['mask', 'mask', 'bag', 'ett', 'ett', 'ett', 'ett'],
+  'sc-pda': ['mask', 'mask', 'ett', 'ett'], 'sc-myo': ['mask', 'mask', 'nc', 'niv'], 'sc-ltv': ['ett', 'ett', 'trach', 'trach', 'trach', 'trach'] };
+const PERF_LOOK = { exam: 'Examine', cxr: 'Chest X-ray', gas: 'Blood gas', vent: 'Handover', img: 'Chest X-ray', table: 'Chart', trace: 'Monitor' };
 const SA_VIT = (hr, bp, extra) => (m, a, s) => [['HR', String(hr)], ['BP', bp], ['SpO₂', 'live'], ...(extra || [])];
 const SIM_STAGES = [
   // ---------- ARDS ----------
@@ -2820,6 +2891,7 @@ class Component extends DCLogic {
   setParam(k, v) {
     const df = defsFor(k, PATIENTS[this.state.patient]); v = Math.max(df.min, Math.min(df.max, Math.round(v / df.step) * df.step));
     this.setState({ [k]: +v.toFixed(1) }, () => this.checkSolved());
+    if (this.state.caseId && this.state.screen === 'sim') this.perfAct(this.state.caseId);
   }
   checkSolved() {
     const c = CASES.find(x => x.id === this.state.caseId); if (!c) return;
@@ -2850,6 +2922,29 @@ class Component extends DCLogic {
     };
   }
   mapA(a) { return a ? { vit: a.vit.map(([l, v]) => ({ l, v })), exam: a.exam, cxr: a.cxr, cxrAns: a.cxrAns, ettAns: a.ettAns, img: a.img || '', hasImg: !!a.img, abg: a.abg.map(([l, v]) => ({ l, v })), vent: a.vent } : null; }
+  // Performance log: when the case opened, what was asked for and when, first action, senior calls, harmful orders, checks.
+  perfSet(key, fn) { this.setState(st => { const P = st.perf || {}, cur = P[key] || {}, nx = fn(cur); return nx === cur ? null : { perf: { ...P, [key]: nx } }; }); }
+  perfStart(key) { if ((this.state.perf || {})[key] || (this._pfq = this._pfq || {})[key]) return; this._pfq[key] = 1; setTimeout(() => { delete this._pfq[key]; this.perfSet(key, c => c.t0 ? c : { ...c, t0: Date.now() }); }, 0); }
+  perfReq(key, k) { this.perfSet(key, c => (c.req || {})[k] ? c : { ...c, t0: c.t0 || Date.now(), req: { ...(c.req || {}), [k]: Date.now() } }); }
+  perfAct(key) { this.perfSet(key, c => c.act ? c : { ...c, t0: c.t0 || Date.now(), act: Date.now() }); }
+  // Rows for the performance card. looks = chip keys that existed; targets = [met, total] or null; extra rows appended.
+  perfReport(P, looks, targets, extra, lean) {
+    const req = P.req || {}, seen = looks.filter(k => req[k]), before = looks.filter(k => req[k] && (!P.act || req[k] <= P.act));
+    const assessedFirst = !!(req.exam && (!P.act || req.exam <= P.act));
+    const rows = [];
+    const row = (ok, l, v) => rows.push({ l, v, icon: ok === null ? 'icon-clock' : ok ? 'icon-circle-check' : 'icon-circle-x', color: ok === null ? 'var(--text-secondary)' : ok ? '#7FB287' : 'var(--danger)' });
+    row(null, 'Time', P.t0 ? mmss((P.done || Date.now()) - P.t0) : '–');
+    row(assessedFirst, 'Assessed before acting.', assessedFirst ? 'You examined the patient before touching the ventilator or ordering treatment.' : P.act ? 'You acted before examining the patient.' : 'You did not examine the patient.');
+    row(seen.length === looks.length, 'Information gathered.', seen.length ? seen.map(k => PERF_LOOK[k] || k).join(', ') + ' (' + seen.length + ' of ' + looks.length + ', ' + before.length + ' before your first action)' : 'Nothing asked for.');
+    let pts = (assessedFirst ? 15 : 0) + Math.round(15 * seen.length / Math.max(1, looks.length));
+    if (targets) { row(targets[0] === targets[1], 'Targets.', targets[0] + ' of ' + targets[1] + ' met' + ((P.checks || 0) > 1 ? ', after ' + P.checks + ' checks' : ' at the first check')); pts += Math.round(45 * targets[0] / Math.max(1, targets[1])) + ((P.checks || 1) <= 1 ? 5 : 0); }
+    (extra || []).forEach(([ok, l, v, w]) => { row(ok, l, v); pts += ok ? w : 0; });
+    if (lean) pts += 20; else {
+      row(!P.hint, 'Senior called.', P.hint ? 'Yes, you asked for advice.' : 'No, you managed alone.'); pts += P.hint ? 0 : 10;
+      row(!(P.bad > 0), 'Harmful orders.', P.bad > 0 ? P.bad + ' (see the feedback on each order)' : 'None.'); pts += P.bad > 0 ? 0 : 10; }
+    const score = Math.max(0, Math.min(100, pts));
+    return { rows, score: score + ' / 100', band: score >= 85 ? 'Ready to run this bedside' : score >= 65 ? 'Safe, with gaps' : 'Run it again' };
+  }
   onDemand(root, assess, rv, setRv, gasOpts) {
     const chips = [['exam', 'Examine'], ['cxr', 'Chest X-ray'], ['gas', 'Blood gas'], ['vent', 'Handover']].concat(gasOpts && gasOpts.learn ? [['learn', 'Learn']] : []);
     const g = gasOpts || {};
@@ -2865,7 +2960,7 @@ class Component extends DCLogic {
       [root + 'Et']: ET.map(([k, label]) => ({ label, on: ep === k, go: () => this.setState(st => ({ ettPick: { ...st.ettPick, [key]: k } })) })),
       [root + 'CxFb']: pickFb, [root + 'CxShow']: cp != null, [root + 'EtFb']: ettFb,
       [root]: { ...assess, vit: g.vit || assess.vit, abg: g.abg || assess.abg },
-      [root + 'Chips']: chips.map(([k, label]) => ({ label, on: !!rv[k], go: () => setRv(k) })),
+      [root + 'Chips']: chips.map(([k, label]) => ({ label, on: !!rv[k], go: () => { if (!rv[k] && g.perf) this.perfReq(g.perf, k); setRv(k); } })),
       [root + 'Rv']: rv,
       [root + 'GasHead']: g.head || 'Blood gas · arterial · on arrival',
       [root + 'GasBtn']: g.btn || '', [root + 'SendGas']: g.send || (() => {})
@@ -2917,7 +3012,9 @@ class Component extends DCLogic {
       pCount: doneN + ' / ' + total,
       practice: PRACTICE.map(t => { const n = t.tasks.filter((_, j) => all[t.id + j]).length, complete = n === t.tasks.length, open = (s.pOpen || 'settings') === t.id;
         return { title: t.title, open, count: n + '/' + t.tasks.length, icon: complete ? 'icon-circle-check' : 'icon-circle', iconColor: complete ? 'var(--success)' : 'var(--text-tertiary)', chev: open ? 'icon-chevron-up' : 'icon-chevron-down',
-          toggle: () => this.setState({ pOpen: t.id }), short: (PRACTICE.indexOf(t) + 1) + ' · ' + t.short, tabBg: open ? 'var(--text-primary)' : 'transparent', tabFg: open ? 'var(--surface-page)' : 'var(--text-primary)', tabRing: open ? 'none' : 'inset 0 0 0 1px var(--border-default)', lessonLinks: t.lessons.map(([mod, i]) => ({ label: 'Module ' + mod + ' · ' + LESSON_SETS[mod][i].h.join('').trim(), go: () => this.openBasics(i, mod) })), cxrImg: (this._cxr = this._cxr || {})[t.id] || (this._cxr[t.id] = React.createElement('img', { key: 'cxr-' + t.id, src: CASE_MEDIA[t.id].cxr, alt: 'Chest X-ray', style: CXR_STYLE })), cxrCap: CASE_MEDIA[t.id].cxrCap, sound: CASE_MEDIA[t.id].sound || '', hasSound: !!CASE_MEDIA[t.id].sound, soundCap: CASE_MEDIA[t.id].soundCap || '', who: t.who, story: t.story, goal: t.goal, ptLabel: 'Load ' + PATIENTS[t.pt].label.toLowerCase(), ptLoaded: s.patient === t.pt, ptNotLoaded: s.patient !== t.pt,
+          toggle: () => this.setState({ pOpen: t.id }), figAge: AGE_BAND(t.who),
+          ...(() => { const pr = (s.pRv || {})[t.id] || {}, flip = k => () => this.setState(st => ({ pRv: { ...(st.pRv || {}), [t.id]: { ...((st.pRv || {})[t.id] || {}), [k]: !((st.pRv || {})[t.id] || {})[k] } } }));
+            return { showSound: !!CASE_MEDIA[t.id].sound && !!pr.listen, showCxr: !!pr.cxr, chips: (CASE_MEDIA[t.id].sound ? [['listen', 'Listen']] : []).concat([['cxr', 'Chest X-ray']]).map(([k, label]) => ({ label, on: !!pr[k], go: flip(k) })) }; })(), short: (PRACTICE.indexOf(t) + 1) + ' · ' + t.short, tabBg: open ? 'var(--text-primary)' : 'transparent', tabFg: open ? 'var(--surface-page)' : 'var(--text-primary)', tabRing: open ? 'none' : 'inset 0 0 0 1px var(--border-default)', lessonLinks: t.lessons.map(([mod, i]) => ({ label: 'Module ' + mod + ' · ' + LESSON_SETS[mod][i].h.join('').trim(), go: () => this.openBasics(i, mod) })), cxrImg: (this._cxr = this._cxr || {})[t.id] || (this._cxr[t.id] = React.createElement('img', { key: 'cxr-' + t.id, src: CASE_MEDIA[t.id].cxr, alt: 'Chest X-ray', style: CXR_STYLE })), cxrCap: CASE_MEDIA[t.id].cxrCap, sound: CASE_MEDIA[t.id].sound || '', hasSound: !!CASE_MEDIA[t.id].sound, soundCap: CASE_MEDIA[t.id].soundCap || '', who: t.who, story: t.story, goal: t.goal, ptLabel: 'Load ' + PATIENTS[t.pt].label.toLowerCase(), ptLoaded: s.patient === t.pt, ptNotLoaded: s.patient !== t.pt,
           load: () => { const p = PATIENTS[t.pt], pat = PATIENTS[this.state.patient] || {}; this.setState(p.infant && !pat.infant ? { patient: t.pt, fpRun: false, su: { ...SU_RESET }, ...INFANT_START } : !p.infant && pat.infant ? { patient: t.pt, fpRun: false, su: { ...SU_RESET }, ...ADULT_START } : { patient: t.pt, fpRun: false, su: { ...SU_RESET } }); },
           tasks: t.tasks.map(([label, , how], j) => { const ok = !!all[t.id + j]; return { label, how, n: String(j + 1), icon: ok ? 'icon-circle-check' : 'icon-circle', color: ok ? 'var(--success)' : 'var(--text-tertiary)', text: ok ? 'var(--text-secondary)' : 'var(--text-primary)' }; }) }; })
     };
@@ -2929,10 +3026,16 @@ class Component extends DCLogic {
       border: chosen ? (right ? 'var(--success)' : 'var(--danger)') : 'var(--border-default)',
       bg: chosen ? (right ? 'var(--success-soft)' : 'transparent') : 'transparent',
       icon: chosen ? (right ? 'icon-circle-check' : 'icon-circle-x') : 'icon-circle', iconColor: chosen ? (right ? 'var(--success)' : 'var(--danger)') : 'var(--text-tertiary)' });
-    const set = (k, j) => () => this.setState(st => ({ [k]: { ...st[k], [i]: j } }));
+    const pk = 'w' + i, P = (s.perf || {})[pk] || {};
+    this.perfStart(pk);
+    const set = (k, j) => () => { const fix = k === 'wFix', right = (fix ? W.fixes : W.names)[j][1] === 1;
+      this.perfSet(pk, q => ({ ...q, t0: q.t0 || Date.now(), [fix ? 'fix1' : 'name1']: (fix ? q.fix1 : q.name1) || (right ? 'ok' : 'no'), ...(fix ? { act: q.act || Date.now() } : {}), ...(fix && right && !q.done ? { done: Date.now() } : {}) }));
+      this.setState(st => ({ [k]: { ...st[k], [i]: j } })); };
+    const R = this.perfReport(P, ['exam', 'cxr', 'gas', 'vent'], null, [[P.name1 === 'ok', 'Diagnosis.', P.name1 === 'ok' ? 'Right first time.' : 'Not right first time.', 25], [P.fix1 === 'ok', 'Management.', P.fix1 === 'ok' ? 'Right first time.' : 'Not right first time.', 25]], true);
     return {
-      ...this.onDemand('wx', this.mapA(W.assess), s.wRv[i] || {}, k => this.setState(st => ({ wRv: { ...st.wRv, [i]: { ...(st.wRv[i] || {}), [k]: !(st.wRv[i] || {})[k] } } })), { head: 'Blood gas · arterial', key: 'w' + i }),
-      w: { eyebrow: `Wave case ${i + 1} of ${WAVES.length}`, t: W.t, story: W.story, sc: okFix ? W.fixed : W.sc, lanes: W.lanes,
+      ...this.onDemand('wx', this.mapA(W.assess), s.wRv[i] || {}, k => this.setState(st => ({ wRv: { ...st.wRv, [i]: { ...(st.wRv[i] || {}), [k]: !(st.wRv[i] || {})[k] } } })), { head: 'Blood gas · arterial', key: 'w' + i, perf: pk }),
+      wPerf: okFix, wPerfRows: R.rows, wPerfScore: R.score, wPerfBand: R.band,
+      w: { eyebrow: `Wave case ${i + 1} of ${WAVES.length}`, t: W.t, story: W.story, age: AGE_BAND(W.t), sup: 'ett', sc: okFix ? W.fixed : W.sc, lanes: W.lanes,
         traceCap: okFix ? 'After your change' : 'Monitor', status: okFix ? 'Improved' : '', traceColor: okFix ? '#93C29A' : '#F59A3C' },
       wDots: WAVES.map((_, j) => ({ bg: j === i ? 'var(--accent)' : s.wFix[j] != null && WAVES[j].fixes[s.wFix[j]][1] ? 'var(--success)' : 'var(--border-default)', go: () => this.setState({ wIdx: j }) })),
       wNames: W.names.map(([l, r], j) => opt(l, nm === j, r === 1, set('wName', j))),
@@ -2959,28 +3062,44 @@ class Component extends DCLogic {
     const tb = st.table, cells = [];
     if (tb) tb.rows.forEach((r, ri) => r.forEach((v, ci) => cells.push({ v, color: ri === 3 ? 'var(--text-accent)' : 'var(--text-primary)', weight: ri === 3 ? '600' : '400' })));
     const L = st.lesson ? LESSON_SETS[st.lesson[0]][st.lesson[1]] : null;
+    // Information on demand: only the story and the picture of the patient are shown; the rest is asked for.
+    const rv = (s.scRv || {})[key] || {}, PF = s.perf || {}, P = PF[key] || {};
+    const looks = [['exam', 'Examine', !!(st.vit || st.exam)], ['vent', 'Ventilator', !!st.vent], ['trace', 'Monitor', !!st.trace], ['gas', 'Blood gas', !!st.abg], ['img', 'Chest X-ray', !!st.img], ['table', 'Chart', !!tb]].filter(x => x[2]);
+    if (s.screen === 'scen' && st.opts) this.perfStart(key);
+    const scen = (S2, j) => PF[S2.id + ':' + j] || {};
+    const qStages = S.stages.map((x, j) => [x, j]).filter(([x]) => x.opts);
+    const firstOk = qStages.filter(([x, j]) => scen(S, j).first === 'ok').length, gathered = qStages.filter(([x, j]) => { const q = scen(S, j); return q.req && Object.values(q.req).some(t => !q.act || t <= q.act); }).length;
+    const totT = qStages.reduce((n, [x, j]) => { const q = scen(S, j); return n + (q.t0 && q.done ? q.done - q.t0 : 0); }, 0);
+    const scPts = Math.round(60 * firstOk / Math.max(1, qStages.length) + 40 * gathered / Math.max(1, qStages.length));
+    const okRow = (ok, l, v) => ({ l, v, icon: ok === null ? 'icon-clock' : ok ? 'icon-circle-check' : 'icon-circle-x', color: ok === null ? 'var(--text-secondary)' : ok ? '#7FB287' : 'var(--danger)' });
+    const lookedNames = Object.keys(P.req || {}).filter(k => !P.act || P.req[k] <= P.act).map(k => PERF_LOOK[k] || k);
     return {
       isScen: s.screen === 'scen',
+      scChips: looks.map(([k, label]) => ({ label, on: !!rv[k], go: () => { if (!rv[k]) this.perfReq(key, k); this.setState(x => ({ scRv: { ...(x.scRv || {}), [key]: { ...((x.scRv || {})[key] || {}), [k]: !((x.scRv || {})[key] || {})[k] } } })); } })),
+      scHasChips: looks.length > 0,
+      scStagePerf: P.t0 && P.done ? 'Decided in ' + mmss(P.done - P.t0) + (P.first === 'ok' ? ', right first time' : ', after ' + (P.tries || 1) + ' tries') + '. ' + (lookedNames.length ? 'Looked at ' + lookedNames.join(', ').toLowerCase() + ' first.' : (looks.length ? 'Decided without asking for anything.' : '')) : '',
+      scPerf: !!st.debrief, scPerfScore: scPts + ' / 100', scPerfBand: scPts >= 85 ? 'Ready to run this bedside' : scPts >= 65 ? 'Safe, with gaps' : 'Run it again',
+      scPerfRows: [okRow(null, 'Time deciding.', mmss(totT)), okRow(firstOk === qStages.length, 'Right first time.', firstOk + ' of ' + qStages.length + ' decisions'), okRow(gathered === qStages.length, 'Asked before deciding.', gathered + ' of ' + qStages.length + ' decisions made after looking at the patient')],
       sc: { eyebrow: S.eyebrow + ' · ' + S.title, stageNo: st.debrief ? 'Debrief' : 'Stage ' + (n + 1) + ' of ' + (S.stages.length - 1), t: st.t,
-        hasStory: !!st.story, story: st.story || '',
-        hasVit: !!st.vit, vit: (st.vit || []).map(([l, v]) => ({ l, v })),
-        hasExam: !!st.exam, exam: st.exam || [],
-        hasVent: !!st.vent, vent: st.vent || '',
-        hasAbg: !!st.abg, abg: (st.abg || []).map(([l, v]) => ({ l, v })),
-        hasImg: !!st.img, img: st.img || '', imgCap: st.imgCap || '',
-        hasTable: !!tb, tCols: tb ? 'repeat(' + (tb.head.length - 1) + ',minmax(0,1fr)) minmax(0,1.7fr)' : '1fr', tHead: tb ? tb.head : [], tCells: cells, tNote: tb ? tb.note : '',
-        hasTrace: !!st.trace, traceSc: st.trace ? st.trace.sc : 'normal-vc', traceLanes: st.trace ? st.trace.lanes : 'pf', traceCap: st.trace ? st.trace.cap : '',
+        hasStory: !!st.story, story: st.story || '', age: AGE_BAND(S.title), sup: (SC_FIG[S.id] || [])[n] || 'ett',
+        hasVit: !!st.vit && !!rv.exam, vit: (st.vit || []).map(([l, v]) => ({ l, v })),
+        hasExam: !!st.exam && !!rv.exam, exam: st.exam || [],
+        hasVent: !!st.vent && !!rv.vent, vent: st.vent || '',
+        hasAbg: !!st.abg && !!rv.gas, abg: (st.abg || []).map(([l, v]) => ({ l, v })),
+        hasImg: !!st.img && !!rv.img, img: st.img || '', imgCap: st.imgCap || '',
+        hasTable: !!tb && !!rv.table, tCols: tb ? 'repeat(' + (tb.head.length - 1) + ',minmax(0,1fr)) minmax(0,1.7fr)' : '1fr', tHead: tb ? tb.head : [], tCells: cells, tNote: tb ? tb.note : '',
+        hasTrace: !!st.trace && !!rv.trace, traceSc: st.trace ? st.trace.sc : 'normal-vc', traceLanes: st.trace ? st.trace.lanes : 'pf', traceCap: st.trace ? st.trace.cap : '',
         hasQ: !!st.opts, q: st.q || '', teach: st.teach || '', teachList: st.teachList || [],
         hasLesson: !!L, lessonLabel: L ? 'Module ' + st.lesson[0] + ' · ' + L.h.join('').trim() : '', goLesson: () => st.lesson && this.openBasics(st.lesson[1], st.lesson[0]),
         isDebrief: !!st.debrief, debrief: (st.debrief || []).map((t, i) => ({ n: i + 1, t })) },
-      scDots: S.stages.map((_, j) => ({ bg: j === n ? 'var(--accent)' : stageOk(j) && S.stages[j].opts ? 'var(--success)' : 'var(--border-default)', go: goStage(j) })),
-      scOpts: (st.opts || []).map(([l, r], j) => opt(l, pk === j, r === 1, () => this.setState(x => ({ scPick: { ...(x.scPick || {}), [key]: j } })))),
+      scDots: S.stages.map((_, j) => ({ bg: j === n ? 'var(--accent)' : stageOk(j) && S.stages[j].opts ? 'var(--success)' : 'var(--border-default)', go: S.stages.slice(0, j).every((x, k) => stageOk(k)) ? goStage(j) : () => {} })),
+      scOpts: (st.opts || []).map(([l, r], j) => opt(l, pk === j, r === 1, () => { this.perfSet(key, q => ({ ...q, t0: q.t0 || Date.now(), act: q.act || Date.now(), first: q.first || (r === 1 ? 'ok' : 'no'), tries: q.done ? q.tries : (q.tries || 0) + 1, done: q.done || (r === 1 ? Date.now() : null) })); this.setState(x => ({ scPick: { ...(x.scPick || {}), [key]: j } })); })),
       scFb: pk == null ? '' : (right ? 'Right. ' : 'Not quite. ') + st.opts[pk][2],
       scRight: right, scSolved: this.scenSolved(S),
       scHasNext: n < S.stages.length - 1 && (right || !st.opts), scNextLabel: n === S.stages.length - 2 ? 'Debrief' : 'Next stage',
       scHasPrev: n > 0, scNext: goStage(n + 1), scPrev: goStage(n - 1),
       scenarios: SCENARIOS.map((X, i) => ({ eyebrow: X.eyebrow, title: X.title, chord: X.chord, setting: X.setting, blurb: X.blurb, done: this.scenSolved(X), count: X.stages.filter((y, j) => y.opts && picks[X.id + ':' + j] != null && y.opts[picks[X.id + ':' + j]][1] === 1).length + ' / ' + X.stages.filter(y => y.opts).length,
-        start: () => this.setState({ screen: 'scen', scIdx: i, scStage: 0 }) }))
+        start: () => this.setState(st => ({ screen: 'scen', scIdx: i, scStage: 0, scRv: {}, perf: Object.fromEntries(Object.entries(st.perf || {}).filter(([k]) => !k.startsWith(X.id + ':'))) })) }))
     };
   }
   knobDown(e, k) {
@@ -3120,24 +3239,36 @@ class Component extends DCLogic {
           setTimeout(() => { const st = this.state, cc = CASES.find(x => x.id === st.caseId); if (!cc) return; const mm = model(st, PATIENTS[st.patient]), res = this.computeGas(cc, st, mm); const at = 'drawn ' + Math.round(mm.mv * 10) / 10 + ' L/min MV · PEEP ' + st.peep + ' · FiO₂ ' + (st.fio2 / 100).toFixed(2);
             this.setState(s2 => ({ gas: { ...s2.gas, [cc.id]: { pending: false, res, at } } })); }, 2500); };
         return this.onDemand('cx', this.mapA(c.assess), s.rv, k => this.setState(st => ({ rv: { ...st.rv, [k]: !st.rv[k] } })),
-          { vit, abg, learn: true, key: c.id, head: gasSt.pending ? 'Blood gas · running…' : gasSt.res ? 'Blood gas · arterial · ' + gasSt.at : 'Blood gas · arterial · on arrival, hand ventilated', btn: gasSt.pending || !s.ventOn ? '' : (gasSt.res ? 'Repeat gas' : 'Send a gas'), send });
+          { vit, abg, learn: true, key: c.id, perf: c.id, head: gasSt.pending ? 'Blood gas · running…' : gasSt.res ? 'Blood gas · arterial · ' + gasSt.at : 'Blood gas · arterial · on arrival, hand ventilated', btn: gasSt.pending || !s.ventOn ? '' : (gasSt.res ? 'Repeat gas' : 'Send a gas'), send });
       })() : { cx: null, cxChips: [], cxRv: {}, cxGasHead: '', cxGasBtn: '', cxSendGas: () => {} }),
       cxLearnLabel: c ? c.learn[1] : '', cxLearnGo: () => c && this.openBasics(c.learn[0], '01'),
       hasNextCase: !!c && (c.scen ? !!stageOf(c) : CASES.indexOf(c) < CASES.filter(x => !x.scen).length - 1),
       nextLabel: c && c.scen ? 'Next stage' : 'Next case',
-      nextCase: () => { const n = c.scen ? stageOf(c) : CASES[CASES.indexOf(c) + 1]; if (n && n.keep) { this.setState(st => ({ patient: n.patient, caseId: n.id, casePhase: 'bedside', ventOn: true, rv: {}, modeMenu: false, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, acts: { ...(st.acts || {}), [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); return; } if (n) this.setState(st => ({ ...(PATIENTS[n.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: n.patient, caseId: n.id, sel: 'vt', casePhase: 'chart', rv: {}, modeMenu: false, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); },
-      caseEvent: c && c.event ? c.event : '', caseStageLabel: c && c.scen ? c.eyebrow : '', caseStageTitle: c && c.t ? c.t : '',
+      nextCase: () => { const n = c.scen ? stageOf(c) : CASES[CASES.indexOf(c) + 1]; if (n && n.keep) { this.setState(st => ({ patient: n.patient, caseId: n.id, casePhase: 'bedside', ventOn: true, rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, acts: { ...(st.acts || {}), [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); return; } if (n) this.setState(st => ({ ...(PATIENTS[n.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: n.patient, caseId: n.id, sel: 'vt', casePhase: 'chart', rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); },
+      caseEvent: c && c.keep ? c.story : '', caseTeach: c && (s.finished || {})[c.id] ? (c.event || '') : '',
+      figAge: c ? AGE_BAND(c.title) : 'child', figSup: !c ? 'ett' : c.fig ? c.fig : (acts.prone || c.id === 'sa7') ? 'prone' : (!c.keep && !s.ventOn) ? 'bag' : 'ett',
+      ...(c ? (() => { const P = (s.perf || {})[c.id] || {}, gl = c.goals(m, acts, s), looks = ['exam', 'cxr', 'gas', 'vent'];
+        const extra = c.actions && c.actions.some(a => !a.bad) ? [[c.actions.filter(a => !a.bad).every(a => acts[a.id]), 'Bedside orders.', c.actions.filter(a => acts[a.id]).map(a => a.label).join(', ') || 'None given.', 0]] : [];
+        const R = this.perfReport(P, looks, [gl.filter(g => g[1]).length, gl.length], extra);
+        const sc = c.scen && !stageOf(c) ? SIM_SCEN.find(z => z.id === c.scen) : null;
+        let scenRows = [];
+        if (sc) { const ids = sc.stages, Ps = ids.map(id => (s.perf || {})[id] || {}), t = Ps.reduce((n, q) => n + (q.t0 && q.done ? q.done - q.t0 : 0), 0);
+          scenRows = [['Stages solved', ids.filter(id => s.solved[id]).length + ' of ' + ids.length], ['Total time at the bedside', mmss(t)], ['Senior calls', String(Ps.filter(q => q.hint).length)], ['Harmful orders', String(Ps.reduce((n, q) => n + (q.bad || 0), 0))], ['Stages where you examined before acting', Ps.filter(q => q.req && q.req.exam && (!q.act || q.req.exam <= q.act)).length + ' of ' + ids.length]].map(([l, v]) => ({ l, v })); }
+        return { perfRows: R.rows, perfScore: R.score, perfBand: R.band, scenPerf: scenRows, hasScenPerf: scenRows.length > 0,
+          hasHint: !!c.brief, hintShown: !!P.hint, hintHidden: !P.hint, hintText: c.brief || '', askSenior: () => this.perfSet(c.id, q => ({ ...q, hint: Date.now() })) };
+      })() : { perfRows: [], perfScore: '', perfBand: '', scenPerf: [], hasScenPerf: false, hasHint: false, hintShown: false, hintHidden: false, hintText: '', askSenior: () => {} }),
+      caseStageLabel: c && c.scen ? c.eyebrow : '', caseStageTitle: c && c.t ? c.t : '',
       taskHead: c && c.scen ? (c.keep ? 'Task · ' + c.t : 'Task 2 · ' + c.t) : 'Task 2 · set the ventilator',
-      taskText: c && c.brief ? c.brief : 'Examine, image and sample the patient, then set the ventilator for this child. When you are happy, finish the case.',
+      taskText: 'Assess the patient, then manage: the ventilator, and any bedside orders. The monitor and the gas respond to what you do. When you are satisfied, ' + (c && c.scen ? 'check the targets.' : 'finish the case.'),
       finishLabel: c && c.scen ? 'Check targets' : 'Finish case',
       hasActs: !!(c && c.actions && c.actions.length), actFb: acts._fb || '',
-      acts: c && c.actions ? c.actions.map(a => ({ label: a.label, on: !!acts[a.id], go: () => this.setState(st => { const cur = (st.acts || {})[c.id] || {}; if (cur[a.id]) return null; if (a.needs && !cur[a.needs]) return { acts: { ...(st.acts || {}), [c.id]: { ...cur, _fb: a.needsFb } } }; return { ...(a.patient ? { patient: a.patient } : {}), acts: { ...(st.acts || {}), [c.id]: { ...cur, [a.id]: true, _fb: a.fb } } }; }) })) : [],
+      acts: c && c.actions ? c.actions.map(a => ({ label: a.label, on: !!acts[a.id], go: () => { if (!acts[a.id] && !(a.needs && !acts[a.needs])) this.perfSet(c.id, q => ({ ...q, t0: q.t0 || Date.now(), act: q.act || Date.now(), bad: (q.bad || 0) + (a.bad ? 1 : 0) })); this.setState(st => { const cur = (st.acts || {})[c.id] || {}; if (cur[a.id]) return null; if (a.needs && !cur[a.needs]) return { acts: { ...(st.acts || {}), [c.id]: { ...cur, _fb: a.needsFb } } }; return { ...(a.patient ? { patient: a.patient } : {}), acts: { ...(st.acts || {}), [c.id]: { ...cur, [a.id]: true, _fb: a.fb } } }; }); } })) : [],
       caseDebrief: c && c.debrief && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1]) ? c.debrief.map((t, i) => ({ n: i + 1, t })) : [],
       hasDebrief: !!(c && c.debrief && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1])),
       reviewScen: () => { const sc = c && SIM_SCEN.find(x => x.id === c.scen); const i = sc ? SCENARIOS.findIndex(x => x.id === sc.review) : -1; if (i >= 0) this.setState({ screen: 'scen', scIdx: i, scStage: 0, caseId: null, ventOn: true }); },
       caseOpen: !!c && s.ventOn && !(s.finished || {})[c.id], caseHead: c && (s.finished || {})[c.id] ? 'Goals · ' + c.goals(m, acts, s).filter(g => g[1]).length + ' of ' + c.goals(m, acts, s).length + ' met' : 'At the bedside', caseShown: !!c && !!(s.finished || {})[c.id],
-      finishCase: () => { if (!c) return; const ok = c.goals(m, acts, s).every(g => g[1]); this.setState(st => ({ finished: { ...st.finished, [c.id]: true }, solved: ok ? { ...st.solved, [c.id]: true } : st.solved })); },
-      retryCase: () => c && this.setState(st => ({ finished: { ...st.finished, [c.id]: false } })),
+      finishCase: () => { if (!c) return; const ok = c.goals(m, acts, s).every(g => g[1]); this.perfSet(c.id, q => ({ ...q, checks: (q.checks || 0) + 1, done: Date.now() })); this.setState(st => ({ finished: { ...st.finished, [c.id]: true }, solved: ok ? { ...st.solved, [c.id]: true } : st.solved })); },
+      retryCase: () => c && (this.perfSet(c.id, q => ({ ...q, done: null })), this.setState(st => ({ finished: { ...st.finished, [c.id]: false } }))),
       caseVerdict: c && (s.finished || {})[c.id] ? (c.goals(m, acts, s).every(g => g[1]) ? (c.scen ? (stageOf(c) ? 'Targets met. On to the next stage.' : 'Scenario complete. All targets met.') : 'Case closed. All goals met.') : 'Not yet. Adjust and check again.') : '',
       goals: c && (s.finished || {})[c.id] ? c.goals(m, acts, s).map(([label, ok]) => ({ label, icon: ok ? 'icon-circle-check' : 'icon-circle', color: ok ? '#B3BDA3' : 'var(--danger)', text: ok ? 'var(--text-secondary)' : 'var(--text-primary)' })) : [],
       endCase: () => this.setState({ caseId: null, ventOn: true }),
@@ -3171,9 +3302,9 @@ class Component extends DCLogic {
       inc: () => this.setParam(sel, s[sel] + sd.step), dec: () => this.setParam(sel, s[sel] - sd.step),
 
       simScen: SIM_SCEN.map(z => { const first = CASES.find(x => x.id === z.stages[0]); const done = z.stages.filter(id => s.solved[id]).length; return { eyebrow: z.eyebrow, title: z.title, chord: z.chord, setting: z.setting, blurb: z.blurb, done: done === z.stages.length, count: done + ' / ' + z.stages.length + ' stages',
-        start: () => this.setState(st => ({ ...(PATIENTS[first.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: first.patient, caseId: first.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, modeMenu: false, acts: { ...(st.acts || {}), [first.id]: {} }, cxrPick: { ...st.cxrPick, [first.id]: null }, ettPick: { ...st.ettPick, [first.id]: null }, finished: { ...st.finished, [first.id]: false }, gas: { ...st.gas, [first.id]: {} } })) }; }),
+        start: () => this.setState(st => ({ ...(PATIENTS[first.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: first.patient, caseId: first.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, modeMenu: false, perf: Object.fromEntries(Object.entries(st.perf || {}).filter(([k]) => !z.stages.includes(k)).concat([[first.id, { t0: Date.now() }]])), acts: { ...(st.acts || {}), [first.id]: {} }, cxrPick: { ...st.cxrPick, [first.id]: null }, ettPick: { ...st.ettPick, [first.id]: null }, finished: { ...st.finished, [first.id]: false }, gas: { ...st.gas, [first.id]: {} } })) }; }),
       cases: CASES.filter(cs => !cs.scen).map(cs => ({ eyebrow: cs.eyebrow, title: cs.title, chord: cs.chord, setting: cs.setting, done: !!s.solved[cs.id],
-        start: () => this.setState(st => ({ ...(PATIENTS[cs.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: cs.patient, caseId: cs.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, cxrPick: { ...st.cxrPick, [cs.id]: null }, ettPick: { ...st.ettPick, [cs.id]: null }, modeMenu: false, finished: { ...st.finished, [cs.id]: false }, gas: { ...st.gas, [cs.id]: {} } })) }))
+        start: () => this.setState(st => ({ ...(PATIENTS[cs.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: cs.patient, caseId: cs.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, perf: { ...(st.perf || {}), [cs.id]: { t0: Date.now() } }, cxrPick: { ...st.cxrPick, [cs.id]: null }, ettPick: { ...st.ettPick, [cs.id]: null }, modeMenu: false, finished: { ...st.finished, [cs.id]: false }, gas: { ...st.gas, [cs.id]: {} } })) }))
     };
   }
 }
