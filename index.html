@@ -818,6 +818,13 @@
                   <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="link" size="sm" onClick="{{ endCase }}" hint-size="70px,24px">Exit</x-import>
                 </div>
               </div>
+            <sc-if value="{{ caseEvent }}" hint-placeholder-val="{{ false }}">
+              <div data-chord="night" style="background:var(--surface-page); color:var(--text-primary); border-radius:4px; padding:12px 14px; display:flex; flex-direction:column; gap:6px;">
+                <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ caseStageLabel }}</span>
+                <span style="font-family:var(--font-display); font-size:22px; line-height:1.05;">{{ caseStageTitle }}</span>
+                <p style="margin:0; font-size:13px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">{{ caseEvent }}</p>
+              </div>
+            </sc-if>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <sc-for list="{{ cxChips }}" as="p" hint-placeholder-count="5">
                 <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Tag" selected="{{ p.on }}" onClick="{{ p.go }}" hint-size="90px,32px">{{ p.label }}</x-import>
@@ -872,9 +879,20 @@
               </sc-if>
               <sc-if value="{{ caseOpen }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--border-subtle); padding-top:12px;">
-                  <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Task 2 · set the ventilator</span>
-                  <span style="font-size:13px; line-height:1.5; color:var(--text-secondary);">Examine, image and sample the patient, then set the ventilator for this child. When you are happy, finish the case.</span>
-                  <div><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="check" onClick="{{ finishCase }}" hint-size="120px,32px">Finish case</x-import></div>
+                  <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">{{ taskHead }}</span>
+                  <span style="font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">{{ taskText }}</span>
+                  <sc-if value="{{ hasActs }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; gap:8px; padding-top:4px;">
+                      <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Bedside actions</span>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <sc-for list="{{ acts }}" as="a" hint-placeholder-count="4"><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Tag" selected="{{ a.on }}" onClick="{{ a.go }}" hint-size="120px,32px">{{ a.label }}</x-import></sc-for>
+                      </div>
+                      <sc-if value="{{ actFb }}" hint-placeholder-val="{{ false }}">
+                        <p style="margin:0; font-size:13px; line-height:1.55; text-wrap:pretty;">{{ actFb }}</p>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+                  <div><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="check" onClick="{{ finishCase }}" hint-size="120px,32px">{{ finishLabel }}</x-import></div>
                 </div>
               </sc-if>
               <sc-if value="{{ caseShown }}" hint-placeholder-val="{{ false }}">
@@ -887,9 +905,18 @@
                       <span style="color:{{ g.text }};">{{ g.label }}</span>
                     </div>
                   </sc-for>
+                  <sc-if value="{{ hasDebrief }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; gap:0; border-top:1px solid var(--border-subtle); margin-top:4px;">
+                      <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent); padding-top:10px;">Debrief</span>
+                      <sc-for list="{{ caseDebrief }}" as="d" hint-placeholder-count="6">
+                        <div style="display:flex; gap:12px; padding:8px 0; border-bottom:1px solid var(--border-subtle);"><span style="font-family:var(--font-display); font-size:20px; line-height:1; color:var(--text-accent); width:20px; flex:none;">{{ d.n }}</span><span style="font-size:13px; line-height:1.5; text-wrap:pretty;">{{ d.t }}</span></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="secondary" size="sm" onClick="{{ retryCase }}" hint-size="110px,32px">Keep adjusting</x-import>
-                    <sc-if value="{{ hasNextCase }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="arrow-right" onClick="{{ nextCase }}" hint-size="100px,32px">Next case</x-import></sc-if>
+                    <sc-if value="{{ hasNextCase }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="arrow-right" onClick="{{ nextCase }}" hint-size="100px,32px">{{ nextLabel }}</x-import></sc-if>
+                    <sc-if value="{{ hasDebrief }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="ghost" size="sm" icon-right="arrow-right" onClick="{{ reviewScen }}" hint-size="150px,32px">Review the decisions</x-import></sc-if>
                   </div>
                 </div>
               </sc-if>
@@ -1079,7 +1106,7 @@
       <sc-if value="{{ isCases }}" hint-placeholder-val="{{ false }}">
         <div style="padding:12px 20px 32px; display:flex; flex-direction:column; gap:24px;">
           <div style="display:flex; flex-direction:column; gap:10px;">
-            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Cases · 7 patients</span>
+            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Cases · 2 scenarios · 5 cases</span>
             <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:44px; line-height:1; letter-spacing:-.02em;">At the <em>bedside</em></h1>
             <p style="margin:0; font-weight:300; font-size:16px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">Read the chart, take over the patient, then ask for what you need. Finish the case when the ventilator is right.</p>
           </div>
@@ -1091,10 +1118,27 @@
             <span style="font-family:var(--font-display); font-size:28px; line-height:1.05;">Read the <em>wave</em></span>
             <p style="margin:0; font-size:14px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">Five ventilated children. Read the assessment and the monitor, decide what is going on, then act.</p>
           </div>
+          <sc-for list="{{ simScen }}" as="y" hint-placeholder-count="2">
+            <div data-chord="{{ y.chord }}" style="background:var(--surface-page); color:var(--text-primary); border:1px solid var(--border-subtle); border-radius:4px; padding:18px; display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ y.eyebrow }} · on the ventilator</span>
+                <sc-if value="{{ y.done }}" hint-placeholder-val="{{ false }}">
+                  <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Badge" tone="success" dot="{{ true }}" hint-size="80px,22px">Complete</x-import>
+                </sc-if>
+              </div>
+              <span style="font-family:var(--font-display); font-size:28px; line-height:1.05;">{{ y.title }}</span>
+              <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">{{ y.setting }}</span>
+              <p style="margin:0; font-size:14px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">{{ y.blurb }}</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding-top:4px;">
+                <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="arrow-right" onClick="{{ y.start }}" hint-size="150px,32px">Take the ventilator</x-import>
+                <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);">{{ y.count }}</span>
+              </div>
+            </div>
+          </sc-for>
           <sc-for list="{{ scenarios }}" as="z" hint-placeholder-count="2">
             <div data-chord="{{ z.chord }}" style="background:var(--surface-page); color:var(--text-primary); border:1px solid var(--border-subtle); border-radius:4px; padding:18px; display:flex; flex-direction:column; gap:10px;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ z.eyebrow }} · evolving</span>
+                <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">{{ z.eyebrow }} · case discussion</span>
                 <sc-if value="{{ z.done }}" hint-placeholder-val="{{ false }}">
                   <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Badge" tone="success" dot="{{ true }}" hint-size="80px,22px">Complete</x-import>
                 </sc-if>
@@ -1103,7 +1147,7 @@
               <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">{{ z.setting }}</span>
               <p style="margin:0; font-size:14px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">{{ z.blurb }}</p>
               <div style="display:flex; justify-content:space-between; align-items:center; padding-top:4px;">
-                <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="arrow-right" onClick="{{ z.start }}" hint-size="130px,32px">Start scenario</x-import>
+                <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="arrow-right" onClick="{{ z.start }}" hint-size="130px,32px">Discuss the decisions</x-import>
                 <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);">{{ z.count }}</span>
               </div>
             </div>
@@ -1156,7 +1200,7 @@ const PATIENTS = {
 const INFANT_DEFS = { vt: { min: 20, max: 120, step: 2 }, rr: { max: 60 } };
 const INFANT_START = { mode: 'VC', vt: 44, rr: 30, peep: 6, ti: 0.6, pinsp: 18, fio2: 40 };
 const ADULT_START = { vt: 450, rr: 15, peep: 5, ti: 1.0, pinsp: 15, fio2: 100 };
-const defsFor = (k, pat) => ({ ...DEFS[k], ...((pat && pat.infant && INFANT_DEFS[k]) || {}) });
+const defsFor = (k, pat) => ({ ...DEFS[k], ...((pat && pat.infant && INFANT_DEFS[k]) || {}), ...((pat && pat.defs && pat.defs[k]) || {}) });
 const DEFS = {
   vt: { label: 'VT', unit: 'mL', min: 200, max: 800, step: 10 },
   pinsp: { label: 'PINSP', unit: 'cmH₂O', min: 5, max: 35, step: 1 },
@@ -1646,6 +1690,264 @@ const SCENARIOS = [
       { t: 'Debrief', debrief: ['PMV in children: at least 6 hours a day on 21 or more consecutive days, invasive and non-invasive together. Ask the long-term questions by the second week.', 'Sort the child by route (drive, pump, load) and course (improving, static, progressive). That decides the airway and the goal.', 'Tracheostomy timing is about trajectory, not a day count. Fixed airway lesions, progressive weakness and repeated failure point to early.', 'A fresh stoma is the most dangerous: use the stay sutures, same size then smaller, and the mouth is still an airway.', 'No EtCO₂ after a change is a false passage until proven otherwise. Do not ventilate through a tube a catheter cannot pass.', 'Discharge needs two trained carers, an awake carer at all times, the full equipment list with a backup ventilator, battery suction and power that outlasts the cuts.', 'Humidity prevents most blocked tubes. A broken humidifier is an emergency in slow motion.', 'One named coordinator and one written plan keep a large team working for one child and one family.'] }
     ] }
 ];
+// Simulator scenarios: one child, several stages on the same ventilator. Each stage is a case with its own physiology (PATIENTS),
+// targets (goals), and bedside actions whose effects feed back into the lung model and the gas.
+const interp = (x, pts) => { if (x <= pts[0][0]) return pts[0][1]; for (let i = 1; i < pts.length; i++) if (x <= pts[i][0]) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; return y0 + (y1 - y0) * (x - x0) / (x1 - x0); } return pts[pts.length - 1][1]; };
+const ARDS_C = p => interp(p, [[0, 2.8], [5, 3.2], [6, 3.3], [8, 3.5], [10, 3.9], [12, 4.4], [14, 3.7], [16, 3.2], [20, 2.6]]);
+Object.assign(PATIENTS, {
+  scArds: { label: 'ARDS · 2-year-old', C: 3.3, Cfn: ARDS_C, R: 30, ibw: 10, infant: true, hidden: true },
+  scArdsFight: { label: 'ARDS · fighting', C: 3.3, Cfn: ARDS_C, R: 30, ibw: 10, infant: true, hidden: true, fight: 1, spont: 60 },
+  scAsthma: { label: 'Asthma · 5-year-old', C: 20, R: 90, ibw: 20, hidden: true, defs: { vt: { min: 60, max: 300, step: 5 } } },
+  scAsthmaTrig: { label: 'Asthma · triggering', C: 20, R: 70, autoBase: 8, spont: 18, ibw: 20, hidden: true, defs: { vt: { min: 60, max: 300, step: 5 } } },
+  scAsthmaCrash: { label: 'Asthma · trapped', C: 20, R: 90, autoBase: 18, ibw: 20, hidden: true, defs: { vt: { min: 60, max: 300, step: 5 } } },
+  scAsthmaDay2: { label: 'Asthma · day 2', C: 20, R: 28, autoBase: 1.5, ibw: 20, hidden: true, defs: { vt: { min: 60, max: 300, step: 5 } } }
+});
+const ieOf = (s, m) => { const T = 60 / m.rr, ti = Math.min(s.ti, T - 0.3); return ti / (T - ti); };
+const teOf = (s, m) => { const T = 60 / m.rr; return T - Math.min(s.ti, T - 0.3); };
+const ardsF = (peep, ie) => Math.pow(ARDS_C(Math.min(peep, 20)) / ARDS_C(7), 1.6) * (1 + 0.35 * Math.max(0, Math.min(1, (ie - 0.5) / 0.5))) * (peep >= 16 ? 0.8 : 1);
+const ardsO2 = (m, a, s, c, extra) => { const T0 = 60 / c.start.rr, ti0 = Math.min(c.start.ti, T0 - 0.3); return ardsF(s.peep, ieOf(s, m)) / ardsF(c.start.peep, ti0 / (T0 - ti0)) * (extra || 1); };
+const noShunt = (m, m0) => Math.pow(m.fio2 / m0.fio2, -0.5);
+const trapCo2 = (m, m0, k) => (1 + k * Math.max(0, m.auto - 1)) / (1 + k * Math.max(0, m0.auto - 1));
+const SIM_SCEN = [
+  { id: 'ards', eyebrow: 'Sim scenario 01', title: '2-year-old girl · 10 kg', chord: 'plum', setting: 'Pneumonia → ARDS · you run the ventilator for three days',
+    blurb: 'Five days of fever and cough, NIV failed in your ER, now intubated and hand-ventilated. Set the ventilator, titrate the PEEP, deal with asynchrony, the fluid chart, proning and the numbers you will accept. The monitor and the gas answer every change you make.',
+    review: 'sc-ards', stages: ['sa1', 'sa2', 'sa3', 'sa4', 'sa5', 'sa6', 'sa7'] },
+  { id: 'asthma', eyebrow: 'Sim scenario 02', title: '5-year-old · 20 kg', chord: 'dusk', setting: 'Acute severe asthma · let the lungs empty',
+    blurb: 'Known asthmatic, drowsy with a silent chest, intubated in the ER on ketamine. Set a ventilator that lets him exhale, accept the CO₂, add the right PEEP once he triggers, survive the sudden desaturation, and get him to day 2 without trapping.',
+    review: 'sc-asthma', stages: ['sb1', 'sb2', 'sb3', 'sb4', 'sb5'] }
+];
+const SA_VIT = (hr, bp, extra) => (m, a, s) => [['HR', String(hr)], ['BP', bp], ['SpO₂', 'live'], ...(extra || [])];
+const SIM_STAGES = [
+  // ---------- ARDS ----------
+  { id: 'sa1', scen: 'ards', stage: 1, t: 'Intubated · first settings', eyebrow: 'Sim scenario 01 · stage 1 of 7', title: '2-year-old girl · 10 kg', chord: 'plum', ibw: 10, setting: 'Intubated in your ER after NIV failed',
+    story: 'Cough, cold and fever for 5 days, fast breathing for 2. Started on oxygen, fluids and ceftriaxone at a nearby hospital and referred. On a non-rebreather her gas was 7.35 / 56 / 70. Two hours of NIV (PEEP 6, PS 10, FiO₂ 0.85) failed: HR 180, SpO₂ 88%, BP 86/45, cold hands, gas 7.25 / 65 / 55. Intubated with a 4.5 cuffed tube after a bolus; sedated and paralysed. She is being hand-ventilated on FiO₂ 1.0 while you prepare the ventilator.',
+    dx: 'Paediatric ARDS from bacterial pneumonia. Small breaths, a starting PEEP, then titrate.', learn: [6, 'Plateau and driving pressure'],
+    assess: { vit: [['HR', '165'], ['BP', '92/50 after bolus'], ['SpO₂', 'live'], ['Temp', '38.6 °C']], exam: ['Equal air entry, bilateral crackles', 'Tube at 12 cm at the lip, EtCO₂ confirmed', 'Sedated and paralysed, not triggering'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Bilateral patchy alveolar opacities, worse on the right. Tube tip at T2. No pneumothorax.', img: 'assets/cxr/cxr-scen01-intubated.jpg', abg: [['pH', '7.25'], ['PaCO₂', '65'], ['PaO₂', '55'], ['HCO₃', '18'], ['Lactate', '2.0']], vent: 'Hand ventilation · FiO₂ 1.0 · ER suggested VC · VT 100 mL · RR 20 · PEEP 5' },
+    patient: 'scArds', start: { mode: 'VC', vt: 100, rr: 20, peep: 5, ti: 0.7, fio2: 100, pinsp: 20 },
+    brief: 'Any mode. Set a tidal volume of 6–8 mL/kg, a rate that keeps the CO₂ moving, a starting PEEP of 6–8 and FiO₂ 1.0. Check the plateau and the flow–time scalar: expiration must reach zero before the next breath. Send a gas when you are happy, then check the targets.',
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c) }),
+    goals: (m, a, s) => [
+      ['Tidal volume 6–8 mL/kg (60–80 mL)', m.vte >= 58 && m.vte <= 82],
+      ['Rate 25–35', m.rr >= 25 && m.rr <= 35],
+      ['PEEP 6–8 to start', s.peep >= 6 && s.peep <= 8],
+      ['Plateau ≤ 30 cmH₂O', m.pplat <= 30],
+      ['Expiration complete: auto-PEEP ≤ 1', m.auto <= 1],
+      ['FiO₂ 1.0 until the first gas', m.fio2 >= 90]] },
+  { id: 'sa2', scen: 'ards', stage: 2, keep: true, t: '30 minutes · 88% on FiO₂ 1.0', eyebrow: 'Sim scenario 01 · stage 2 of 7', title: '2-year-old girl · 10 kg', chord: 'plum', ibw: 10, setting: 'PICU · first hour',
+    event: 'Settled on your settings. The nurse has the first ventilator gas: PaO₂ 65 on FiO₂ 1.0, SpO₂ 88%. Oxygen is maximal, so the only lever left for oxygenation is mean airway pressure. Titrate the PEEP: go up in steps of 2, wait, and watch the driving pressure (ΔP), the plateau, the SpO₂ and the blood pressure. Driving pressure falls while the lung recruits and rises again when it overdistends. Settle on the step with the lowest ΔP at the same tidal volume.',
+    story: 'Thirty minutes after your first settings. SpO₂ 88% on FiO₂ 1.0.', dx: 'Best-compliance PEEP: step up until driving pressure stops falling, then step back.', learn: [6, 'Plateau and driving pressure'],
+    assess: { vit: [['HR', '167'], ['BP', 'live'], ['SpO₂', 'live'], ['Temp', '38.2 °C']], exam: ['Equal air entry, crackles unchanged', 'Not triggering', 'Warm, pulses full'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Bilateral opacities, unchanged. Tube at T2.', img: 'assets/cxr/cxr-scen01-intubated.jpg', abg: [['pH', '7.30'], ['PaCO₂', '50'], ['PaO₂', '65'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'scArds', start: { mode: 'VC', vt: 75, rr: 30, peep: 7, ti: 0.7, fio2: 100, pinsp: 20 },
+    brief: 'Titrate the PEEP in steps of 2 cmH₂O. At each step read ΔP, plateau, SpO₂ and BP. Keep VT at 6 mL/kg while you do it. Stop at the best step, then check the targets.',
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c) }),
+    vitals: (m, a, s, live) => [['HR', s.peep >= 14 ? '150' : '140'], ['BP', s.peep >= 16 ? '72/40' : s.peep >= 14 ? '82/48' : '95/55'], ['SpO₂', 'live'], ['Temp', '38.2 °C']],
+    goals: (m, a, s) => [
+      ['Best-compliance PEEP: 11–13 cmH₂O', s.peep >= 11 && s.peep <= 13],
+      ['Driving pressure ≤ 15 cmH₂O', m.dp <= 15],
+      ['Tidal volume ≤ 6.5 mL/kg (≤ 65 mL)', m.vte <= 66],
+      ['Plateau ≤ 28 cmH₂O', m.pplat <= 28],
+      ['Blood pressure held (not overdistended)', s.peep < 14],
+      ['SpO₂ ≥ 92%', m.spo2 >= 92]] },
+  { id: 'sa3', scen: 'ards', stage: 3, keep: true, t: 'PEEP 12 · still on FiO₂ 1.0', eyebrow: 'Sim scenario 01 · stage 3 of 7', title: '2-year-old girl · 10 kg', chord: 'plum', ibw: 10, setting: 'PICU · hour 3',
+    event: 'PEEP is at its best step and she is still on FiO₂ 1.0. One more ventilator lever raises mean airway pressure without raising the peak or the PEEP: a longer inspiratory time. The time constant of this stiff lung is short, so expiration finishes early and there is time to spare. Lengthen Ti towards an I:E of 1:1.5 to 1:1, confirm on the flow scalar that expiratory flow still reaches zero, then wean the FiO₂ while the SpO₂ holds.',
+    story: 'An hour after the titration. PEEP 12, FiO₂ 1.0, SpO₂ 91%.', dx: 'Mean airway pressure is the area under the pressure–time curve: PEEP lifts it, Ti widens it.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', '130'], ['BP', '92/52'], ['SpO₂', 'live'], ['Temp', '38.0 °C']], exam: ['Equal air entry', 'Not triggering', 'Warm, well perfused'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Bilateral opacities, slightly better aerated at the bases.', img: 'assets/cxr/cxr-scen01-intubated.jpg', abg: [['pH', '7.32'], ['PaCO₂', '50'], ['PaO₂', '65'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'scArds', start: { mode: 'VC', vt: 60, rr: 30, peep: 12, ti: 0.7, fio2: 100, pinsp: 20 },
+    brief: 'Lengthen the inspiratory time, watching the expiratory flow. Then wean FiO₂ to 0.8 or below while SpO₂ stays above 90%. Keep PEEP at the best step and VT at 6 mL/kg.',
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c) }),
+    goals: (m, a, s) => [
+      ['I:E 1:1.5 or longer (Ti/Te ≥ 0.65)', ieOf(s, m) >= 0.65],
+      ['Expiration still complete: auto-PEEP ≤ 1', m.auto <= 1],
+      ['FiO₂ ≤ 0.8', m.fio2 <= 80],
+      ['SpO₂ ≥ 90%', m.spo2 >= 90],
+      ['PEEP stays 11–13', s.peep >= 11 && s.peep <= 13],
+      ['Plateau ≤ 28 cmH₂O', m.pplat <= 28]] },
+  { id: 'sa4', scen: 'ards', stage: 4, keep: true, t: '6 hours · fighting the ventilator', eyebrow: 'Sim scenario 01 · stage 4 of 7', title: '2-year-old girl · 10 kg', chord: 'plum', ibw: 10, setting: 'PICU · hour 6',
+    event: 'The paralysis has worn off. The high-pressure alarm keeps sounding, she is breathing at 60 against a set rate of 30, coughing on the tube and moving all four limbs. The pressure trace dips with every breath she pulls and the SpO₂ has slipped to 88%. Rule out the quick causes first, then treat the asynchrony.',
+    story: 'Six hours in. Fighting the ventilator, SpO₂ 88–90%.', dx: 'Check the tube, secretions and chest first. Then sedation to Ramsay 3–4. Paralysis only if she still fights, briefly.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', '190'], ['RR', '60 (set 30)'], ['BP', '95/55'], ['SpO₂', 'live']], exam: ['Pulling on every breath, grimacing, coughing', 'Equal air entry, tube at the same mark', 'Moving all four limbs'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Bilateral opacities, no pneumothorax, tube at T2.', img: 'assets/cxr/cxr-scen01-intubated.jpg', abg: [['pH', '7.30'], ['PaCO₂', '48'], ['PaO₂', '60'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'scArdsFight', start: { mode: 'VC', vt: 60, rr: 30, peep: 12, ti: 1.0, fio2: 80, pinsp: 20 },
+    brief: 'Use the bedside actions. The quick checks come first; sedation before any blocker. The ventilator rate is not the problem, so leave it.',
+    actions: [
+      { id: 'check', label: 'Tube, suction, ultrasound', fb: 'Tube at the same depth, equal air entry, suctioned a little clear secretion, no pneumothorax on ultrasound, bladder empty. The problem is asynchrony, not the tube.' },
+      { id: 'sedate', label: 'Deepen sedation', fb: 'Fentanyl with a midazolam infusion, titrated to Ramsay 3–4. Within minutes she settles, the pressure dips disappear and the SpO₂ climbs.', patient: 'scArds', needs: 'check', needsFb: 'Rule out the tube, secretions and a pneumothorax before you sedate a child who is fighting.' },
+      { id: 'paralyse', label: 'Neuromuscular blocker', fb: 'A single dose, after sedation. She stops fighting. Keep it to the lowest dose and shortest time: steroids plus blockade for days means myopathy.', patient: 'scArds', needs: 'sedate', needsFb: 'Sedate first. Paralysis without adequate sedation is cruel and masks pain.' },
+      { id: 'extubate', label: 'Extubate to NIV', fb: 'She is on PEEP 12 and FiO₂ 0.8 with a plateau in the high 20s. Awake is not the same as ready. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c, PATIENTS[s.patient].fight ? 0.85 : 1) }),
+    vitals: (m, a, s) => PATIENTS[s.patient].fight ? [['HR', '190'], ['RR', '60 (set ' + m.rr + ')'], ['BP', '95/55'], ['SpO₂', 'live']] : [['HR', '140'], ['RR', 'set ' + m.rr + ', no extra breaths'], ['BP', '92/52'], ['SpO₂', 'live']],
+    goals: (m, a, s) => [
+      ['Tube, secretions and chest checked first', !!a.check],
+      ['Sedation deepened', !!a.sedate],
+      ['No extubation attempt', !a.extubate],
+      ['Not fighting', !PATIENTS[s.patient].fight],
+      ['Set rate left at 25–35', m.rr >= 25 && m.rr <= 35],
+      ['SpO₂ ≥ 90%', m.spo2 >= 90]] },
+  { id: 'sa5', scen: 'ards', stage: 5, keep: true, t: 'Day 2 · beyond the ventilator', eyebrow: 'Sim scenario 01 · stage 5 of 7', title: '2-year-old girl · 10 kg', chord: 'plum', ibw: 10, setting: 'PICU · day 2 morning round',
+    event: 'Settled overnight. The round brings the labs, the fluid chart and an echo: Hb 9, TLC 20,000, platelets 1.6 lakh, CRP 96, procalcitonin 70, viral panel negative, electrolytes, renal, liver and clotting normal. Fluid balance +350 mL. Echo: normal contractility and chambers, IVC adequate, no TR, normal right heart. The film is denser. Six things outside the ventilator change this lung: fluids, infection, haemoglobin, haemodynamics, abdominal distension and chest-wall compliance.',
+    story: 'Day 2. Settled, but the film is worse and the chart is +350 mL.', dx: 'After the first resuscitation, a conservative fluid strategy shortens ventilation. Treat the infection, not the haemoglobin.', learn: [11, 'Three kinds of lungs'],
+    assess: { vit: [['HR', '140'], ['BP', '90/52'], ['SpO₂', 'live'], ['Fluid balance', '+350 mL']], exam: ['Hb 9 g/dL · TLC 20,000 (N55 L45) · platelets 1.6 lakh', 'CRP 96 mg/L · procalcitonin 70 · viral panel negative', 'Echo: normal heart, IVC adequate, no TR', 'Abdomen soft, not distended'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Denser, more confluent opacities in both lungs. Tube at T2.', img: 'assets/cxr/cxr-scen01-worse.jpg', abg: [['pH', '7.30'], ['PaCO₂', '58'], ['PaO₂', '65'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'scArds', start: { mode: 'VC', vt: 60, rr: 30, peep: 12, ti: 1.0, fio2: 80, pinsp: 20 },
+    brief: 'Decide what to do outside the ventilator. Choose the actions you would order this morning; watch what each does to the SpO₂ and the blood pressure.',
+    actions: [
+      { id: 'diurese', label: 'Diuretic, aim even-to-negative', fb: 'Frusemide, maintenance fluids trimmed. Over the day she comes back to an even balance and the oxygenation improves a little.' },
+      { id: 'abx', label: 'Review antibiotics with cultures', fb: 'Procalcitonin 70 with a negative viral panel: bacterial pneumonia. The culture grows a resistant organism; antibiotics changed.' },
+      { id: 'ng', label: 'Decompress the stomach', fb: 'Nasogastric tube on free drainage. A distended abdomen stiffens the chest wall and steals plateau from the lung.' },
+      { id: 'bolus', label: '20 mL/kg bolus for the BP', fb: 'The echo showed an adequate IVC and a normal heart. The bolus goes into the lung: SpO₂ falls, the BP barely moves.', bad: true },
+      { id: 'transfuse', label: 'Transfuse to Hb 12', fb: 'Hb 9 is above the threshold of 7 for a stable child. Blood is volume and lung injury risk. Not done.', bad: true },
+      { id: 'steroid', label: 'Steroids and IVIG', fb: 'No indication in bacterial pneumonia ARDS. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c, (a.diurese ? 1.1 : 1) * (a.bolus ? 0.8 : 1)) }),
+    vitals: (m, a, s) => [['HR', a.bolus ? '150' : '140'], ['BP', a.bolus ? '92/54' : '90/52'], ['SpO₂', 'live'], ['Fluid balance', a.bolus ? '+550 mL' : a.diurese ? 'even by evening' : '+350 mL']],
+    goals: (m, a, s) => [
+      ['Fluid balance driven towards even', !!a.diurese],
+      ['Antibiotics reviewed against the cultures', !!a.abx],
+      ['No fluid bolus', !a.bolus],
+      ['No transfusion above threshold', !a.transfuse],
+      ['Tidal volume ≤ 6.5 mL/kg', m.vte <= 66],
+      ['Plateau ≤ 28 cmH₂O', m.pplat <= 28]] },
+  { id: 'sa6', scen: 'ards', stage: 6, keep: true, t: 'Day 2 evening · OI 26', eyebrow: 'Sim scenario 01 · stage 6 of 7', title: '2-year-old girl · 10 kg', chord: 'plum', ibw: 10, setting: 'PICU · day 2 evening',
+    event: 'Despite the best PEEP, a longer Ti, sedation and a drier chart she has drifted back to FiO₂ 1.0 with a PaO₂ of 65: oxygenation index about 26, P/F 65. The plateau is 28, so nothing is forcing a mode change yet. What else can be done?',
+    story: 'Evening of day 2. Back on FiO₂ 1.0, OI 26.', dx: 'Rescue ladder: prone → HFOV → ECMO discussion. Prone recruits the dorsal lung and spreads ventilation evenly.', learn: [11, 'Three kinds of lungs'],
+    assess: { vit: [['HR', '145'], ['BP', '88/50'], ['SpO₂', 'live'], ['OI', '26 · P/F 65']], exam: ['Equal air entry, coarse crackles', 'Sedated, not fighting', 'Warm, perfused on no inotrope'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Confluent bilateral opacities. Tube at T2.', img: 'assets/cxr/cxr-scen01-worse.jpg', abg: [['pH', '7.30'], ['PaCO₂', '58'], ['PaO₂', '65'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'scArds', start: { mode: 'VC', vt: 60, rr: 30, peep: 12, ti: 1.0, fio2: 100, pinsp: 20 },
+    brief: 'Choose the next step on the rescue ladder. Then re-send a gas and check the targets.',
+    actions: [
+      { id: 'prone', label: 'Prone, 16 h/day, with checklist', fb: 'Tube secured and depth noted, lines protected, eyes padded, pressure points padded, one person owning the airway. Turned. Within the hour SpO₂ is climbing and the plateau has not moved.' },
+      { id: 'hfov', label: 'Switch to HFOV now', fb: 'A reasonable rescue, but prone first: the plateau is 28 and there is no barotrauma forcing a mode change. Kept in reserve.', bad: true },
+      { id: 'ino', label: 'Inhaled nitric oxide', fb: 'Improves the number for a while; no mortality benefit. A bridge for pulmonary hypertension or on the way to ECMO, not a treatment for pneumonia. Not started.', bad: true },
+      { id: 'ecmo', label: 'Call the ECMO centre', fb: 'Early conversation, no transfer yet. OI 26 with proning not yet tried is not an ECMO indication; a sustained OI above 40 despite everything is.' }
+    ],
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c, a.prone ? 1.45 : 1) }),
+    vitals: (m, a, s) => [['HR', '145'], ['BP', '88/50'], ['SpO₂', 'live'], ['Position', a.prone ? 'prone' : 'supine']],
+    goals: (m, a, s) => [
+      ['Proned with a checklist', !!a.prone],
+      ['HFOV kept in reserve', !a.hfov],
+      ['No nitric oxide', !a.ino],
+      ['Plateau ≤ 28 cmH₂O', m.pplat <= 28],
+      ['SpO₂ ≥ 88%', m.spo2 >= 88],
+      ['PEEP stays 10–13', s.peep >= 10 && s.peep <= 13]] },
+  { id: 'sa7', scen: 'ards', stage: 7, keep: true, t: 'Day 3 · prone · which numbers to accept', eyebrow: 'Sim scenario 01 · stage 7 of 7', title: '2-year-old girl · 10 kg', chord: 'plum', ibw: 10, setting: 'PICU · day 3, prone',
+    event: 'Prone for 14 hours. The gas is worse: 7.20 / 75 / 55 on FiO₂ 1.0, OI about 33, but the blood pressure is steady. Permissive hypoxaemia and permissive hypercapnia protect the lung from the pressures that normal numbers would demand, and pH 7.20 is the floor. Do not buy a normal CO₂ with a plateau above 30, or a 95% saturation with a PEEP that squeezes the heart. She is at the floor, so it is also time to escalate.',
+    story: 'Day 3, prone. pH 7.20, CO₂ 75, PaO₂ 55 on FiO₂ 1.0.', dx: 'Accept SpO₂ 88–92% and a high CO₂ while pH ≥ 7.20. Then HFOV and an ECMO call before the OI reaches 40.', learn: [11, 'Three kinds of lungs'],
+    assess: { vit: [['HR', '150'], ['BP', '90/55'], ['SpO₂', 'live'], ['OI', '33']], exam: ['Prone, settled', 'Equal air entry', 'No raised ICP, normal right heart on echo'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Confluent bilateral opacities. Tube at T2.', img: 'assets/cxr/cxr-scen01-worse.jpg', abg: [['pH', '7.20'], ['PaCO₂', '75'], ['PaO₂', '55'], ['HCO₃', '17']], vent: 'Your settings carry over' },
+    patient: 'scArds', start: { mode: 'VC', vt: 60, rr: 30, peep: 12, ti: 1.0, fio2: 100, pinsp: 20 },
+    brief: 'Do not chase the numbers: keep the lung-protective limits. Then choose the escalation. Check the targets to finish the scenario.',
+    actions: [
+      { id: 'hfov', label: 'Switch to HFOV', fb: 'OI 33 after proning with pH at the floor: HFOV now. Mean airway pressure set 4–5 above the conventional MAP, amplitude to chest wiggle.' },
+      { id: 'ecmo', label: 'Call the ECMO centre', fb: 'Discussed and accepted in principle; transfer if the OI stays above 40 on HFOV.' },
+      { id: 'bicarb', label: 'Sodium bicarbonate', fb: 'Bicarbonate makes CO₂ in a child who cannot blow it off. Not given.', bad: true }
+    ],
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c) }),
+    goals: (m, a, s) => [
+      ['Tidal volume ≤ 6.5 mL/kg', m.vte <= 66],
+      ['Plateau ≤ 30 cmH₂O', m.pplat <= 30],
+      ['PEEP ≤ 14 (no chasing SpO₂ 95%)', s.peep <= 14],
+      ['Rate ≤ 35 (no hyperventilating)', m.rr <= 35],
+      ['HFOV chosen', !!a.hfov],
+      ['ECMO centre called', !!a.ecmo]],
+    debrief: ['Any mode works. The limits are what matter: VT 6–8 mL/kg, plateau ≤ 28–30, driving pressure ≤ 15.', 'Oxygenation = FiO₂ + mean airway pressure. PEEP first, then inspiratory time, both checked against the flow scalar.', 'Titrate PEEP to the lowest driving pressure at a fixed VT, and watch the blood pressure.', 'Asynchrony: check the tube, secretions and chest first, then sedation, then the briefest paralysis.', 'Outside the ventilator: fluids, infection, haemoglobin, haemodynamics, abdomen, chest wall.', 'Rescue ladder: prone → HFOV → ECMO discussion. Accept SpO₂ 88–92% and a high CO₂ with pH ≥ 7.20.'] },
+  // ---------- ASTHMA ----------
+  { id: 'sb1', scen: 'asthma', stage: 1, t: 'Intubated · first settings', eyebrow: 'Sim scenario 02 · stage 1 of 5', title: '5-year-old · 20 kg', chord: 'dusk', ibw: 20, setting: 'Intubated in the ER · asthma',
+    story: 'Known asthma, rarely takes his preventer. Two days of cough and wheeze, worse overnight. Three salbutamol nebulisers, ipratropium, IV hydrocortisone and magnesium over the last hour, then drowsy with a silent chest, SpO₂ 86% on a non-rebreather. Intubated now: ketamine and rocuronium, cuffed 5.0 tube, 20 mL/kg of fluid, BP 92/55 after the tube. Being bagged slowly on FiO₂ 1.0; the chest barely moves and the bag is stiff.',
+    dx: 'Acute severe asthma: let the lungs empty. Low rate, small VT, long expiration, plateau under 30, accept the CO₂.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', '160'], ['BP', '92/55'], ['SpO₂', 'live'], ['Temp', '37.2 °C']], exam: ['Hyperinflated, almost silent chest', 'Prolonged expiration, stiff bag', 'Paralysed, not triggering'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Hyperinflated lungs, flat diaphragms, more than 9 posterior ribs. No pneumothorax. Tube at T2.', img: 'assets/cxr/cxr-case02-asthma.png', abg: [['pH', '7.24'], ['PaCO₂', '68'], ['PaO₂', '90'], ['HCO₃', '27']], vent: 'Hand ventilation · FiO₂ 1.0 · ER suggested VC · VT 200 mL · RR 24 · PEEP 5' },
+    patient: 'scAsthma', start: { mode: 'VC', vt: 140, rr: 14, peep: 4, ti: 1.0, fio2: 100, pinsp: 20 },
+    brief: 'Set a ventilator that lets him exhale: small VT, a low rate, an expiratory time of 4–5 seconds, little or no PEEP while he is paralysed, FiO₂ 1.0 to start. Watch the expiratory flow reach zero and the total PEEP readout. Then check the targets.',
+    actions: [
+      { id: 'salb', label: 'Salbutamol through the circuit', fb: 'Continuous nebulised salbutamol into the inspiratory limb, ipratropium 4-hourly, steroids continued.' },
+      { id: 'ket', label: 'Ketamine infusion', fb: 'Ketamine 1–2 mg/kg/h: bronchodilates and holds the blood pressure. Blocker boluses only as needed.' }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.06), o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Tidal volume 6–8 mL/kg (120–160 mL)', m.vte >= 118 && m.vte <= 162],
+      ['Rate 10–14', m.rr >= 10 && m.rr <= 14],
+      ['Expiratory time ≥ 4 s', teOf(s, m) >= 4],
+      ['Auto-PEEP ≤ 1.5 cmH₂O', m.auto <= 1.5],
+      ['Plateau ≤ 30 cmH₂O', m.pplat <= 30],
+      ['Set PEEP ≤ 5 while paralysed', s.peep <= 5]] },
+  { id: 'sb2', scen: 'asthma', stage: 2, keep: true, t: '20 minutes · the first gas', eyebrow: 'Sim scenario 02 · stage 2 of 5', title: '5-year-old · 20 kg', chord: 'dusk', ibw: 20, setting: 'PICU · first hour',
+    event: 'Twenty minutes on your settings. The gas: pH 7.21, PaCO₂ 78, PaO₂ 90. The peak pressure is high but the plateau is low: the gap is airway resistance, not lung stretch. Permissive hypercapnia with pH above 7.2 is well tolerated and avoids the hyperinflation that chasing a normal CO₂ would cause. Raising the rate shortens expiration, traps more gas and can push the CO₂ up, not down. Try it if you like and watch the total PEEP.',
+    story: 'First gas: 7.21 / 78 / 90. Peak 42, plateau 24.', dx: 'Peak − plateau = resistance. Plateau − PEEP = stretch. In asthma the plateau is the number that matters.', learn: [6, 'Plateau and driving pressure'],
+    assess: { vit: [['HR', '150'], ['BP', 'live'], ['SpO₂', 'live'], ['Temp', '37.0 °C']], exam: ['Chest still quiet, expiration long', 'Paralysed, ketamine running', 'Warm, pulses good'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Hyperinflated, unchanged. No pneumothorax.', img: 'assets/cxr/cxr-case02-asthma.png', abg: [['pH', '7.21'], ['PaCO₂', '78'], ['PaO₂', '90'], ['HCO₃', '28']], vent: 'Your settings carry over' },
+    patient: 'scAsthma', start: { mode: 'VC', vt: 140, rr: 12, peep: 4, ti: 1.0, fio2: 100, pinsp: 20 },
+    brief: 'Decide what, if anything, to change. Keep the plateau under 30 and the expiration long. Wean the FiO₂ if the PaO₂ allows. Then check the targets.',
+    actions: [
+      { id: 'bicarb', label: 'Sodium bicarbonate', fb: 'Bicarbonate becomes CO₂, and he cannot blow it off. The CO₂ rises. Not given.', bad: true },
+      { id: 'accept', label: 'Accept the gas, continue bronchodilators', fb: 'pH 7.21 with a plateau of 24: the lung is not being stretched. Salbutamol, steroids, time.' }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.06) * (a.bicarb ? 1.08 : 1), o2: noShunt(m, m0) }),
+    vitals: (m, a, s) => [['HR', m.auto > 4 ? '165' : '150'], ['BP', m.auto > 6 ? '72/40' : m.auto > 4 ? '82/48' : '95/58'], ['SpO₂', 'live'], ['Temp', '37.0 °C']],
+    goals: (m, a, s) => [
+      ['Gas accepted (no bicarbonate)', !!a.accept && !a.bicarb],
+      ['Rate still 10–14', m.rr >= 10 && m.rr <= 14],
+      ['Tidal volume ≤ 8 mL/kg', m.vte <= 162],
+      ['Auto-PEEP ≤ 1.5 cmH₂O', m.auto <= 1.5],
+      ['Plateau ≤ 30 cmH₂O', m.pplat <= 30],
+      ['FiO₂ ≤ 0.6', m.fio2 <= 60]] },
+  { id: 'sb3', scen: 'asthma', stage: 3, keep: true, t: '4 hours · he starts to trigger', eyebrow: 'Sim scenario 02 · stage 3 of 5', title: '5-year-old · 20 kg', chord: 'dusk', ibw: 20, setting: 'PICU · hour 4',
+    event: 'The blocker has been allowed to wear off and he is taking some breaths of his own, but each one needs a big effort before the ventilator responds, and some efforts never trigger a breath. The measured auto-PEEP is about 8 cmH₂O: with set PEEP near zero, every breath has to pull 8 cmH₂O before the trigger even sees it. External PEEP set just below the intrinsic PEEP splints the airways, lowers resistance and the work of triggering, and adds nothing to the trapped gas. Above the intrinsic PEEP it adds to hyperinflation.',
+    story: 'Four hours in. Triggering, with ineffective efforts. Auto-PEEP 8.', dx: 'External PEEP in obstruction: at or just below the intrinsic PEEP, never above it.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', '140'], ['RR', 'live'], ['BP', '98/60'], ['SpO₂', 'live']], exam: ['Visible inspiratory efforts, some without a breath', 'Expiration long, some wheeze now audible', 'Ketamine running, blocker worn off'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Hyperinflated, slightly less than yesterday.', img: 'assets/cxr/cxr-case02-asthma.png', abg: [['pH', '7.30'], ['PaCO₂', '60'], ['PaO₂', '95'], ['HCO₃', '28']], vent: 'Your settings carry over · measured auto-PEEP 8' },
+    patient: 'scAsthmaTrig', start: { mode: 'VC', vt: 140, rr: 12, peep: 0, ti: 1.0, fio2: 50, pinsp: 20 },
+    brief: 'Set the external PEEP against the measured auto-PEEP of 8. Watch the plateau and the efforts. Do not paralyse him again.',
+    actions: [
+      { id: 'paralyse', label: 'Paralyse him again', fb: 'Blockade is for the first hours at the lowest dose. Days of blocker with steroids means myopathy. Not given.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.04), o2: noShunt(m, m0) }),
+    vitals: (m, a, s) => [['HR', s.peep >= 6 ? '125' : '140'], ['RR', s.peep >= 6 ? '18, every effort triggers' : '18 efforts, 12 triggered'], ['BP', s.peep > 8 ? '80/46' : '98/60'], ['SpO₂', 'live']],
+    goals: (m, a, s) => [
+      ['External PEEP 5–7 (≈ 75–80% of auto-PEEP 8)', s.peep >= 5 && s.peep <= 7],
+      ['Never above the intrinsic PEEP', s.peep <= 8],
+      ['Not paralysed again', !a.paralyse],
+      ['Rate 10–14', m.rr >= 10 && m.rr <= 14],
+      ['Plateau ≤ 30 cmH₂O', m.pplat <= 30],
+      ['Expiratory time ≥ 4 s', teOf(s, m) >= 4]] },
+  { id: 'sb4', scen: 'asthma', stage: 4, keep: true, t: 'Sudden desaturation', eyebrow: 'Sim scenario 02 · stage 4 of 5', title: '5-year-old · 20 kg', chord: 'dusk', ibw: 20, setting: 'PICU · hour 9',
+    event: 'The high-pressure alarm is continuous. SpO₂ 78%, BP 70/40, HR 170. The chest is very full and hardly moves. Step one is always the same: disconnect from the ventilator and let the chest recoil. If the blood pressure recovers within a minute the problem was trapping, and you restart at a lower rate and tidal volume. If it does not, go to DOPE: a dislodged tube, an obstructed tube, a pneumothorax (ultrasound is faster than the film), equipment.',
+    story: 'Sudden collapse: SpO₂ 78%, BP 70/40, chest full and still.', dx: 'Disconnect first. Then DOPE. In asthma, trapping is the fifth cause that comes first.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', 'live'], ['BP', 'live'], ['SpO₂', 'live'], ['PIP', 'alarm']], exam: ['Chest hyperexpanded, barely moving', 'Breath sounds faint on both sides', 'Neck veins full'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Portable film requested; ultrasound at the bedside first.', img: '', abg: [['pH', '7.12'], ['PaCO₂', '95'], ['PaO₂', '48'], ['HCO₃', '28']], vent: 'Your settings carry over · PIP alarm' },
+    patient: 'scAsthmaCrash', start: { mode: 'VC', vt: 140, rr: 12, peep: 6, ti: 1.0, fio2: 50, pinsp: 20 },
+    brief: 'Act in the right order using the bedside actions, then restart the ventilator with a lower rate and tidal volume and confirm the expiratory flow reaches zero.',
+    actions: [
+      { id: 'disconnect', label: 'Disconnect, let the chest fall', fb: 'Circuit off, gentle pressure on the chest, a long slow exhalation. Within 40 seconds the BP is 92/55 and the SpO₂ 90%. It was trapping. Restart lower.', patient: 'scAsthmaDay2' },
+      { id: 'suction', label: 'Suction the tube', fb: 'Catheter passes freely, a little mucus. Tube patent.', needs: 'disconnect', needsFb: 'Disconnect first. Five seconds tells you whether this is trapping.' },
+      { id: 'us', label: 'Bedside ultrasound', fb: 'Lung sliding present on both sides. No pneumothorax.', needs: 'disconnect', needsFb: 'Disconnect first. Five seconds tells you whether this is trapping.' },
+      { id: 'needle', label: 'Needle the chest now', fb: 'A needle into a hyperinflated lung creates the pneumothorax you were looking for. Not done; disconnect first and scan.', bad: true },
+      { id: 'bagfast', label: 'Bag at 40 a minute', fb: 'The fastest way to stack more gas. BP falls further. Stopped.', bad: true },
+      { id: 'morepeep', label: 'FiO₂ 1.0 and PEEP 10', fb: 'More pressure into a chest that cannot empty. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.05), o2: a.disconnect ? 1.9 * noShunt(m, m0) : m0.fio2 / m.fio2 }),
+    vitals: (m, a, s) => a.disconnect ? [['HR', '130'], ['BP', m.auto > 4 ? '80/46' : '92/55'], ['SpO₂', 'live'], ['PIP', 'alarm cleared']] : [['HR', '170'], ['BP', '70/40'], ['SpO₂', 'live'], ['PIP', 'alarm · > 50']],
+    goals: (m, a, s) => [
+      ['Disconnected first', !!a.disconnect && !a.needle && !a.bagfast && !a.morepeep],
+      ['Tube checked after recovery', !!a.suction],
+      ['Pneumothorax excluded by ultrasound', !!a.us],
+      ['Rate ≤ 12', m.rr <= 12],
+      ['Tidal volume ≤ 6.5 mL/kg (≤ 130 mL)', m.vte <= 132],
+      ['Auto-PEEP ≤ 2 cmH₂O', m.auto <= 2]] },
+  { id: 'sb5', scen: 'asthma', stage: 5, keep: true, t: 'Day 2 · keeping the gas out', eyebrow: 'Sim scenario 02 · stage 5 of 5', title: '5-year-old · 20 kg', chord: 'dusk', ibw: 20, setting: 'PICU · day 2',
+    event: 'Stable overnight after the disconnection and a lower rate. Salbutamol through the circuit, steroids, ketamine. The airways are opening: resistance is down, wheeze is audible, the measured auto-PEEP is 1.5. Weaning in asthma is usually fast: as the trapped volume falls, a child who was unventilatable yesterday is often extubated within 24–48 hours. The blocker was stopped 12 hours ago and stays off.',
+    story: 'Day 2. Gas 7.36 / 50 / 95, auto-PEEP 1.5, wheeze audible.', dx: 'Prevent auto-PEEP: long expiration, bronchodilators, sedation, low VT. Blockade shortest and lowest.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', '120'], ['BP', '100/62'], ['SpO₂', 'live'], ['Temp', '37.0 °C']], exam: ['Wheeze audible, expiration shorter', 'Triggering comfortably on ketamine', 'Blocker off 12 h, moving all limbs'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Less hyperinflated. No pneumothorax.', img: 'assets/cxr/cxr-case02-asthma.png', abg: [['pH', '7.36'], ['PaCO₂', '50'], ['PaO₂', '95'], ['HCO₃', '28']], vent: 'Your settings carry over' },
+    patient: 'scAsthmaDay2', start: { mode: 'VC', vt: 130, rr: 12, peep: 6, ti: 1.0, fio2: 40, pinsp: 20 },
+    brief: 'Keep the auto-PEEP away while you wean: rate up only as far as expiration allows, FiO₂ down, PEEP down as the intrinsic PEEP falls. Decide about the blocker. Check the targets to finish.',
+    actions: [
+      { id: 'nmboff', label: 'Keep the blocker off', fb: 'Right. Steroids plus days of blockade is the recipe for critical-illness myopathy.' },
+      { id: 'nmb48', label: 'Blocker infusion for 48 h "for safety"', fb: 'Myopathy waits for children paralysed for days on steroids. Not started.', bad: true },
+      { id: 'extnow', label: 'Extubate now while sedated', fb: 'Extubation needs an awake child with a clear chest, a leak around the tube and a plan for laryngospasm. Not yet.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.06), o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Blocker kept off', !!a.nmboff && !a.nmb48],
+      ['Not extubated while sedated', !a.extnow],
+      ['Auto-PEEP ≤ 2 cmH₂O', m.auto <= 2],
+      ['Rate ≤ 16', m.rr <= 16],
+      ['Set PEEP ≤ 5', s.peep <= 5],
+      ['FiO₂ ≤ 0.4', m.fio2 <= 40]],
+    debrief: ['Intubation in asthma is a clinical decision: exhaustion and altered mental state, not a gas.', 'Low rate, small VT, I:E 1:4, expiratory time 4–5 s, plateau < 30, pH > 7.2.', 'Peak − plateau is resistance; plateau − PEEP is stretch. Watch the plateau.', 'External PEEP at or just below the intrinsic PEEP once he triggers; never above it.', 'Sudden collapse: disconnect first, then DOPE. Ultrasound before the X-ray.', 'Prevent auto-PEEP: long expiration, bronchodilators, sedation, low VT. Blockade shortest and lowest.'] }
+];
+SIM_STAGES.forEach(x => CASES.push(x));
 const SU_MODES = [['AC-PC', 'Pressure A/C'], ['AC-VC', 'Volume A/C'], ['SIMV-PC', 'Pressure SIMV+PS'], ['SIMV-VC', 'Volume SIMV+PS'], ['PS', 'Pressure PS/CPAP']];
 const SU_START = { adult: { vt: 300, rr: 20, peep: 5, ti: 1.0, fio2: 100, pinsp: 15, ps: 5 }, infant: { vt: 30, rr: 30, peep: 5, ti: 0.5, fio2: 100, pinsp: 15, ps: 5 } };
 const SU_RESET = { niv: false, mode: null, pt: null, wt: 0, test: 'idle' };
@@ -2135,15 +2437,15 @@ function mapMode(s, pat) {
   const v = vmodeOf(s);
   if (v === 'AC-VC' || v === 'SIMV-VC') return { ...s, mode: 'VC' };
   if (v === 'AC-PC' || v === 'SIMV-PC') return { ...s, mode: 'PC' };
-  if (v === 'AC-PRVC' || v === 'SIMV-PRVC') { const tau = pat.R * pat.C / 1000, T = 60 / s.rr, ti = Math.min(s.ti, T - 0.3);
-    return { ...s, mode: 'PC', pinsp: Math.max(5, Math.min(35, s.vt / (pat.C * (1 - Math.exp(-ti / tau))))) }; }
+  if (v === 'AC-PRVC' || v === 'SIMV-PRVC') { const Cp = pat.Cfn ? pat.Cfn(s.peep) : pat.C, tau = pat.R * Cp / 1000, T = 60 / s.rr, ti = Math.min(s.ti, T - 0.3);
+    return { ...s, mode: 'PC', pinsp: Math.max(5, Math.min(35, s.vt / (Cp * (1 - Math.exp(-ti / tau))))) }; }
   if (v === 'CPAP') return { ...s, mode: 'PS', ps: 0, eff: Math.max(s.eff, 3) };
   if (v === 'APRV') return { ...s, mode: 'PC', peep: s.plow ?? 5, pinsp: Math.max(1, (s.phigh ?? 25) - (s.plow ?? 5)), ti: s.thigh ?? 4, rr: 60 / ((s.thigh ?? 4) + (s.tlow ?? 0.6)) };
   return { ...s, mode: v };
 }
 function model(s, pat) { return model0(mapMode(s, pat), pat); }
 function model0(s, pat) {
-  const C = pat.C / 1000, R = pat.R, tau = R * C;
+  const C = (pat.Cfn ? pat.Cfn(s.peep) : pat.C) / 1000, R = pat.R, tau = R * C;
   const T = 60 / s.rr, ti = Math.min(s.ti, T - 0.3), Te = T - ti, e = Math.exp(-Te / tau);
   const peep = s.peep;
   let r;
@@ -2192,6 +2494,8 @@ function model0(s, pat) {
         return { p: P, f: f * 60, v: (V - V0) * 1000 };
       } };
   }
+  if (pat.autoBase) { r.auto += pat.autoBase; r.pplat += pat.autoBase; r.ppeak += pat.autoBase; }
+  if (pat.fight) { const s0 = r.sample; r.sample = tm => { const o = s0(tm), ph = ((tm % T) + T) % T; if (ph < ti) o.p -= pat.fight * 7 * Math.sin(Math.PI * ph / ti); return o; }; }
   r.tau = tau; r.totalPeep = peep + r.auto; r.dp = r.pplat - r.totalPeep;
   r.vte = r.vte * 1000; r.mv = r.vte * s.rr / 1000; r.fio2 = s.fio2; r.rr = s.rr;
   return r;
@@ -2248,7 +2552,7 @@ class Component extends DCLogic {
   state = (() => { const m = (typeof location !== 'undefined' ? location.hash : '').match(/^#(home|sim|learn|cases|basics|machines|waves)(?:-([A-Za-z]+))?/); return { screen: m ? m[1] : (this.props.startScreen ?? 'home'), mode: m && m[2] ? m[2] : 'VC', vt: 450, rr: 15, peep: 5, fio2: 100, ti: 1.0, pinsp: 15, ps: 10, nava: 1.0, eff: 5,
     auth: (() => { try { return JSON.parse(this.lsGet('vc-auth-session') || 'null'); } catch (e) { return null; } })(), aStage: 'creds', aTab: 'in',
     patient: 'normal', fpRun: false, su: { ...SU_RESET }, sel: 'vt', caseId: null, solved: {}, open: '03', quiz: null, lessonC: 50, lessonR: 10,
-    mW: 'preterm', mMode: 'VC', mCpc: 1.5, mComp: false, mOpen: null, mQuiz: null, bIdx: 0, bMod: '01', bQuiz: {}, phigh: 25, plow: 5, thigh: 4, tlow: 0.6, wIdx: 0, wName: {}, wFix: {}, scIdx: 0, scStage: 0, scPick: {}, finished: {}, casePhase: 'chart', rv: {}, wRv: {}, gas: {}, cxrPick: {}, ettPick: {}, pDone: {}, pOpen: 'settings', ventOn: true, su: { niv: false, mode: null, pt: null, wt: 0, test: 'idle' } }; })();
+    mW: 'preterm', mMode: 'VC', mCpc: 1.5, mComp: false, mOpen: null, mQuiz: null, bIdx: 0, bMod: '01', bQuiz: {}, phigh: 25, plow: 5, thigh: 4, tlow: 0.6, wIdx: 0, wName: {}, wFix: {}, scIdx: 0, scStage: 0, scPick: {}, acts: {}, finished: {}, casePhase: 'chart', rv: {}, wRv: {}, gas: {}, cxrPick: {}, ettPick: {}, pDone: {}, pOpen: 'settings', ventOn: true, su: { niv: false, mode: null, pt: null, wt: 0, test: 'idle' } }; })();
   simRef = el => { this.simCv = el; this.fit(el); };
   lessonRef = el => { this.lessonCv = el; this.fit(el); };
 
@@ -2534,10 +2838,11 @@ class Component extends DCLogic {
     const base = Object.fromEntries(c.assess.abg.map(([l, v]) => [l, parseFloat(v)]));
     const m0 = model({ ...s, ...c.start, vmode: null }, PATIENTS[c.patient]);
     const ratio = Math.max(0.25, m0.mv) / Math.max(0.25, m.mv);
-    const paco2 = Math.min(150, Math.max(18, base['PaCO₂'] * Math.pow(ratio, 0.9)));
+    const paco2 = Math.min(150, Math.max(18, base['PaCO₂'] * Math.pow(ratio, 0.9) * (c.gas ? ((c.gas(m, (s.acts || {})[c.id] || {}, s, m0, c) || {}).co2 || 1) : 1)));
     const ph = base.pH + (base['PaCO₂'] - paco2) * 0.0065;
-    const peepGain = c.patient === 'asthma' || c.patient === 'bronchObs' ? 0 : 0.05 * (m.totalPeep - m0.totalPeep);
-    const pao2 = Math.min(500, Math.max(32, base['PaO₂'] * (m.fio2 / m0.fio2) * Math.max(0.6, 1 + peepGain)));
+    const hook = c.gas ? c.gas(m, (s.acts || {})[c.id] || {}, s, m0, c) : null;
+    const peepGain = hook || c.patient === 'asthma' || c.patient === 'bronchObs' ? 0 : 0.05 * (m.totalPeep - m0.totalPeep);
+    const pao2 = Math.min(500, Math.max(32, base['PaO₂'] * (m.fio2 / m0.fio2) * Math.max(0.6, 1 + peepGain) * (hook && hook.o2 ? hook.o2 : 1)));
     const spo2 = Math.min(100, Math.round(100 / (23400 / (Math.pow(pao2, 3) + 150 * pao2) + 1)));
     return { pH: ph.toFixed(2), 'PaCO₂': paco2.toFixed(0), 'PaO₂': pao2.toFixed(0), 'HCO₃': base['HCO₃'].toFixed(0), spo2 };
   }
@@ -2548,7 +2853,7 @@ class Component extends DCLogic {
     const ready = !!su.mode && !!su.pt && su.wt > 0 && su.test === 'done' && !su.niv;
     const step = su.wt < 10 ? 0.5 : su.wt < 30 ? 1 : 2;
     const live = c ? this.computeGas(c, s, m) : null;
-    const gap = c ? ({ asthma: 14, bronchObs: 14, ards: 9, bronch: 8 })[c.patient] || 4 : 0;
+    const gap = c ? ({ asthma: 14, bronchObs: 14, ards: 9, bronch: 8, scArds: 9, scArdsFight: 9, scAsthma: 14, scAsthmaTrig: 14, scAsthmaCrash: 14, scAsthmaDay2: 14 })[c.patient] || 4 : 0;
     return {
       setupMode: on, ventRunning: !on,
       monSpo2: c && s.ventOn ? String(live.spo2) : '--', monEtco2: c && s.ventOn ? String(Math.max(10, Math.round(parseFloat(live['PaCO₂']) - gap))) : '--',
@@ -2662,6 +2967,9 @@ class Component extends DCLogic {
     const monitorChord = this.props.monitorTheme ?? 'night';
     const c = CASES.find(x => x.id === s.caseId);
     const ibw = c ? c.ibw : (pat.ibw ?? 70);
+    const acts = c ? ((s.acts || {})[c.id] || {}) : {};
+    if (c) m.spo2 = this.computeGas(c, s, m).spo2;
+    const stageOf = cs => cs && cs.scen ? CASES.find(x => x.scen === cs.scen && x.stage === cs.stage + 1) : null;
     const go = screen => () => this.setState({ screen });
     const keys = VKEYS[vmodeOf(s)];
     const sel = keys.includes(s.sel) ? s.sel : keys[0], sd = defsFor(sel, pat);
@@ -2769,7 +3077,7 @@ class Component extends DCLogic {
       takeOver: () => this.setState({ casePhase: 'bedside' }), showChart: () => this.setState({ casePhase: 'chart' }),
       ...(c ? (() => {
         const gasSt = s.gas[c.id] || {}, live = this.computeGas(c, s, m), fin = !!(s.finished || {})[c.id];
-        const vit = c.assess.vit.map(([l, v]) => ({ l, v: l === 'SpO₂' ? (s.ventOn ? live.spo2 + '% on FiO₂ ' + (m.fio2 / 100).toFixed(2) : 'on hand ventilation, FiO₂ 1.0') : v }));
+        const vit = (c.vitals ? c.vitals(m, acts, s, live) : c.assess.vit).map(([l, v]) => ({ l, v: l === 'SpO₂' ? (s.ventOn ? live.spo2 + '% on FiO₂ ' + (m.fio2 / 100).toFixed(2) : 'on hand ventilation, FiO₂ 1.0') : v }));
         const abg = gasSt.res ? Object.entries(gasSt.res).filter(([l]) => l !== 'spo2').map(([l, v]) => ({ l, v })) : c.assess.abg.map(([l, v]) => ({ l, v }));
         const send = () => { this.setState(st => ({ gas: { ...st.gas, [c.id]: { ...(st.gas[c.id] || {}), pending: true } } }));
           setTimeout(() => { const st = this.state, cc = CASES.find(x => x.id === st.caseId); if (!cc) return; const mm = model(st, PATIENTS[st.patient]), res = this.computeGas(cc, st, mm); const at = 'drawn ' + Math.round(mm.mv * 10) / 10 + ' L/min MV · PEEP ' + st.peep + ' · FiO₂ ' + (st.fio2 / 100).toFixed(2);
@@ -2778,13 +3086,23 @@ class Component extends DCLogic {
           { vit, abg, learn: true, key: c.id, head: gasSt.pending ? 'Blood gas · running…' : gasSt.res ? 'Blood gas · arterial · ' + gasSt.at : 'Blood gas · arterial · on arrival, hand ventilated', btn: gasSt.pending || !s.ventOn ? '' : (gasSt.res ? 'Repeat gas' : 'Send a gas'), send });
       })() : { cx: null, cxChips: [], cxRv: {}, cxGasHead: '', cxGasBtn: '', cxSendGas: () => {} }),
       cxLearnLabel: c ? c.learn[1] : '', cxLearnGo: () => c && this.openBasics(c.learn[0], '01'),
-      hasNextCase: !!c && CASES.indexOf(c) < CASES.length - 1,
-      nextCase: () => { const n = CASES[CASES.indexOf(c) + 1]; if (n) this.setState(st => ({ ...(PATIENTS[n.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: n.patient, caseId: n.id, sel: 'vt', casePhase: 'chart', rv: {}, modeMenu: false, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); },
-      caseOpen: !!c && s.ventOn && !(s.finished || {})[c.id], caseHead: c && (s.finished || {})[c.id] ? 'Goals · ' + c.goals(m).filter(g => g[1]).length + ' of ' + c.goals(m).length + ' met' : 'At the bedside', caseShown: !!c && !!(s.finished || {})[c.id],
-      finishCase: () => { if (!c) return; const ok = c.goals(m).every(g => g[1]); this.setState(st => ({ finished: { ...st.finished, [c.id]: true }, solved: ok ? { ...st.solved, [c.id]: true } : st.solved })); },
+      hasNextCase: !!c && (c.scen ? !!stageOf(c) : CASES.indexOf(c) < CASES.filter(x => !x.scen).length - 1),
+      nextLabel: c && c.scen ? 'Next stage' : 'Next case',
+      nextCase: () => { const n = c.scen ? stageOf(c) : CASES[CASES.indexOf(c) + 1]; if (n && n.keep) { this.setState(st => ({ patient: n.patient, caseId: n.id, casePhase: 'bedside', ventOn: true, rv: {}, modeMenu: false, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, acts: { ...(st.acts || {}), [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); return; } if (n) this.setState(st => ({ ...(PATIENTS[n.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: n.patient, caseId: n.id, sel: 'vt', casePhase: 'chart', rv: {}, modeMenu: false, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); },
+      caseEvent: c && c.event ? c.event : '', caseStageLabel: c && c.scen ? c.eyebrow : '', caseStageTitle: c && c.t ? c.t : '',
+      taskHead: c && c.scen ? (c.keep ? 'Task · ' + c.t : 'Task 2 · ' + c.t) : 'Task 2 · set the ventilator',
+      taskText: c && c.brief ? c.brief : 'Examine, image and sample the patient, then set the ventilator for this child. When you are happy, finish the case.',
+      finishLabel: c && c.scen ? 'Check targets' : 'Finish case',
+      hasActs: !!(c && c.actions && c.actions.length), actFb: acts._fb || '',
+      acts: c && c.actions ? c.actions.map(a => ({ label: a.label, on: !!acts[a.id], go: () => this.setState(st => { const cur = (st.acts || {})[c.id] || {}; if (cur[a.id]) return null; if (a.needs && !cur[a.needs]) return { acts: { ...(st.acts || {}), [c.id]: { ...cur, _fb: a.needsFb } } }; return { ...(a.patient ? { patient: a.patient } : {}), acts: { ...(st.acts || {}), [c.id]: { ...cur, [a.id]: true, _fb: a.fb } } }; }) })) : [],
+      caseDebrief: c && c.debrief && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1]) ? c.debrief.map((t, i) => ({ n: i + 1, t })) : [],
+      hasDebrief: !!(c && c.debrief && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1])),
+      reviewScen: () => { const sc = c && SIM_SCEN.find(x => x.id === c.scen); const i = sc ? SCENARIOS.findIndex(x => x.id === sc.review) : -1; if (i >= 0) this.setState({ screen: 'scen', scIdx: i, scStage: 0, caseId: null, ventOn: true }); },
+      caseOpen: !!c && s.ventOn && !(s.finished || {})[c.id], caseHead: c && (s.finished || {})[c.id] ? 'Goals · ' + c.goals(m, acts, s).filter(g => g[1]).length + ' of ' + c.goals(m, acts, s).length + ' met' : 'At the bedside', caseShown: !!c && !!(s.finished || {})[c.id],
+      finishCase: () => { if (!c) return; const ok = c.goals(m, acts, s).every(g => g[1]); this.setState(st => ({ finished: { ...st.finished, [c.id]: true }, solved: ok ? { ...st.solved, [c.id]: true } : st.solved })); },
       retryCase: () => c && this.setState(st => ({ finished: { ...st.finished, [c.id]: false } })),
-      caseVerdict: c && (s.finished || {})[c.id] ? (c.goals(m).every(g => g[1]) ? 'Case closed. All goals met.' : 'Not yet. Adjust and finish again.') : '',
-      goals: c && (s.finished || {})[c.id] ? c.goals(m).map(([label, ok]) => ({ label, icon: ok ? 'icon-circle-check' : 'icon-circle', color: ok ? '#B3BDA3' : 'var(--danger)', text: ok ? 'var(--text-secondary)' : 'var(--text-primary)' })) : [],
+      caseVerdict: c && (s.finished || {})[c.id] ? (c.goals(m, acts, s).every(g => g[1]) ? (c.scen ? (stageOf(c) ? 'Targets met. On to the next stage.' : 'Scenario complete. All targets met.') : 'Case closed. All goals met.') : 'Not yet. Adjust and check again.') : '',
+      goals: c && (s.finished || {})[c.id] ? c.goals(m, acts, s).map(([label, ok]) => ({ label, icon: ok ? 'icon-circle-check' : 'icon-circle', color: ok ? '#B3BDA3' : 'var(--danger)', text: ok ? 'var(--text-secondary)' : 'var(--text-primary)' })) : [],
       endCase: () => this.setState({ caseId: null, ventOn: true }),
       patients: Object.entries(PATIENTS).filter(([, p]) => !p.hidden).map(([id, p]) => ({ label: p.label, selected: s.patient === id, select: () => this.setState(p.infant && !pat.infant ? { patient: id, fpRun: false, su: { ...SU_RESET }, ...INFANT_START } : !p.infant && pat.infant ? { patient: id, fpRun: false, su: { ...SU_RESET }, ...ADULT_START } : { patient: id, fpRun: false, su: { ...SU_RESET } }) })),
       readouts: [
@@ -2815,7 +3133,9 @@ class Component extends DCLogic {
       onSlide: e => this.setParam(sel, +e.target.value),
       inc: () => this.setParam(sel, s[sel] + sd.step), dec: () => this.setParam(sel, s[sel] - sd.step),
 
-      cases: CASES.map(cs => ({ eyebrow: cs.eyebrow, title: cs.title, chord: cs.chord, setting: cs.setting, done: !!s.solved[cs.id],
+      simScen: SIM_SCEN.map(z => { const first = CASES.find(x => x.id === z.stages[0]); const done = z.stages.filter(id => s.solved[id]).length; return { eyebrow: z.eyebrow, title: z.title, chord: z.chord, setting: z.setting, blurb: z.blurb, done: done === z.stages.length, count: done + ' / ' + z.stages.length + ' stages',
+        start: () => this.setState(st => ({ ...(PATIENTS[first.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: first.patient, caseId: first.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, modeMenu: false, acts: { ...(st.acts || {}), [first.id]: {} }, cxrPick: { ...st.cxrPick, [first.id]: null }, ettPick: { ...st.ettPick, [first.id]: null }, finished: { ...st.finished, [first.id]: false }, gas: { ...st.gas, [first.id]: {} } })) }; }),
+      cases: CASES.filter(cs => !cs.scen).map(cs => ({ eyebrow: cs.eyebrow, title: cs.title, chord: cs.chord, setting: cs.setting, done: !!s.solved[cs.id],
         start: () => this.setState(st => ({ ...(PATIENTS[cs.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: cs.patient, caseId: cs.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, cxrPick: { ...st.cxrPick, [cs.id]: null }, ettPick: { ...st.ettPick, [cs.id]: null }, modeMenu: false, finished: { ...st.finished, [cs.id]: false }, gas: { ...st.gas, [cs.id]: {} } })) }))
     };
   }
