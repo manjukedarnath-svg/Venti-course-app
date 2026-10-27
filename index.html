@@ -14,6 +14,7 @@
   <script src="_ds/solstice-design-system-a0f434e9-f981-4221-9ca5-ab89c7b9d6bc/_ds_bundle.js"></script>
   <script src="./vent-graphics.js"></script>
   <script src="./patient-figure.js"></script>
+  <script src="./bedside-monitor.js"></script>
   <style>
     html,body{margin:0;background:#E7DECF;}
     a{color:#0F6E77;} a:hover{color:#1B1A17;}
@@ -487,9 +488,7 @@
             </div>
             <sc-if value="{{ wxRv.exam }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex; flex-direction:column; gap:12px;">
-                <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px;">
-                  <sc-for list="{{ wx.vit }}" as="v" hint-placeholder-count="4"><div style="display:flex; flex-direction:column; gap:2px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary);">{{ v.l }}</span><span style="font-size:14px;">{{ v.v }}</span></div></sc-for>
-                </div>
+                <x-import component-from-global-scope="bedside-monitor" vitals="{{ wxMon }}" style="width:100%;" hint-size="100%,200px"></x-import>
                 <div style="display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Examination</span><sc-for list="{{ wx.exam }}" as="x" hint-placeholder-count="2"><span style="font-size:14px; line-height:1.5; text-wrap:pretty;">{{ x }}</span></sc-for></div>
               </div>
             </sc-if>
@@ -531,24 +530,20 @@
             </div>
             <x-import component-from-global-scope="vent-trace" scenario="{{ w.sc }}" lanes="{{ w.lanes }}" theme="night" font="10" lw="1.6" marks="off" style="width:100%; height:240px;" hint-size="100%,240px"></x-import>
           </div>
-          <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-accent);">1 · What is going on?</span>
-          <sc-for list="{{ wNames }}" as="o" hint-placeholder-count="4">
-            <div onClick="{{ o.pick }}" style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:4px; border:1px solid {{ o.border }}; background:{{ o.bg }}; cursor:pointer; min-height:44px; box-sizing:border-box;">
-              <span style="flex:1; font-size:15px; text-wrap:pretty;">{{ o.label }}</span>
-              <i class="{{ o.icon }}" style="font-size:18px; color:{{ o.iconColor }};"></i>
-            </div>
-          </sc-for>
-          <sc-if value="{{ wNamed }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex; flex-direction:column; gap:12px;">
-              <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-accent); padding-top:6px;">2 · What will you do?</span>
-              <sc-for list="{{ wFixes }}" as="o" hint-placeholder-count="4">
-                <div onClick="{{ o.pick }}" style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:4px; border:1px solid {{ o.border }}; background:{{ o.bg }}; cursor:pointer; min-height:44px; box-sizing:border-box;">
-                  <span style="flex:1; font-size:15px; text-wrap:pretty;">{{ o.label }}</span>
-                  <i class="{{ o.icon }}" style="font-size:18px; color:{{ o.iconColor }};"></i>
+          <sc-if value="{{ wNamed }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Your orders · any order, as many as you like</span>
+              <sc-for list="{{ wActs }}" as="o" hint-placeholder-count="4">
+                <div onClick="{{ o.go }}" style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:4px; border:1px solid var(--border-default); background:{{ o.bg }}; color:{{ o.fg }}; cursor:{{ o.cur }}; min-height:44px; box-sizing:border-box;">
+                  <i class="{{ o.icon }}" style="font-size:16px; flex:none; color:var(--text-tertiary);"></i>
+                  <span style="flex:1; font-size:15px; line-height:1.4; text-wrap:pretty;">{{ o.label }}</span>
                 </div>
               </sc-for>
-              <sc-if value="{{ wFb }}" hint-placeholder-val="{{ false }}">
-                <p style="margin:0; font-size:15px; line-height:1.6; color:var(--text-secondary); text-wrap:pretty;">{{ wFb }}</p>
+              <sc-for list="{{ wLog }}" as="e" hint-placeholder-count="0">
+                <div style="display:flex; flex-direction:column; gap:3px; border-left:3px solid var(--border-strong); padding:2px 0 2px 12px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary);">{{ e.at }} · {{ e.label }}</span><span style="font-size:14px; line-height:1.55; text-wrap:pretty;">{{ e.resp }}</span></div>
+              </sc-for>
+              <sc-if value="{{ wPerf }}" hint-placeholder-val="{{ false }}">
+                <div style="border-left:3px solid var(--accent); padding:2px 0 2px 12px; display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">What was going on</span><span style="font-size:15px; line-height:1.5;">{{ wDx }}</span></div>
               </sc-if>
               <sc-if value="{{ wPerf }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex; flex-direction:column; gap:8px; background:var(--surface-sunken); border-radius:4px; padding:12px;">
@@ -585,7 +580,20 @@
           </div>
           <div style="display:{{ wGrid }}; grid-template-columns:{{ halfCols }}; grid-template-rows:auto 1fr; gap:40px; align-items:start;">
           <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:1; grid-row:1;">
-          <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-accent);">{{ sc.stageNo }}</span>
+          <sc-if value="{{ scHasPast }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:0; border-left:1px solid var(--border-default); padding-left:14px;">
+              <sc-for list="{{ scPast }}" as="x" hint-placeholder-count="2">
+                <div style="display:flex; flex-direction:column; gap:6px; padding:0 0 16px;">
+                  <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary);">{{ x.no }} · {{ x.t }}</span>
+                  <span style="font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">{{ x.story }}</span>
+                  <sc-for list="{{ x.acts }}" as="e" hint-placeholder-count="1">
+                    <div style="display:flex; flex-direction:column; gap:3px;"><span style="font-size:13px; line-height:1.45; font-weight:600; text-wrap:pretty;">{{ e.label }}</span><span style="font-size:13px; line-height:1.5; text-wrap:pretty;">{{ e.resp }}</span></div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <span id="sc-now" style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-accent); scroll-margin-top:16px;">{{ sc.stageNo }}</span>
           <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:36px; line-height:1; letter-spacing:-.02em; text-wrap:pretty;">{{ sc.t }}</h1>
           <sc-if value="{{ sc.hasStory }}" hint-placeholder-val="{{ true }}">
             <div style="width:100%; max-width:440px;"><x-import component-from-global-scope="patient-figure" age="{{ sc.age }}" support="{{ sc.sup }}" style="width:100%; aspect-ratio:480 / 302;" hint-size="100%,190px"></x-import></div>
@@ -602,9 +610,7 @@
             </div>
           </sc-if>
           <sc-if value="{{ sc.hasVit }}" hint-placeholder-val="{{ true }}">
-            <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; border-top:1px solid var(--border-subtle); padding-top:12px;">
-              <sc-for list="{{ sc.vit }}" as="v" hint-placeholder-count="4"><div style="display:flex; flex-direction:column; gap:2px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary);">{{ v.l }}</span><span style="font-size:14px;">{{ v.v }}</span></div></sc-for>
-            </div>
+            <x-import component-from-global-scope="bedside-monitor" vitals="{{ scMon }}" style="width:100%;" hint-size="100%,200px"></x-import>
           </sc-if>
           <sc-if value="{{ sc.hasExam }}" hint-placeholder-val="{{ true }}">
             <div style="display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">At the bedside</span><sc-for list="{{ sc.exam }}" as="x" hint-placeholder-count="3"><span style="font-size:14px; line-height:1.5; text-wrap:pretty;">{{ x }}</span></sc-for></div>
@@ -642,31 +648,32 @@
           </div>
           <div style="display:{{ wCol }}; flex-direction:column; gap:18px; min-width:0; grid-column:1; grid-row:2; align-self:start;">
           <sc-if value="{{ sc.hasQ }}" hint-placeholder-val="{{ true }}">
-            <div style="display:flex; flex-direction:column; gap:12px; border-top:1px solid var(--border-subtle); padding-top:14px;">
-              <span style="font-family:var(--font-display); font-size:24px; line-height:1.1; text-wrap:pretty;">{{ sc.q }}</span>
-              <sc-for list="{{ scOpts }}" as="o" hint-placeholder-count="4">
-                <div onClick="{{ o.pick }}" style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:4px; border:1px solid {{ o.border }}; background:{{ o.bg }}; cursor:pointer; min-height:44px; box-sizing:border-box;">
+            <div style="display:flex; flex-direction:column; gap:10px; border-top:1px solid var(--border-subtle); padding-top:14px;">
+              <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Your orders · any order, as many as you like</span>
+              <sc-for list="{{ scActs }}" as="o" hint-placeholder-count="4">
+                <div onClick="{{ o.go }}" style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:4px; border:1px solid var(--border-default); background:{{ o.bg }}; color:{{ o.fg }}; cursor:{{ o.cur }}; min-height:44px; box-sizing:border-box;">
+                  <i class="{{ o.icon }}" style="font-size:16px; flex:none; color:var(--text-tertiary);"></i>
                   <span style="flex:1; font-size:15px; line-height:1.4; text-wrap:pretty;">{{ o.label }}</span>
-                  <i class="{{ o.icon }}" style="font-size:18px; color:{{ o.iconColor }}; flex:none;"></i>
                 </div>
               </sc-for>
-              <sc-if value="{{ scFb }}" hint-placeholder-val="{{ false }}">
-                <p style="margin:0; font-size:15px; line-height:1.6; color:var(--text-secondary); text-wrap:pretty;">{{ scFb }}</p>
-              </sc-if>
-              <sc-if value="{{ scRight }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.45; color:var(--text-secondary);"><i class="icon-clock" style="font-size:15px; flex:none; margin-top:2px;"></i><span style="flex:1; text-wrap:pretty;">{{ scStagePerf }}</span></div>
-                <div style="border-left:3px solid var(--accent); padding:4px 0 4px 14px; display:flex; flex-direction:column; gap:8px;">
-                  <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Take away</span>
-                  <p style="margin:0; font-size:15px; line-height:1.6; text-wrap:pretty;">{{ sc.teach }}</p>
-                  <sc-for list="{{ sc.teachList }}" as="x" hint-placeholder-count="0"><span style="font-size:14px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">· {{ x }}</span></sc-for>
-                  <sc-if value="{{ sc.hasLesson }}" hint-placeholder-val="{{ false }}">
-                    <div><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="ghost" size="sm" icon-left="book-open" onClick="{{ sc.goLesson }}" hint-size="200px,32px">{{ sc.lessonLabel }}</x-import></div>
-                  </sc-if>
-                </div>
-              </sc-if>
+              <sc-for list="{{ scNowLog }}" as="e" hint-placeholder-count="0">
+                <div style="display:flex; flex-direction:column; gap:3px; border-left:3px solid var(--border-strong); padding:2px 0 2px 12px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary);">{{ e.at }} · {{ e.label }}</span><span style="font-size:14px; line-height:1.55; text-wrap:pretty;">{{ e.resp }}</span></div>
+              </sc-for>
             </div>
           </sc-if>
           <sc-if value="{{ sc.isDebrief }}" hint-placeholder-val="{{ false }}">
+            <div style="border-left:3px solid var(--accent); padding:2px 0 2px 14px; display:flex; flex-direction:column; gap:14px;">
+              <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">What was going on · stage by stage</span>
+              <sc-for list="{{ scTeach }}" as="x" hint-placeholder-count="3">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  <span style="font-size:14px; font-weight:600; line-height:1.4;">{{ x.t }}</span>
+                  <span style="font-size:14px; line-height:1.55; text-wrap:pretty;">{{ x.teach }}</span>
+                  <sc-for list="{{ x.list }}" as="y" hint-placeholder-count="0"><span style="font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">· {{ y }}</span></sc-for>
+                  <sc-if value="{{ x.hasLesson }}" hint-placeholder-val="{{ false }}"><div><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="ghost" size="sm" icon-left="book-open" onClick="{{ x.goLesson }}" hint-size="200px,32px">{{ x.lessonLabel }}</x-import></div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent); padding-top:6px;">Debrief</span>
             <div style="display:flex; flex-direction:column; gap:0;">
               <sc-for list="{{ sc.debrief }}" as="d" hint-placeholder-count="8">
                 <div style="display:flex; gap:14px; padding:12px 0; border-top:1px solid var(--border-subtle);">
@@ -883,9 +890,7 @@
             </div>
             <sc-if value="{{ cxRv.exam }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex; flex-direction:column; gap:12px;">
-                <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px;">
-                  <sc-for list="{{ cx.vit }}" as="v" hint-placeholder-count="4"><div style="display:flex; flex-direction:column; gap:2px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-secondary);">{{ v.l }}</span><span style="font-size:14px;">{{ v.v }}</span></div></sc-for>
-                </div>
+                <x-import component-from-global-scope="bedside-monitor" vitals="{{ cxMon }}" style="width:100%;" hint-size="100%,200px"></x-import>
                 <div style="display:flex; flex-direction:column; gap:4px;"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Examination</span><sc-for list="{{ cx.exam }}" as="x" hint-placeholder-count="2"><span style="font-size:14px; line-height:1.5; text-wrap:pretty;">{{ x }}</span></sc-for></div>
               </div>
             </sc-if>
@@ -2967,6 +2972,7 @@ class Component extends DCLogic {
       [root + 'Et']: ET.map(([k, label]) => ({ label, on: ep === k, go: () => this.setState(st => ({ ettPick: { ...st.ettPick, [key]: k } })) })),
       [root + 'CxFb']: pickFb, [root + 'CxShow']: cp != null, [root + 'EtFb']: ettFb,
       [root]: { ...assess, vit: g.vit || assess.vit, abg: g.abg || assess.abg },
+      [root + 'Mon']: JSON.stringify((g.vit || assess.vit || []).map(v => Array.isArray(v) ? v : [v.l, v.v])),
       [root + 'Chips']: chips.map(([k, label]) => ({ label, on: !!rv[k], go: () => { if (!rv[k] && g.perf) this.perfReq(g.perf, k); setRv(k); } })),
       [root + 'Rv']: rv,
       [root + 'GasHead']: g.head || 'Blood gas · arterial · on arrival',
@@ -3038,15 +3044,24 @@ class Component extends DCLogic {
     const set = (k, j) => () => { const fix = k === 'wFix', right = (fix ? W.fixes : W.names)[j][1] === 1;
       this.perfSet(pk, q => ({ ...q, t0: q.t0 || Date.now(), [fix ? 'fix1' : 'name1']: (fix ? q.fix1 : q.name1) || (right ? 'ok' : 'no'), ...(fix ? { act: q.act || Date.now() } : {}), ...(fix && right && !q.done ? { done: Date.now() } : {}) }));
       this.setState(st => ({ [k]: { ...st[k], [i]: j } })); };
-    const R = this.perfReport(P, ['exam', 'cxr', 'gas', 'vent'], null, [[P.name1 === 'ok', 'Diagnosis.', P.name1 === 'ok' ? 'Right first time.' : 'Not right first time.', 25], [P.fix1 === 'ok', 'Management.', P.fix1 === 'ok' ? 'Right first time.' : 'Not right first time.', 25]], true);
+    // Free flow: orders in any order, each answered; the right one fixes the monitor.
+    const wl = (s.wLog || {})[i] || [], wrong = wl.filter(e => W.fixes[e.o][1] !== 1).length;
+    let h = 11; for (const ch of W.t) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const ord = [...W.fixes.keys()]; for (let k = ord.length - 1; k > 0; k--) { h = (h * 1103515245 + 12345) >>> 0; const r = h % (k + 1); [ord[k], ord[r]] = [ord[r], ord[k]]; }
+    const giveOrder = o => { if (wl.some(e => e.o === o)) return; const right = W.fixes[o][1] === 1;
+      this.perfSet(pk, q => ({ ...q, t0: q.t0 || Date.now(), fix1: q.fix1 || (right ? 'ok' : 'no'), act: q.act || Date.now(), ...(right && !q.done ? { done: Date.now() } : {}) }));
+      this.setState(st => ({ wLog: { ...(st.wLog || {}), [i]: ((st.wLog || {})[i] || []).concat([{ o, at: Date.now() - (((st.perf || {})[pk] || {}).t0 || Date.now()) }]) }, ...(right ? { wFix: { ...st.wFix, [i]: o } } : {}) })); };
+    const R = this.perfReport(P, ['exam', 'cxr', 'gas', 'vent'], null, [[P.fix1 === 'ok', 'Right call first.', P.fix1 === 'ok' ? 'Yes.' : 'No.', 35], [wrong === 0, 'Orders that did not help.', wrong ? String(wrong) : 'None.', 15]], true);
     return {
+      wActs: ord.map(o => { const d = wl.some(e => e.o === o) || (okFix && fx === o); return { label: W.fixes[o][0], go: () => giveOrder(o), bg: d ? 'var(--surface-sunken)' : 'transparent', fg: d ? 'var(--text-tertiary)' : 'var(--text-primary)', cur: d ? 'default' : 'pointer', icon: d ? 'icon-check' : 'icon-chevron-right' }; }),
+      wLog: wl.map(e => ({ label: W.fixes[e.o][0], resp: W.fixes[e.o][2], at: mmss(e.at || 0) })),
+      wDx: (W.names.find(x => x[1] === 1) || [''])[0],
       ...this.onDemand('wx', this.mapA(W.assess), s.wRv[i] || {}, k => this.setState(st => ({ wRv: { ...st.wRv, [i]: { ...(st.wRv[i] || {}), [k]: !(st.wRv[i] || {})[k] } } })), { head: 'Blood gas · arterial', key: 'w' + i, perf: pk }),
       wPerf: okFix, wPerfRows: R.rows, wPerfScore: R.score, wPerfBand: R.band,
       w: { eyebrow: `Wave case ${i + 1} of ${WAVES.length}`, t: W.t, story: W.story, age: AGE_BAND(W.t), sup: 'ett', sc: okFix ? W.fixed : W.sc, lanes: W.lanes,
         traceCap: okFix ? 'After your change' : 'Monitor', status: okFix ? 'Improved' : '', traceColor: okFix ? '#93C29A' : '#F59A3C' },
       wDots: WAVES.map((_, j) => ({ bg: j === i ? 'var(--accent)' : s.wFix[j] != null && WAVES[j].fixes[s.wFix[j]][1] ? 'var(--success)' : 'var(--border-default)', go: () => this.setState({ wIdx: j }) })),
       wNames: W.names.map(([l, r], j) => opt(l, nm === j, r === 1, set('wName', j))),
-      wNamed: okName,
+      wNamed: true,
       wFixes: W.fixes.map(([l, r], j) => opt(l, fx === j, r === 1, set('wFix', j))),
       wFb: fx == null ? '' : (okFix ? 'Right. ' : 'Not quite. ') + W.fixes[fx][2],
       wHasNext: i < WAVES.length - 1, wHasPrev: i > 0,
@@ -3077,16 +3092,35 @@ class Component extends DCLogic {
     const qStages = S.stages.map((x, j) => [x, j]).filter(([x]) => x.opts);
     const firstOk = qStages.filter(([x, j]) => scen(S, j).first === 'ok').length, gathered = qStages.filter(([x, j]) => { const q = scen(S, j); return q.req && Object.values(q.req).some(t => !q.act || t <= q.act); }).length;
     const totT = qStages.reduce((n, [x, j]) => { const q = scen(S, j); return n + (q.t0 && q.done ? q.done - q.t0 : 0); }, 0);
-    const scPts = Math.round(60 * firstOk / Math.max(1, qStages.length) + 40 * gathered / Math.max(1, qStages.length));
+    const scPts = Math.max(0, Math.round(60 * firstOk / Math.max(1, qStages.length) + 40 * gathered / Math.max(1, qStages.length)) - 3 * ((s.scLog || {})[S.id] || []).filter(e => S.stages[e.j].opts && S.stages[e.j].opts[e.o][1] !== 1).length);
     const okRow = (ok, l, v) => ({ l, v, icon: ok === null ? 'icon-clock' : ok ? 'icon-circle-check' : 'icon-circle-x', color: ok === null ? 'var(--text-secondary)' : ok ? '#7FB287' : 'var(--danger)' });
     const lookedNames = Object.keys(P.req || {}).filter(k => !P.act || P.req[k] <= P.act).map(k => PERF_LOOK[k] || k);
+    // Free flow: orders in any order; the patient answers each one; the right order moves the case on.
+    const log = (s.scLog || {})[S.id] || [];
+    const order = (j, len) => { const k = S.id + j; let h = 7; for (const ch of k) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const a = [...Array(len).keys()]; for (let i = len - 1; i > 0; i--) { h = (h * 1103515245 + 12345) >>> 0; const r = h % (i + 1); [a[i], a[r]] = [a[r], a[i]]; } return a; };
+    const tried = o => log.some(e => e.j === n && e.o === o);
+    const wrongN = log.filter(e => S.stages[e.j].opts && S.stages[e.j].opts[e.o][1] !== 1).length;
+    const order1 = (j, o) => { const x = S.stages[j]; if (!x || !x.opts || log.some(e => e.j === j && e.o === o)) return; const r = x.opts[o][1] === 1, kj = S.id + ':' + j;
+      this.perfSet(kj, q => ({ ...q, t0: q.t0 || Date.now(), act: q.act || Date.now(), first: q.first || (r ? 'ok' : 'no'), tries: q.done ? q.tries : (q.tries || 0) + 1, done: q.done || (r ? Date.now() : null) }));
+      this.setState(st2 => { const L0 = (st2.scLog || {})[S.id] || []; const t0 = ((st2.perf || {})[S.id + ':0'] || {}).t0 || Date.now();
+        return { scLog: { ...(st2.scLog || {}), [S.id]: L0.concat([{ j, o, at: Date.now() - t0 }]) }, ...(r ? { scStage: j + 1, scPick: { ...(st2.scPick || {}), [kj]: o } } : {}) }; },
+        () => { if (r) setTimeout(() => { const el = document.getElementById('sc-now'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60); }); };
+    const entry = e => ({ label: S.stages[e.j].opts[e.o][0], resp: S.stages[e.j].opts[e.o][2], at: mmss(e.at || 0) });
+    const qTotal = S.stages.filter(x => x.opts).length;
     return {
       isScen: s.screen === 'scen',
+      scActs: st.opts ? order(n, st.opts.length).map(o => { const d = tried(o); return { label: st.opts[o][0], go: () => order1(n, o), bg: d ? 'var(--surface-sunken)' : 'transparent', fg: d ? 'var(--text-tertiary)' : 'var(--text-primary)', cur: d ? 'default' : 'pointer', icon: d ? 'icon-check' : 'icon-chevron-right' }; }) : [],
+      scNowLog: log.filter(e => e.j === n).map(entry),
+      scPast: S.stages.slice(0, n).map((x, j) => ({ no: 'Stage ' + (j + 1), t: x.t, story: x.story || '', acts: log.filter(e => e.j === j).map(entry) })),
+      scHasPast: n > 0,
+      scTeach: S.stages.map((x, j) => [x, j]).filter(([x]) => x.opts && x.teach).map(([x, j]) => { const L2 = x.lesson ? LESSON_SETS[x.lesson[0]][x.lesson[1]] : null;
+        return { t: 'Stage ' + (j + 1) + ' · ' + x.t, teach: x.teach, list: x.teachList || [], hasLesson: !!L2, lessonLabel: L2 ? 'Module ' + x.lesson[0] + ' · ' + L2.h.join('').trim() : '', goLesson: () => x.lesson && this.openBasics(x.lesson[1], x.lesson[0]) }; }),
+      scMon: JSON.stringify(st.vit || []),
       scChips: looks.map(([k, label]) => ({ label, on: !!rv[k], go: () => { if (!rv[k]) this.perfReq(key, k); this.setState(x => ({ scRv: { ...(x.scRv || {}), [key]: { ...((x.scRv || {})[key] || {}), [k]: !((x.scRv || {})[key] || {})[k] } } })); } })),
       scHasChips: looks.length > 0,
       scStagePerf: P.t0 && P.done ? 'Decided in ' + mmss(P.done - P.t0) + (P.first === 'ok' ? ', right first time' : ', after ' + (P.tries || 1) + ' tries') + '. ' + (lookedNames.length ? 'Looked at ' + lookedNames.join(', ').toLowerCase() + ' first.' : (looks.length ? 'Decided without asking for anything.' : '')) : '',
       scPerf: !!st.debrief, scPerfScore: scPts + ' / 100', scPerfBand: scPts >= 85 ? 'Ready to run this bedside' : scPts >= 65 ? 'Safe, with gaps' : 'Run it again',
-      scPerfRows: [okRow(null, 'Time deciding.', mmss(totT)), okRow(firstOk === qStages.length, 'Right first time.', firstOk + ' of ' + qStages.length + ' decisions'), okRow(gathered === qStages.length, 'Asked before deciding.', gathered + ' of ' + qStages.length + ' decisions made after looking at the patient')],
+      scPerfRows: [okRow(null, 'Time at the bedside.', mmss(totT)), okRow(firstOk === qStages.length, 'Right call first.', firstOk + ' of ' + qStages.length + ' stages'), okRow(gathered === qStages.length, 'Assessed before acting.', gathered + ' of ' + qStages.length + ' stages: you asked for information before your first order'), okRow(wrongN === 0, 'Orders that did not help.', wrongN ? wrongN + ' (each one is in the case log above)' : 'None.')],
       sc: { eyebrow: S.eyebrow + ' · ' + S.title, stageNo: st.debrief ? 'Debrief' : 'Stage ' + (n + 1) + ' of ' + (S.stages.length - 1), t: st.t,
         hasStory: !!st.story, story: st.story || '', age: AGE_BAND(S.title), sup: (SC_FIG[S.id] || [])[n] || 'ett',
         hasVit: !!st.vit && !!rv.exam, vit: (st.vit || []).map(([l, v]) => ({ l, v })),
@@ -3099,14 +3133,14 @@ class Component extends DCLogic {
         hasQ: !!st.opts, q: st.q || '', teach: st.teach || '', teachList: st.teachList || [],
         hasLesson: !!L, lessonLabel: L ? 'Module ' + st.lesson[0] + ' · ' + L.h.join('').trim() : '', goLesson: () => st.lesson && this.openBasics(st.lesson[1], st.lesson[0]),
         isDebrief: !!st.debrief, debrief: (st.debrief || []).map((t, i) => ({ n: i + 1, t })) },
-      scDots: S.stages.map((_, j) => ({ bg: j === n ? 'var(--accent)' : stageOk(j) && S.stages[j].opts ? 'var(--success)' : 'var(--border-default)', go: S.stages.slice(0, j).every((x, k) => stageOk(k)) ? goStage(j) : () => {} })),
+      scDots: S.stages.map((_, j) => ({ bg: j === n ? 'var(--accent)' : j < n ? 'var(--success)' : 'var(--border-default)', go: () => {} })),
       scOpts: (st.opts || []).map(([l, r], j) => opt(l, pk === j, r === 1, () => { this.perfSet(key, q => ({ ...q, t0: q.t0 || Date.now(), act: q.act || Date.now(), first: q.first || (r === 1 ? 'ok' : 'no'), tries: q.done ? q.tries : (q.tries || 0) + 1, done: q.done || (r === 1 ? Date.now() : null) })); this.setState(x => ({ scPick: { ...(x.scPick || {}), [key]: j } })); })),
       scFb: pk == null ? '' : (right ? 'Right. ' : 'Not quite. ') + st.opts[pk][2],
       scRight: right, scSolved: this.scenSolved(S),
-      scHasNext: n < S.stages.length - 1 && (right || !st.opts), scNextLabel: n === S.stages.length - 2 ? 'Debrief' : 'Next stage',
-      scHasPrev: n > 0, scNext: goStage(n + 1), scPrev: goStage(n - 1),
+      scHasNext: false, scNextLabel: n === S.stages.length - 2 ? 'Debrief' : 'Next stage',
+      scHasPrev: false, scNext: goStage(n + 1), scPrev: goStage(n - 1),
       scenarios: SCENARIOS.map((X, i) => ({ eyebrow: X.eyebrow, title: X.title, chord: X.chord, setting: X.setting, blurb: X.blurb, done: this.scenSolved(X), count: X.stages.filter((y, j) => y.opts && picks[X.id + ':' + j] != null && y.opts[picks[X.id + ':' + j]][1] === 1).length + ' / ' + X.stages.filter(y => y.opts).length,
-        start: () => this.setState(st => ({ screen: 'scen', scIdx: i, scStage: 0, scRv: {}, perf: Object.fromEntries(Object.entries(st.perf || {}).filter(([k]) => !k.startsWith(X.id + ':'))) })) }))
+        start: () => this.setState(st => ({ screen: 'scen', scIdx: i, scStage: 0, scRv: {}, scLog: { ...(st.scLog || {}), [X.id]: [] }, perf: Object.fromEntries(Object.entries(st.perf || {}).filter(([k]) => !k.startsWith(X.id + ':'))) })) }))
     };
   }
   knobDown(e, k) {
