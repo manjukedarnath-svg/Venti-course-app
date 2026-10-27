@@ -43,16 +43,18 @@
   <meta name="ext-resource-dependency" content="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js">
 </helmet>
 <template id="__bundler_thumbnail" data-bg-color="#1B1A17"><svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#1B1A17"></rect><text x="600" y="470" text-anchor="middle" font-family="Georgia, serif" font-size="240" fill="#0F6E77">VC</text></svg></template>
-<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 16px; box-sizing:border-box; font-family:var(--font-sans);">
-  <div data-chord="{{ phoneChord }}" style="width:390px; height:844px; border-radius:52px; background:var(--surface-page); color:var(--text-primary); box-shadow:0 0 0 10px #1B1A17, 0 30px 80px rgba(43,39,35,.35); position:relative; overflow:hidden; display:flex; flex-direction:column; transition:background 360ms cubic-bezier(.2,.7,.2,1);">
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:{{ shellPad }}; box-sizing:border-box; font-family:var(--font-sans);">
+  <div data-chord="{{ phoneChord }}" style="width:{{ frameW }}; height:{{ frameH }}; border-radius:{{ frameR }}; background:var(--surface-page); color:var(--text-primary); box-shadow:{{ frameShadow }}; position:relative; overflow:hidden; display:flex; flex-direction:{{ frameDir }}; transition:background 360ms cubic-bezier(.2,.7,.2,1);">
 
+    <sc-if value="{{ isPhone }}" hint-placeholder-val="{{ true }}">
     <div style="height:50px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:6px 30px 0; box-sizing:border-box; font-size:15px; font-weight:600;">
       <span>9:41</span>
       <div style="display:flex; gap:6px; align-items:center;"><i class="icon-signal" style="font-size:15px;"></i><i class="icon-wifi" style="font-size:15px;"></i><i class="icon-battery-full" style="font-size:18px;"></i></div>
     </div>
+    </sc-if>
 
     <sc-if value="{{ authGate }}" hint-placeholder-val="{{ false }}">
-      <div data-chord="paper" class="noscroll" style="position:absolute; top:50px; left:0; right:0; bottom:0; z-index:50; background:var(--surface-page); color:var(--text-primary); overflow-y:auto; scrollbar-width:none; padding:32px 24px 40px; box-sizing:border-box; display:flex; flex-direction:column; gap:24px;">
+      <div data-chord="paper" class="noscroll" style="position:absolute; top:{{ gateTop }}; left:0; right:0; bottom:0; z-index:50; background:var(--surface-page); color:var(--text-primary); overflow-y:auto; scrollbar-width:none; padding:{{ gatePad }}; box-sizing:border-box; display:flex; flex-direction:column; gap:24px; align-items:stretch;">
         <div style="display:flex; flex-direction:column; gap:12px;">
           <img src="assets/logo/final/ventcourse-logo-transparent.png" alt="VentCourse" style="width:132px; height:auto; display:block; margin:0 0 4px -6px;">
           <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-secondary);">VentCourse · Paediatric ventilation</span>
@@ -122,7 +124,7 @@
       </div>
     </sc-if>
 
-    <div class="noscroll" style="flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; scrollbar-width:none;">
+    <div class="noscroll" style="flex:1; min-height:0; min-width:0; overflow-y:auto; overflow-x:hidden; scrollbar-width:none;">
 
       <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex; flex-direction:column; min-height:100%;">
@@ -1125,14 +1127,20 @@
       </sc-if>
     </div>
 
-    <div style="flex:none; height:72px; border-top:1px solid var(--border-subtle); display:grid; grid-template-columns:repeat(3,1fr); padding:8px 12px 0; box-sizing:border-box; background:var(--surface-page);">
+    <div style="flex:none; height:{{ tabH }}; width:{{ tabW }}; border-top:{{ tabBorderTop }}; border-right:{{ tabBorderRight }}; display:grid; grid-template-columns:{{ tabCols }}; align-content:{{ tabAlign }}; gap:{{ tabGap }}; padding:{{ tabPad }}; box-sizing:border-box; background:var(--surface-page);">
+      <sc-if value="{{ isWide }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ goHome }}" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:44px; margin-bottom:12px;" title="Home"><img src="assets/logo/final/ventcourse-icon-192.png" alt="VentCourse" style="width:44px; height:44px; border-radius:10px; display:block;"></div>
+      </sc-if>
       <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
-        <div onClick="{{ t.go }}" style="display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; color:{{ t.color }}; min-height:44px;" aria-label="{{ t.label }}" title="{{ t.label }}">
+        <div onClick="{{ t.go }}" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; color:{{ t.color }}; min-height:44px;" aria-label="{{ t.label }}" title="{{ t.label }}">
           <i class="{{ t.icon }}" style="font-size:26px;"></i>
+          <sc-if value="{{ isWide }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;">{{ t.label }}</span></sc-if>
         </div>
       </sc-for>
     </div>
+    <sc-if value="{{ isPhone }}" hint-placeholder-val="{{ true }}">
     <div style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; background:var(--text-primary); opacity:.9;"></div>
+    </sc-if>
   </div>
 </div>
 </x-dc>
@@ -2251,6 +2259,7 @@ class Component extends DCLogic {
     el.height = Math.round((r.height || parseFloat(el.style.height)) * d);
   }
   componentDidMount() {
+    try { this._mq = window.matchMedia('(min-width: 900px)'); this._onMq = () => this.setState({ wide: this._mq.matches }); this._mq.addEventListener('change', this._onMq); if (this._mq.matches) this.setState({ wide: true }); } catch (e) {}
     const loop = () => { this.draw(); this.raf = requestAnimationFrame(loop); };
     const a0 = this.state.auth, l0 = a0 && this.users()[a0.u];
     if (l0) this.api('login', { u: a0.u, ph: l0.ph }).then(r => { if (r.st === 401) this.signOut(); else if (r.ok) { const db = this.users(); db[a0.u] = { ...db[a0.u], role: r.j.user.role }; this.saveUsers(db); } }).catch(() => {});
@@ -2399,7 +2408,10 @@ class Component extends DCLogic {
           toggleRole: upd(u, x => { x[u].role = adm ? 'student' : 'admin'; }, 'role', { role: adm ? 'student' : 'admin' }),
           remove: upd(u, x => { delete x[u]; }, 'delete') }; }) };
   }
-  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this.otpTick); }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this.otpTick); try { this._mq.removeEventListener('change', this._onMq); } catch (e) {} }
+  // Shell: a phone frame below 900px; on a desktop the same app runs as a full-height column with a navigation rail on the left.
+  shellVals() { const w = !!this.state.wide; return { isWide: w, isPhone: !w, shellPad: w ? '0' : '40px 16px', frameW: w ? 'min(100vw, 1000px)' : '390px', frameH: w ? '100vh' : '844px', frameR: w ? '0' : '52px', frameShadow: w ? '0 0 0 1px var(--border-subtle)' : '0 0 0 10px #1B1A17, 0 30px 80px rgba(43,39,35,.35)', frameDir: w ? 'row-reverse' : 'column', gateTop: w ? '0' : '50px', gatePad: w ? '48px calc((100% - 520px) / 2) 40px' : '32px 24px 40px',
+      tabH: w ? 'auto' : '72px', tabW: w ? '96px' : 'auto', tabBorderTop: w ? 'none' : '1px solid var(--border-subtle)', tabBorderRight: w ? '1px solid var(--border-subtle)' : 'none', tabCols: w ? '1fr' : 'repeat(3,1fr)', tabAlign: w ? 'start' : 'stretch', tabGap: w ? '8px' : '0', tabPad: w ? '20px 8px' : '8px 12px 0', goHome: () => this.setState({ screen: 'home' }) }; }
 
   sweep(ctx, w, y0, h, lane, sample, t, W, pos) {
     const d = window.devicePixelRatio || 1;
@@ -2669,7 +2681,7 @@ class Component extends DCLogic {
       : 'Not quite. A stiffer lung or trapped gas would lift the plateau too. Here the plateau held, so the problem sits in the airway.';
 
     return {
-      phoneChord: s.screen === 'sim' ? monitorChord : 'paper', monitorChord,
+      ...this.shellVals(), phoneChord: s.screen === 'sim' ? monitorChord : 'paper', monitorChord,
       isMachines: s.screen === 'machines', isBasics: s.screen === 'basics',
       ...this.basicsVals(), ...this.wavesVals(), ...this.scenVals(),
       fourQs: FOUR_QS.map(([t, d], i) => ({ n: i + 1, t, d })),
