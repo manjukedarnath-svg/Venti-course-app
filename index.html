@@ -237,7 +237,7 @@
             <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.IconButton" icon="search" label="Search" hint-size="40px,40px"></x-import>
           </div>
           <div style="display:flex; flex-direction:column; gap:10px;">
-            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Course · 9 modules · 64 lessons</span>
+            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Course · 9 modules · 65 lessons</span>
             <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:46px; line-height:.98; letter-spacing:-.02em;">Every breath, <em>explained</em></h1>
             <p style="margin:0; font-weight:300; font-size:16px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">Physiology first, then the machine. Each lesson ends at the bedside of a simulated patient.</p>
           </div>
@@ -1630,7 +1630,7 @@ const SCENARIOS = [
       { t: 'Day 22 · the ward round', story: 'Ventilated since admission for RSV bronchiolitis on a background of severe BPD. Extubated on day 9 to CPAP and on day 17 to BiPAP; both times re-intubated within 24 hours with stridor, collapse and a rising CO₂. Airway endoscopy yesterday: moderate tracheobronchomalacia and grade II subglottic stenosis.',
         vit: [['HR', '148'], ['RR', '40'], ['SpO₂', '93%'], ['Weight', '6.0 kg, static for 3 weeks']],
         exam: ['Comfortable on light sedation', 'Prolonged expiration, scattered wheeze', 'NG feeds, tolerating'],
-        vent: 'SIMV-PC + PS · PIP 24 · PEEP 8 · RR 24 · Ti 0.6 s · PS 12 · FiO₂ 0.35',
+        vent: 'SIMV-PC + PS · PIP 26 · PEEP 9 · RR 18 · Ti 0.7 s · PS 12 · FiO₂ 0.35 · VT ~9 mL/kg',
         abg: [['pH', '7.36'], ['PaCO₂', '58'], ['PaO₂', '70'], ['HCO₃', '32'], ['BE', '+6']],
         q: 'The registrar asks: "Is this just a slow wean?" What is your answer?',
         opts: [['She has PMV, and two failed extubations from causes that will not reverse quickly. It is time to bring ENT and the family together to discuss a tracheostomy', 1, 'Twenty-two consecutive days of ventilation is PMV. The extubations failed for fixed airway reasons, malacia and stenosis, on top of a chronic lung. A third attempt is unlikely to succeed and adds ventilator days, sedation and pneumonia risk.'],
@@ -1638,7 +1638,7 @@ const SCENARIOS = [
           ['Keep weaning and revisit on day 42', 0, 'Waiting does not answer the question; it only delays it. The barrier is known and will not reverse in a fortnight.'],
           ['Extubate to BiPAP with dexamethasone and accept a re-intubation if needed', 0, 'Steroids help oedema, not malacia or established stenosis. Every failed extubation risks a difficult re-intubation and more subglottic injury.']],
         teach: 'PMV is ventilation for at least 6 hours a day on 21 or more consecutive days. Two failed extubations with a cause that will not reverse soon is a tracheostomy conversation, not a third attempt.',
-        lesson: ['09', 3] },
+        lesson: ['09', 4] },
       { t: 'Day 24 · the family meeting', story: 'Both parents work and live 60 km from the hospital. ENT, the PICU consultant, the nurse educator and the social worker are present. The mother asks: "If she has a tube in her neck, will it be there forever?"',
         vit: [['HR', '140'], ['SpO₂', '94%']],
         q: 'What do you tell her?',
@@ -1647,7 +1647,7 @@ const SCENARIOS = [
           ['Only a few weeks, until the infection settles', 0, 'Over-promising. Malacia and stenosis do not settle in weeks, and the family must plan for a long road.'],
           ['Avoid numbers: decide after the operation', 0, 'Consent without a picture of the future is not informed. Give them the honest range.']],
         teach: 'Before a tracheostomy the family should hear four things: why, for how long, what daily life will be like, and who will be trained. Bring the social worker in from the first meeting.',
-        lesson: ['09', 2] },
+        lesson: ['09', 3] },
       { t: 'Post-op day 2 · the tube is out', story: 'Surgical tracheostomy, 3.5 uncuffed neonatal tube, stay sutures taped to the chest and labelled. During a nappy change the nurse finds the tube lying on the neck. The saturation is falling.',
         vit: [['HR', '178'], ['SpO₂', '78% and falling'], ['RR', '56']],
         exam: ['Tube out, lying on the chest, tapes undone', 'Stay sutures intact, labelled left and right', 'Weak cry, some air movement at the mouth'],
@@ -1657,7 +1657,7 @@ const SCENARIOS = [
           ['Push the tube back firmly without the obturator, then bag hard', 0, 'Without the obturator the tip catches the tissue and finds a false passage. Then bagging fills the neck with air.'],
           ['Pass a bougie into the stoma to hold it open', 0, 'A bougie in a fresh stoma is the classic way to make a false passage.']],
         teach: 'A fresh stoma closes and misleads. Stay sutures up and out open it. Same size, then smaller. If both fail, oxygenate from above.',
-        lesson: ['09', 7] },
+        lesson: ['09', 8] },
       { t: 'Day 30 · after the first change', story: 'ENT did the first tube change at the bedside this morning and the stay sutures were removed. Twenty minutes later the ventilator alarms.',
         vit: [['HR', '182'], ['SpO₂', '81%'], ['EtCO₂', 'No trace']],
         exam: ['Poor chest rise', 'Crackling under the skin of the neck and upper chest', 'Suction catheter stops at 2 cm'],
@@ -1668,8 +1668,8 @@ const SCENARIOS = [
           ['Raise the PIP to 35 and the FiO₂ to 1.0', 0, 'Settings cannot fix a tube that is outside the airway.'],
           ['Needle decompression on both sides', 0, 'There is no evidence of a tension pneumothorax yet, and the primary problem is the tube.']],
         teach: 'No EtCO₂ after a tube change means the tube is not in the trachea until proven otherwise. Do not ventilate through a tube a suction catheter cannot pass.',
-        lesson: ['09', 8] },
-      { t: 'Week 7 · ready for home?', story: 'On the home ventilator for 12 days, settings unchanged: PC 22/7, rate 20, FiO₂ 0.30 by day and 0.35 at night. The mother has completed training and two nights of rooming-in. The father has attended two sessions. At home: one ventilator, a mains-only suction machine, a pulse oximeter and a 600 VA inverter. Their village has power cuts of 4–6 hours.',
+        lesson: ['09', 9] },
+      { t: 'Week 7 · ready for home?', story: 'On the home ventilator for 12 days, settings unchanged: PC, PIP 26, PEEP 10 for the malacia, rate 16, Ti 0.7 s, FiO₂ 0.30 by day and 0.35 at night; SpO₂ target 92–95% because her echo shows pulmonary hypertension. The mother has completed training and two nights of rooming-in. The father has attended two sessions. At home: one ventilator, a mains-only suction machine, a pulse oximeter and a 600 VA inverter. Their village has power cuts of 4–6 hours.',
         vit: [['HR', '132'], ['SpO₂', '95%'], ['Weight', '6.8 kg, gaining']],
         q: 'What must be in place before she goes home?',
         opts: [['A second fully trained caregiver, a backup ventilator, battery suction and a self-inflating bag, power backup that lasts through the cuts, an emergency box, and a plan with the nearest hospital', 1, 'The ATS home list is a ventilator and a backup, batteries, a bag and mask, portable suction, a heated humidifier, emergency oxygen, a nebuliser and a pulse oximeter, with two trained family caregivers and an awake trained carer at all times. A 600 VA inverter may not carry the ventilator, humidifier, suction and concentrator through a six-hour cut; check the load and runtime.'],
@@ -1677,7 +1677,7 @@ const SCENARIOS = [
           ['Discharge now and train the father by video calls', 0, 'Tube changes and the emergency drill are hands-on skills. He must do them, and do rooming-in, before discharge.'],
           ['Keep her in hospital until she is decannulated', 0, 'That may be years. Children grow and develop better at home, and the risk in hospital is not zero.']],
         teach: 'Discharge readiness is the child, the carers and the home: stable settings on the home ventilator, two trained carers, the full equipment list with a backup, and power that outlasts the outages.',
-        lesson: ['09', 5] },
+        lesson: ['09', 6] },
       { t: 'Month 4 · a call at 2 a.m.', story: 'The mother phones: Riya is breathing fast, the oximeter reads 80% and the high-pressure alarm keeps sounding. The heated humidifier broke two days ago; since then they have used only an HME, and the secretions have been very thick.',
         vit: [['SpO₂', '80% (home oximeter)'], ['RR', 'Fast, by phone']],
         q: 'What do you tell her, step by step?',
@@ -1686,8 +1686,8 @@ const SCENARIOS = [
           ['Put saline down the tube and wait for it to loosen', 0, 'Repeated saline and waiting wastes the minutes she does not have. If the catheter will not pass, change the tube.'],
           ['Put her in the car and drive to hospital first', 0, 'A blocked tube must be cleared or changed where she is. Drive after the airway is fixed, or wait for the ambulance.']],
         teach: 'At home the drill is the same: off the vent, suction test, change the tube, bag, call. Then fix the cause; here it is humidity, so the replacement humidifier is part of the treatment.',
-        lesson: ['09', 7] },
-      { t: 'Debrief', debrief: ['PMV in children: at least 6 hours a day on 21 or more consecutive days, invasive and non-invasive together. Ask the long-term questions by the second week.', 'Sort the child by route (drive, pump, load) and course (improving, static, progressive). That decides the airway and the goal.', 'Tracheostomy timing is about trajectory, not a day count. Fixed airway lesions, progressive weakness and repeated failure point to early.', 'A fresh stoma is the most dangerous: use the stay sutures, same size then smaller, and the mouth is still an airway.', 'No EtCO₂ after a change is a false passage until proven otherwise. Do not ventilate through a tube a catheter cannot pass.', 'Discharge needs two trained carers, an awake carer at all times, the full equipment list with a backup ventilator, battery suction and power that outlasts the cuts.', 'Humidity prevents most blocked tubes. A broken humidifier is an emergency in slow motion.', 'One named coordinator and one written plan keep a large team working for one child and one family.'] }
+        lesson: ['09', 8] },
+      { t: 'Debrief', debrief: ['PMV in children: at least 6 hours a day on 21 or more consecutive days, invasive and non-invasive together. Ask the long-term questions by the second week.', 'Severe BPD needs a chronic strategy: slow rate, larger VT, longer Ti, higher PEEP for malacia, SpO₂ 92–95% with pulmonary hypertension.', 'Sort the child by route (drive, pump, load) and course (improving, static, progressive). That decides the airway and the goal.', 'Tracheostomy timing is about trajectory, not a day count. Fixed airway lesions, progressive weakness and repeated failure point to early.', 'A fresh stoma is the most dangerous: use the stay sutures, same size then smaller, and the mouth is still an airway.', 'No EtCO₂ after a change is a false passage until proven otherwise. Do not ventilate through a tube a catheter cannot pass.', 'Discharge needs two trained carers, an awake carer at all times, the full equipment list with a backup ventilator, battery suction and power that outlasts the cuts.', 'Humidity prevents most blocked tubes. A broken humidifier is an emergency in slow motion.', 'One named coordinator and one written plan keep a large team working for one child and one family.'] }
     ] }
 ];
 // Simulator scenarios: one child, several stages on the same ventilator. Each stage is a case with its own physiology (PATIENTS),
@@ -2312,29 +2312,45 @@ LESSON_SETS['09'] = [
     ans: 'A', opts: [['A', 'Drive'], ['B', 'Pump'], ['C', 'Load'], ['D', 'Gas exchange']],
     fb: "Congenital central hypoventilation is a failure of drive. The child needs ventilation in sleep for life, and sometimes awake too." },
 
+  { h: ['Ventilating the ', 'chronic', ' lung'],
+    lede: "The settings that protected the lung in week one are the wrong settings in month three. A chronic lung needs a chronic strategy.",
+    body: ["Early neonatal and acute lung disease is stiff, fairly uniform and has short time constants: a fast rate, small breaths and a short Ti suit it. Severe BPD is the opposite: high airway resistance, gas trapping and a patchwork of units with very different time constants.",
+      "So the strategy turns round. Abman and the BPD Collaborative: a slow rate, often below 20; larger tidal volumes, 8–12 mL/kg instead of 4–6; a longer Ti of 0.5–0.8 s to reach the slow units; and enough expiratory time to empty. Peak pressures above 25 may be needed to deliver that volume. Watch the flow scalar: expiration must finish before the next breath.",
+      "PEEP is relatively high, above 6–8, to hold FRC, prevent regional collapse and splint the airways. With tracheo- or bronchomalacia it may need to be higher still: titrate it up until the expiratory flow limitation on the flow–volume loop disappears.",
+      "Oxygen targets 92–95%, because intermittent hypoxaemia drives pulmonary hypertension, which complicates up to a quarter of severe BPD. Screen every child with an echo. Severe PH with high support is itself an argument for a tracheostomy and chronic ventilation.",
+      "PEMVECC for any chronically ventilated child: when they deteriorate acutely, ventilate the acute problem by the same rules as any other child, and preserve spontaneous breathing. Do not use the home ventilator in the acute phase in the PICU: single-limb home circuits leak and are not suitable for invasive ventilation there. In severe or progressive disease, ask openly whether invasive ventilation will benefit this child."],
+    nums: [['< 20', 'Rate · severe BPD'], ['8–12', 'VT mL/kg · chronic'], ['0.5–0.8 s', 'Ti'], ['> 6–8', 'PEEP']],
+    peds: "There is no trial behind the slow-rate, large-volume strategy; it rests on the physiology of the chronic lung and clinical experience. Gas trapping is rare with it as long as the rate is low and expiration is complete, so the flow scalar is the safety check.",
+    src: 'Abman et al., Interdisciplinary care of children with severe BPD, J Pediatr 2017 · Sun & Zhang, Ventilation strategies from neonatal respiratory distress to chronic lung disease, Semin Fetal Neonatal Med · Kneyber et al., PEMVECC recommendations, Intensive Care Med 2017 · Wallis et al., ERS statement on tracheo- and bronchomalacia, Eur Respir J 2019',
+    q: 'A 7-month-old with severe BPD and bronchomalacia is on rate 35, VT 5 mL/kg, Ti 0.35 s, PEEP 5. He is hyperinflated with flow that never reaches zero, and the loop shows early expiratory flow limitation. Which change fits the chronic lung?',
+    ans: 'C', opts: [['A', 'Raise the rate to 45 to clear CO₂'], ['B', 'Lower PEEP to reduce hyperinflation'], ['C', 'Slow rate, larger VT, longer Ti, and PEEP up until the flow limitation clears'], ['D', 'Switch to HFOV']],
+    fb: "Fast, small breaths suit a uniform acute lung, not a heterogeneous chronic one. A slow rate gives time to empty; higher PEEP holds the malacic airways open so the gas can leave." },
+
   { h: ['Why a ', 'tracheostomy', '?'],
     lede: "A tracheostomy does not treat the disease. It changes where the airway lives, so that a child who needs a ventilator for months can live with it.",
     body: ["Four indications. Prolonged ventilation with no extubation in sight. Upper airway obstruction that will not resolve soon: subglottic or tracheal stenosis, bilateral vocal cord palsy, craniofacial anomalies, severe malacia. Poor airway protection and pulmonary toilet: a weak cough, pooled secretions, recurrent aspiration. Repeated failed extubations.",
       "What it gives: a secure airway that can be changed at the bedside, less sedation, and a child who is awake and mobile, can be held, play, feed by mouth and, with a speaking valve, make sound. A shorter tube has less resistance and dead space and is easier to suction.",
       "What it costs: an operation and a stoma that takes days to mature; accidental decannulation and tube blockage, which in a small child can kill in minutes; granulation tissue, infection, tracheal stenosis and, rarely, bleeding from erosion into a vessel; and a family who now carries an airway home.",
+      "A tracheostomy is not a way to wean faster. In severe BPD it is a commitment to sustained ventilation that relieves distress and spells and gives the stability a child needs to grow and develop. In some units it is seen as a symbol of futility, and that reluctance can leave a child struggling on the edge for months (Abman).",
+      "In tracheobronchomalacia CPAP is the usual support, by mask or tracheostomy. A tracheostomy is reserved for the child who has failed other options or needs pressure for most of the 24-hour day: non-invasive support around the clock is rarely practical (ERS).",
       "A tracheostomy is a family decision. Before the operation the family should hear what daily life will look like, who will be trained, how long it may last, and what the path off the tube is, if there is one."],
     nums: [['4', 'Indications'], ['PMV', 'Commonest reason'], ['33–41%', 'Have a neurological deficit']],
     peds: "Decannulation rates vary widely. About half of children with BPD come off the tube eventually. In children with neurological impairment far fewer do, and later: in one series 4% at one year and 17% at five years. Tell the family which group their child is likely to be in.",
-    src: 'Tracheostomy practices in children on mechanical ventilation, systematic review and meta-analysis, J Pediatr (Rio) 2022 · Chang ch. 6 · Tobin ch. 38',
+    src: 'Abman et al., J Pediatr 2017 · Wallis et al., ERS statement on tracheo- and bronchomalacia, Eur Respir J 2019 · Tracheostomy practices in children on mechanical ventilation, J Pediatr (Rio) 2022 · Chang ch. 6 · Tobin ch. 38',
     q: 'Which child needs a tracheostomy for an airway reason rather than for the ventilator?',
     ans: 'B', opts: [['A', 'Severe ARDS on day 10, improving'], ['B', 'Grade III subglottic stenosis after a long intubation; two failed extubations with stridor'], ['C', 'Asthma, intubated for 3 days'], ['D', 'GBS on day 5, weakness still progressing']],
     fb: "A fixed narrowing below the cords will not let any extubation succeed. The tracheostomy bypasses it while it is treated or the child grows." },
 
   { h: ['Tube or ', 'trach', '? Timing'],
     lede: "There is no magic day. The question is not how long the child has been intubated, but whether extubation is realistically close.",
-    body: ["Chang suggests a tracheostomy when the tube is expected to stay beyond about 21 days. Children tolerate a translaryngeal tube longer than adults, there is no randomised trial in children, and practice varies widely between units.",
+    body: ["Chang suggests a tracheostomy when the tube is expected to stay beyond about 21 days; the Indian Pediatrics editorial on ventilation puts it at more than 2–4 weeks, because a tracheostomy is more comfortable, protects the larynx and is less likely to block or dislodge. Children tolerate a translaryngeal tube longer than adults, there is no randomised trial in children, and practice varies widely between units.",
       "Retrospective paediatric data, mostly defining early as within 14 days, link early tracheostomy with fewer ventilator days, a shorter PICU and hospital stay and less ventilator-associated pneumonia. The effect on mortality is inconsistent between reviews, and these children were selected, not randomised.",
       "Go early when the trajectory is clear: a progressive neuromuscular disease, a fixed upper-airway lesion, a severe brain injury with no airway protection, or a second failed extubation for a reason that will not reverse quickly.",
       "Wait when recovery is plausible: an improving lung, a reversible weakness such as GBS that is starting to recover, an airway that time or steroids may fix. Keep weaning, treat the barrier, and set a date to decide again.",
       "At every review ask: why did the last extubation fail, is that reversible in the next one to two weeks, and does the family know the options? Bring ENT and the family into the conversation before the decision is urgent."],
-    nums: [['~21 d', 'Classic threshold (Chang)'], ['< 14 d', 'Usual definition of early'], ['0', 'Paediatric RCTs']],
+    nums: [['2–4 wk', 'Threshold (Chang · Indian Pediatrics)'], ['< 14 d', 'Usual definition of early'], ['0', 'Paediatric RCTs']],
     peds: "In GBS the 20-30-40 rule (vital capacity below 20 mL/kg, inspiratory pressure weaker than −30, expiratory pressure below 40 cmH₂O) predicts the need to intubate, not the need to trach. Most children with GBS recover. Adult data suggest a tracheostomy when weakness shows no improvement after about two weeks of ventilation.",
-    src: 'Chang ch. 6 · Timing of tracheostomy in paediatric patients, systematic review and meta-analysis, 2020 · Tracheostomy practices in children on mechanical ventilation, J Pediatr (Rio) 2022 · Lawn & Wijdicks, GBS and tracheostomy',
+    src: 'Chang ch. 6 · Indian Pediatrics editorial, Ventilation · Timing of tracheostomy in paediatric patients, systematic review and meta-analysis, 2020 · Tracheostomy practices in children on mechanical ventilation, J Pediatr (Rio) 2022 · Lawn & Wijdicks, GBS and tracheostomy',
     q: 'An 18-month-old, day 10 after drowning with a severe hypoxic brain injury. Lungs are now clear. Extubated on day 7, re-intubated within 6 hours for pooled secretions and obstruction. No cough, no gag. Best plan?',
     ans: 'B', opts: [['A', 'Wait until day 21, then decide'], ['B', 'Discuss an early tracheostomy with the family now'], ['C', 'Extubate again to high-flow'], ['D', 'Extubate to BiPAP']],
     fb: "The barrier is airway protection, and it will not reverse in the next fortnight. Waiting adds ventilator days and pneumonia risk without changing the answer." },
@@ -2361,8 +2377,8 @@ LESSON_SETS['09'] = [
       "Send. At least two trained family caregivers, and an awake, trained carer with the child at all times. Equipment delivered and tested at home, power backup, an emergency plan with the nearest hospital, and the first follow-up booked.",
       "The ATS home list: a ventilator and a backup ventilator, batteries, a self-inflating bag and mask, portable suction, a heated humidifier, emergency oxygen, a nebuliser and a pulse oximeter, plus a cough-assist device when the cough is weak. Pulse oximetry, especially in sleep, is the recommended monitor: ventilator alarms alone may not sound."],
     nums: [['2', 'Trained family caregivers'], ['24/7', 'Awake trained carer'], ['2', 'Ventilators at home']],
-    peds: "In India most home care falls on the family, so training and backup matter even more: an inverter or UPS rated for the ventilator, suction and concentrator; a suction machine that runs on battery; a local service number for the ventilator; and a nearby hospital that knows the child before the first emergency.",
-    src: 'Sterni et al., ATS clinical practice guideline: paediatric chronic home invasive ventilation, Am J Respir Crit Care Med 2016 · Tobin ch. 28 and ch. 33',
+    peds: "The risk is real. In one series of 228 children on home ventilation, 21% died; half of the deaths were unexpected, and a fifth were from tracheostomy problems such as unobserved plugging or disconnection. Half of infants with severe BPD are readmitted within two years. Give every family a written action plan, and keep a respiratory specialist reachable by phone at all times. In India most home care falls on the family, so training and backup matter even more: an inverter or UPS rated for the ventilator, suction and concentrator; a suction machine that runs on battery; a local service number for the ventilator; and a nearby hospital that knows the child before the first emergency.",
+    src: 'Sterni et al., ATS clinical practice guideline: paediatric chronic home invasive ventilation, Am J Respir Crit Care Med 2016 · Abman et al., J Pediatr 2017 (Edwards et al. home ventilation outcomes) · Tobin ch. 28 and ch. 33',
     q: 'A child has been stable on the home ventilator for two weeks. The mother is fully trained and has completed rooming-in. The father works away and has not been trained. Ready for discharge?',
     ans: 'B', opts: [['A', 'Yes: one trained parent is enough'], ['B', 'No: a second trained caregiver and a plan for round-the-clock awake care are needed'], ['C', 'Yes, if a pulse oximeter is supplied'], ['D', 'No: she must first be off the ventilator during the day']],
     fb: "One caregiver cannot stay awake and attentive every hour of every day. The ATS recommends at least two trained family caregivers and a trained carer awake at all times." },
@@ -2373,10 +2389,11 @@ LESSON_SETS['09'] = [
       "Physiotherapist: airway clearance, cough augmentation, positioning, the chest wall, mobility and development. Nurses and respiratory therapists: tracheostomy and ventilator care, and most of the family training.",
       "Dietitian: growth on a tight energy budget; too few calories weaken the muscles, too many add CO₂ and weight. Speech and swallow therapist: safe feeding, speaking-valve trials, language. Developmental and school support: these children grow up on the ventilator.",
       "Social worker: finances, government schemes and insurance, home readiness, housing and power, caregiver burden, school. Psychologist and palliative care: support for decisions, quality of life and goals of care, alongside active treatment, not instead of it.",
+      "Why a team: an organised interdisciplinary programme with inpatient and outpatient arms shortens hospital stay and improves survival in severe BPD, to over 75–80% at discharge in such programmes. Regular rounds and family meetings give continuity that a rotating ICU roster cannot.",
       "A general paediatrician as the medical home, co-managing with the respiratory specialist, and a named care coordinator who holds the plan, books the reviews and is the family's first call. One written care plan travels with the child."],
     nums: [['1', 'Named coordinator'], ['1', 'Shared written plan'], ['8+', 'Disciplines']],
-    peds: "Weaning does not stop at discharge. Children with BPD or recovering weakness often move from 24-hour support to night-only ventilation, then to a capped tube by day, then to decannulation after an airway endoscopy and a supervised capping trial. The team plans the steps; the family takes them.",
-    src: 'Sterni et al., ATS guideline 2016: comprehensive medical home co-managed by a generalist and a respiratory specialist · Tobin ch. 28 and ch. 33',
+    peds: "Weaning does not stop at discharge. Children with BPD or recovering weakness often move from 24-hour support to night-only ventilation, then to a capped tube by day, then to decannulation after an airway endoscopy and a supervised capping trial. Polysomnography guides each step best; where it is not available, overnight oximetry with EtCO₂ will do, and capping trials are done in hospital. The team plans the steps; the family takes them.",
+    src: 'Sterni et al., ATS guideline 2016: comprehensive medical home co-managed by a generalist and a respiratory specialist · Abman et al., J Pediatr 2017 · Tobin ch. 28 and ch. 33',
     q: 'A child with SMA on home BiPAP has had three chest infections in four months and is losing weight. Which two team members are most likely to change this course?',
     ans: 'A', opts: [['A', 'Physiotherapist and dietitian'], ['B', 'ENT surgeon and cardiologist'], ['C', 'Social worker and psychologist'], ['D', 'Radiologist and microbiologist']],
     fb: "Infections in a weak child are usually retained secretions: cough assist and airway clearance. Weight loss weakens the pump further. Both are fixable outside the hospital." },
@@ -2420,7 +2437,7 @@ const MODULES = [
   { no: '06', title: 'Ventilator graphics', total: 5, lessons: LESSON_SETS['06'].map(l => l.h.join('').trim()) },
   { no: '07', title: 'Disease-specific ventilation', total: 6, lessons: LESSON_SETS['07'].map(l => l.h.join('').trim()) },
   { no: '08', title: 'Cardiopulmonary interactions', total: 13, lessons: LESSON_SETS['08'].map(l => l.h.join('').trim()) },
-  { no: '09', title: 'Long-term ventilation', total: 9, lessons: LESSON_SETS['09'].map(l => l.h.join('').trim()) }
+  { no: '09', title: 'Long-term ventilation', total: 10, lessons: LESSON_SETS['09'].map(l => l.h.join('').trim()) }
 ];
 
 const VMODES = [
@@ -2707,7 +2724,7 @@ class Component extends DCLogic {
       adminStats: [{ v: String(list.length), l: 'Accounts' }, { v: String(admins), l: 'Admins' }, { v: String(list.length - admins), l: 'Students' }],
       adminUsers: list.map(([u, v]) => { const adm = v.role === 'admin', self = u === me, lastAdm = adm && admins <= 1;
         return { u, e: v.e, role: adm ? 'Admin' : 'Student', roleTone: adm ? 'accent' : 'neutral', you: self ? ' · you' : '',
-          meta: 'Joined ' + d(v.joined) + ' · Last sign-in ' + d(v.last) + (v.lessons != null ? ' · ' + v.lessons + ' of 64 lessons' : ''),
+          meta: 'Joined ' + d(v.joined) + ' · Last sign-in ' + d(v.last) + (v.lessons != null ? ' · ' + v.lessons + ' of 65 lessons' : ''),
           roleLabel: adm ? 'Remove admin' : 'Make admin', canRole: !lastAdm, canRemove: !self,
           toggleRole: upd(u, x => { x[u].role = adm ? 'student' : 'admin'; }, 'role', { role: adm ? 'student' : 'admin' }),
           remove: upd(u, x => { delete x[u]; }, 'delete') }; }) };
@@ -3035,7 +3052,7 @@ class Component extends DCLogic {
       startRun: () => this.setState({ fpRun: true }), toggleRun: () => !s.caseId && this.setState(st => ({ fpRun: !st.fpRun })),
       ledColor: (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? '#E9B54A' : '#6FBF73', ledLabel: (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? 'STANDBY' : 'ON',
       simParts: [['Free practice', !s.caseId, () => this.setState({ caseId: null, ventOn: true, fpRun: false, su: { ...SU_RESET } })], ['Cases', !!s.caseId, () => this.setState({ screen: 'cases' })]].map(([label, on, go]) => ({ label, go, bg: on ? 'var(--surface-page)' : 'transparent', color: on ? 'var(--text-primary)' : 'var(--text-secondary)' })),
-      homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `9 modules · ${d} of 64 lessons done` : '9 modules · 64 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
+      homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `9 modules · ${d} of 65 lessons done` : '9 modules · 65 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
       simRef: this.simRef, lessonRef: this.lessonRef,
       tabs: [['learn', 'Learn', 'icon-book-open'], ['sim', 'Simulator', 'icon-activity'], ['cases', 'Cases', 'icon-clipboard-list']].map(([id, label, icon]) => ({
         label, icon, go: go(id), color: (s.screen === id || (id === 'cases' && (s.screen === 'waves' || s.screen === 'scen')) || (id === 'learn' && (s.screen === 'lesson' || s.screen === 'machines' || s.screen === 'basics'))) ? 'var(--accent)' : 'var(--text-secondary)' })),

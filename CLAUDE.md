@@ -29,7 +29,7 @@ This is a **live, working app**. Continue it; don't rebuild or migrate it.
 ## Accounts API (`server.js`)
 POST JSON: `/api/exists`, `/api/register`, `/api/login`, `/api/touch`, `/api/admin/list`, `/api/admin/role`, `/api/admin/delete`.
 `/api/progress` (POST `{u, ph, prog?}`) saves and returns the user's lesson progress; the app also keeps a copy in localStorage (`vc-progress-<user>`). A lesson counts as done when its quiz is answered; Module 02 is done when its quiz is answered.
-Nine modules, 64 lessons; Module 07 (Disease-specific ventilation) lives in `LESSON_SETS['07']`, Module 08 (Cardiopulmonary interactions) in `LESSON_SETS['08']`, Module 09 (Long-term ventilation) in `LESSON_SETS['09']`. The lesson count also appears as text in `index.html` (home card, Learn header, admin list): update all three when adding lessons. A lesson may carry `vidCap` + `vidNote` (renders a video slot) and `vid` (path to an mp4 under `assets/`; until it is set the slot shows a placeholder).
+Nine modules, 65 lessons; Module 07 (Disease-specific ventilation) lives in `LESSON_SETS['07']`, Module 08 (Cardiopulmonary interactions) in `LESSON_SETS['08']`, Module 09 (Long-term ventilation) in `LESSON_SETS['09']`. The lesson count also appears as text in `index.html` (home card, Learn header, admin list): update all three when adding lessons. A lesson may carry `vidCap` + `vidNote` (renders a video slot) and `vid` (path to an mp4 under `assets/`; until it is set the slot shows a placeholder).
 Username 2–40 chars (trimmed, lower-cased), password ≥ 6. Admin re-seeded from `ADMIN_PASSWORD` on boot.
 EmailJS sends the sign-up code (service `service_po89bsd`, template `template_ndn664u`).
 
