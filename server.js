@@ -28,7 +28,47 @@ const mergeProg = (a, b) => { a = a && typeof a === 'object' ? a : {}; b = b && 
 const okUser = (b) => b && typeof b.u === 'string' && users[b.u] && users[b.u].ph === b.ph;
 const isAdmin = (b) => okUser(b) && users[b.u].role === 'admin';
 const admins = () => Object.values(users).filter(v => v.role === 'admin').length;
+// Live sessions: a talk deck creates a room, sets the current question; candidates answer from the app.
+const rooms = {};
+const sweepRooms = () => { const t = Date.now(); for (const k in rooms) if (t - rooms[k].at > 864e5) delete rooms[k]; };
+const who = (b) => okUser(b) ? 'u:' + b.u : 'g:' + String(b.d || '').slice(0, 40);
+function live(route, b) {
+  sweepRooms();
+  const r = rooms[String(b.room || '')];
+  switch (route) {
+    case 'create': {
+      let code; do { code = String(1000 + Math.floor(Math.random() * 9000)); } while (rooms[code]);
+      const key = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      rooms[code] = { key, cur: null, at: Date.now(), opened: {}, ans: {} };
+      return [200, { room: code, key }];
+    }
+    case 'set': {
+      if (!r || r.key !== b.key) return [403, { error: 'no' }];
+      r.cur = typeof b.q === 'string' && b.q.length < 40 ? b.q : null; r.at = Date.now();
+      if (r.cur) r.opened[r.cur] = true;
+      return [200, { ok: true }];
+    }
+    case 'state': return r ? [200, { cur: r.cur }] : [404, { error: 'no room' }];
+    case 'answer': {
+      if (!r) return [404, { error: 'no room' }];
+      const q = String(b.q || ''), id = who(b);
+      if (!r.opened[q] || id.length < 3) return [400, { error: 'closed' }];
+      const a = String(b.a || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+      if (!a) return [400, { error: 'empty' }];
+      (r.ans[q] = r.ans[q] || {})[id] = a;
+      return [200, { ok: true }];
+    }
+    case 'results': {
+      if (!r) return [404, { error: 'no room' }];
+      const all = Object.values(r.ans[String(b.q || '')] || {}), counts = {}, texts = {};
+      for (const a of all) { if (/^[A-F]$/.test(a)) counts[a] = (counts[a] || 0) + 1; const k = a.toLowerCase(); texts[k] = texts[k] || { t: a, n: 0 }; texts[k].n++; }
+      return [200, { n: all.length, counts, texts: Object.values(texts).sort((x, y) => y.n - x.n).slice(0, 60) }];
+    }
+  }
+  return [404, { error: 'not found' }];
+}
 function api(route, b) {
+  if (route.startsWith('live/')) return live(route.slice(5), b);
   switch (route) {
     case 'exists': return [200, { exists: !!users[String(b.u || '').trim().replace(/\s+/g, ' ').toLowerCase()] }];
     case 'register': {
@@ -61,12 +101,14 @@ function api(route, b) {
 
 http.createServer((req, res) => {
   if (req.url.startsWith('/api/')) {
+    const cors = req.url.startsWith('/api/live/') ? { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } : {};
+    if (req.method === 'OPTIONS') { res.writeHead(204, cors); return res.end(); }
     let body = '';
     req.on('data', c => { body += c; if (body.length > 1e5) req.destroy(); });
     req.on('end', () => {
       let b = {}; try { b = JSON.parse(body || '{}'); } catch (e) {}
       const [st, out] = req.method === 'POST' ? api(req.url.slice(5).split('?')[0], b) : [405, { error: 'POST only' }];
-      res.writeHead(st, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.writeHead(st, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...cors });
       res.end(JSON.stringify(out));
     });
     return;
