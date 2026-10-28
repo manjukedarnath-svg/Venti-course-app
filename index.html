@@ -4197,7 +4197,7 @@ class Component extends DCLogic {
   lsDel(k) { try { window.localStorage.removeItem(k); } catch (e) {} }
   state = (() => { const m = (typeof location !== 'undefined' ? location.hash : '').match(/^#(home|sim|learn|cases|basics|machines|waves|live)(?:-([A-Za-z]+))?/); return { screen: m ? m[1] : (this.props.startScreen ?? 'home'), mode: m && m[2] ? m[2] : 'VC', vt: 450, rr: 15, peep: 5, fio2: 100, ti: 1.0, pinsp: 15, ps: 10, nava: 1.0, eff: 5,
     auth: (() => { try { return JSON.parse(this.lsGet('vc-auth-session') || 'null'); } catch (e) { return null; } })(), aStage: 'creds', aTab: 'in',
-    patient: 'normal', fpRun: false, su: { ...SU_RESET }, sel: 'vt', caseId: null, solved: {}, open: '03', quiz: null, lessonC: 50, lessonR: 10,
+    patient: 'normal', fpRun: false, su: { ...SU_RESET }, armed: false, sel: 'vt', caseId: null, solved: {}, open: '03', quiz: null, lessonC: 50, lessonR: 10,
     mW: 'preterm', mMode: 'VC', mCpc: 1.5, mComp: false, mOpen: null, mQuiz: null, bIdx: 0, bMod: '01', bQuiz: {}, phigh: 25, plow: 5, thigh: 4, tlow: 0.6, wIdx: 0, wName: {}, wFix: {}, scIdx: 0, scStage: 0, scPick: {}, acts: {}, finished: {}, casePhase: 'chart', rv: {}, wRv: {}, gas: {}, cxrPick: {}, ettPick: {}, pDone: {}, pOpen: 'settings', ventOn: true, su: { niv: false, mode: null, pt: null, wt: 0, test: 'idle' } }; })();
   simRef = el => { this.simCv = el; this.fit(el); };
   lessonRef = el => { this.lessonCv = el; this.fit(el); };
@@ -4460,7 +4460,7 @@ class Component extends DCLogic {
     const t = performance.now() / 1000, W = this.props.sweepSeconds ?? 8, pos = t % W;
     const d = window.devicePixelRatio || 1;
     const sim = this.simCv, les = this.lessonCv;
-    if (sim && sim.isConnected && this.state.screen === 'sim' && !(!this.state.caseId && !this.state.fpRun)) {
+    if (sim && sim.isConnected && this.state.screen === 'sim' && !this.state.armed && !(!this.state.caseId && !this.state.fpRun)) {
       const ctx = sim.getContext('2d'), w = sim.width, H = sim.height, lh = H / 3;
       ctx.clearRect(0, 0, w, H);
       const pp = PATIENTS[this.state.patient], m = model(this.state, pp);
@@ -4591,7 +4591,7 @@ class Component extends DCLogic {
     const gap = c ? ({ asthma: 14, bronchObs: 14, ards: 9, bronch: 8, scArds: 9, scArdsFight: 9, scAsthma: 14, scAsthmaTrig: 14, scAsthmaCrash: 14, scAsthmaDay2: 14 })[c.patient] || (PATIENTS[c.patient] || {}).gap || 4 : 0;
     return {
       setupMode: on, ventRunning: !on,
-      monSpo2: c && s.ventOn ? String(live.spo2) : '--', monEtco2: c && s.ventOn ? String(Math.max(10, Math.round(parseFloat(live['PaCO₂']) - gap))) : '--',
+      monSpo2: c && s.ventOn && !s.armed ? String(live.spo2) : '--', monEtco2: c && s.ventOn && !s.armed ? String(Math.max(10, Math.round(parseFloat(live['PaCO₂']) - gap))) : '--',
       suIf: [['Non-invasive', true], ['Invasive', false]].map(([label, niv]) => ({ label, go: () => set({ niv, mode: su.niv === niv ? su.mode : null }), color: su.niv === niv ? '#0E1012' : '#8A9096', bg: su.niv === niv ? '#F2EFE8' : 'transparent' })),
       suModes: (su.niv ? SU_MODES_NIV : SU_MODES).map(([id, label]) => ({ label, go: () => set({ mode: id }), ...btn(su.mode === id) })),
       suPts: [['neonatal', 'Neonatal'], ['child', 'Child'], ['adult', 'Adult']].map(([id, label]) => ({ label, go: () => set({ pt: id }), ...btn(su.pt === id) })),
@@ -4599,15 +4599,15 @@ class Component extends DCLogic {
       suWtInc: () => set({ wt: Math.min(120, +(su.wt + step).toFixed(1)) }), suWtDec: () => set({ wt: Math.max(0, +(su.wt - step).toFixed(1)) }),
       suTest: () => { if (su.test !== 'idle') return; set({ test: 'running' }); setTimeout(() => set({ test: 'done' }), 2200); },
       suTestLabel: su.test === 'idle' ? 'Perform self test' : su.test === 'running' ? 'Testing…' : 'Test complete', suTestIcon: su.test === 'done' ? 'icon-circle-check' : su.test === 'running' ? 'icon-loader' : 'icon-play', suTestColor: su.test === 'done' ? '#93C29A' : '#F2EFE8',
-      suCancel: () => set(SU_RESET),
-      suSave: () => { if (!ready) return; const nv = NIV_MODES.includes(su.mode); this.setState({ ventOn: true, fpRun: true, vmode: su.mode, mode: nv ? (su.mode === 'NIV-T' ? 'PC' : 'PS') : su.mode.indexOf('PC') >= 0 ? 'PC' : su.mode === 'PS' ? 'PS' : 'VC', caseWt: su.wt, modeMenu: false, sel: nv ? VKEYS[su.mode][0] : su.mode.indexOf('PC') >= 0 ? 'pinsp' : su.mode === 'PS' ? 'ps' : 'vt' }); },
+      suCancel: () => { set(SU_RESET); this.setState({ armed: false }); },
+      suSave: () => { if (!ready) return; const nv = NIV_MODES.includes(su.mode); this.setState({ ventOn: true, fpRun: true, armed: true, vmode: su.mode, mode: nv ? (su.mode === 'NIV-T' ? 'PC' : 'PS') : su.mode.indexOf('PC') >= 0 ? 'PC' : su.mode === 'PS' ? 'PS' : 'VC', caseWt: su.wt, modeMenu: false, sel: nv ? VKEYS[su.mode][0] : su.mode.indexOf('PC') >= 0 ? 'pinsp' : su.mode === 'PS' ? 'ps' : 'vt' }); },
       suSaveColor: ready ? '#0E1012' : '#4A4740', suSaveBg: ready ? '#93C29A' : '#1A1D20',
       suNote: nivCase && !su.niv ? 'The child is on a mask, not intubated. Choose non-invasive.' : su.niv && !nivCase ? 'The patient is intubated. Non-invasive is not available.' : !su.mode ? 'Choose a mode.' : !su.pt ? 'Choose the patient type.' : !su.wt ? 'Set the weight from the chart.' : su.test !== 'done' ? 'Run the self test before ventilating.' : c && Math.abs(su.wt - c.ibw) > c.ibw * 0.15 ? 'Weight does not match the chart. Save anyway, or correct it.' : 'Ready. Save & close to begin ventilating.'
     };
   }
   practiceVals(s, m, alarms) {
     const done = s.pDone || {}, newly = {};
-    if (!s.caseId && !s.fpRun) {} else PRACTICE.forEach(t => { for (let j = 0; j < t.tasks.length; j++) { const k = t.id + j; if (done[k]) continue; if (t.tasks[j][1](s, m, alarms)) newly[k] = true; break; } });
+    if ((!s.caseId && !s.fpRun) || s.armed) {} else PRACTICE.forEach(t => { for (let j = 0; j < t.tasks.length; j++) { const k = t.id + j; if (done[k]) continue; if (t.tasks[j][1](s, m, alarms)) newly[k] = true; break; } });
     if (Object.keys(newly).length && !this._pPending) { this._pPending = true; setTimeout(() => { this._pPending = false; this.setState(st => ({ pDone: { ...st.pDone, ...newly } })); }, 0); }
     const all = { ...done, ...newly };
     const total = PRACTICE.reduce((n, t) => n + t.tasks.length, 0), doneN = Object.keys(all).length;
@@ -4618,7 +4618,7 @@ class Component extends DCLogic {
           toggle: () => this.setState({ pOpen: t.id }), figAge: AGE_BAND(t.who),
           ...(() => { const pr = (s.pRv || {})[t.id] || {}, flip = k => () => this.setState(st => ({ pRv: { ...(st.pRv || {}), [t.id]: { ...((st.pRv || {})[t.id] || {}), [k]: !((st.pRv || {})[t.id] || {})[k] } } }));
             return { showSound: !!CASE_MEDIA[t.id].sound && !!pr.listen, showCxr: !!pr.cxr, chips: (CASE_MEDIA[t.id].sound ? [['listen', 'Listen']] : []).concat([['cxr', 'Chest X-ray']]).map(([k, label]) => ({ label, on: !!pr[k], go: flip(k) })) }; })(), short: (PRACTICE.indexOf(t) + 1) + ' · ' + t.short, tabBg: open ? 'var(--text-primary)' : 'transparent', tabFg: open ? 'var(--surface-page)' : 'var(--text-primary)', tabRing: open ? 'none' : 'inset 0 0 0 1px var(--border-default)', lessonLinks: t.lessons.map(([mod, i]) => ({ label: 'Module ' + mod + ' · ' + LESSON_SETS[mod][i].h.join('').trim(), go: () => this.openBasics(i, mod) })), cxrImg: (this._cxr = this._cxr || {})[t.id] || (this._cxr[t.id] = React.createElement('img', { key: 'cxr-' + t.id, src: CASE_MEDIA[t.id].cxr, alt: 'Chest X-ray', style: CXR_STYLE })), cxrCap: CASE_MEDIA[t.id].cxrCap, sound: CASE_MEDIA[t.id].sound || '', hasSound: !!CASE_MEDIA[t.id].sound, soundCap: CASE_MEDIA[t.id].soundCap || '', who: t.who, story: t.story, goal: t.goal, ptLabel: 'Load ' + PATIENTS[t.pt].label.toLowerCase(), ptLoaded: s.patient === t.pt, ptNotLoaded: s.patient !== t.pt,
-          load: () => { const p = PATIENTS[t.pt], pat = PATIENTS[this.state.patient] || {}; this.setState(p.infant && !pat.infant ? { patient: t.pt, fpRun: false, su: { ...SU_RESET }, ...INFANT_START } : !p.infant && pat.infant ? { patient: t.pt, fpRun: false, su: { ...SU_RESET }, ...ADULT_START } : { patient: t.pt, fpRun: false, su: { ...SU_RESET } }); },
+          load: () => { const p = PATIENTS[t.pt], pat = PATIENTS[this.state.patient] || {}; this.setState(p.infant && !pat.infant ? { patient: t.pt, fpRun: false, su: { ...SU_RESET }, armed: false, ...INFANT_START } : !p.infant && pat.infant ? { patient: t.pt, fpRun: false, su: { ...SU_RESET }, armed: false, ...ADULT_START } : { patient: t.pt, fpRun: false, su: { ...SU_RESET }, armed: false }); },
           tasks: t.tasks.map(([label, , how], j) => { const ok = !!all[t.id + j]; return { label, how, n: String(j + 1), icon: ok ? 'icon-circle-check' : 'icon-circle', color: ok ? 'var(--success)' : 'var(--text-tertiary)', text: ok ? 'var(--text-secondary)' : 'var(--text-primary)' }; }) }; })
     };
   }
@@ -4761,9 +4761,10 @@ class Component extends DCLogic {
     const keys = VKEYS[vmodeOf(s)].filter(k => !(pat.eff != null && (k === 'eff' || (k === 'rr' && ['PS', 'CPAP'].includes(vmodeOf(s))))));
     const sel = keys.includes(s.sel) ? s.sel : keys[0], sd = defsFor(sel, pat);
 
+    const volMode = ['AC-VC', 'SIMV-VC'].includes(vmodeOf(s));
     const alarms = [];
-    if (m.pplat > 30) alarms.push(`Plateau ${m.pplat.toFixed(0)} cmH₂O is above 30.`);
-    if (m.dp > 15) alarms.push(`Driving pressure ${m.dp.toFixed(0)} — aim for 15 or less.`);
+    if (volMode && m.pplat > 30) alarms.push(`Plateau ${m.pplat.toFixed(0)} cmH₂O is above 30.`);
+    if (volMode && m.dp > 15) alarms.push(`Driving pressure ${m.dp.toFixed(0)} — aim for 15 or less.`);
     if (m.auto >= 2) alarms.push(c ? `Measured end-expiratory pressure is ${m.totalPeep.toFixed(1)} cmH₂O, above set PEEP.` : `Auto-PEEP ${m.auto.toFixed(1)} cmH₂O. Expiration is too short for τ ${m.tau.toFixed(2)} s.`);
     if (m.vte / ibw > 8) alarms.push(`VT ${(m.vte / ibw).toFixed(1)} mL/kg IBW.`);
     const hi = 'var(--text-accent)', no = 'var(--text-primary)';
@@ -4818,10 +4819,10 @@ class Component extends DCLogic {
         ['Work through the steps.', 'Tap a knob, turn the dial, watch the waves and numbers. Each step ticks when you get it right.'],
         ['Explore freely.', 'Free practice lets you try any setting on any patient. Nothing can go wrong here.']
       ].map(([h, d], i) => ({ n: String(i + 1).padStart(2, '0'), h, d })),
-      standby: false, standbyNote: (PATIENTS[s.patient] || {}).label + ' connected. Check your settings on the knobs, then start.',
-      startRun: () => this.setState({ fpRun: true }), toggleRun: () => !s.caseId && this.setState(st => ({ fpRun: !st.fpRun })),
-      ledColor: (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? '#E9B54A' : '#6FBF73', ledLabel: (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? 'STANDBY' : 'ON',
-      simParts: [['Free practice', !s.caseId, () => this.setState({ caseId: null, ventOn: true, fpRun: false, su: { ...SU_RESET } })], ['Cases', !!s.caseId, () => this.setState({ screen: 'cases' })]].map(([label, on, go]) => ({ label, go, bg: on ? 'var(--surface-page)' : 'transparent', color: on ? 'var(--text-primary)' : 'var(--text-secondary)' })),
+      standby: !!s.armed && !(c ? !s.ventOn : !s.fpRun), standbyNote: 'Mode set. Turn the knobs below to your settings for this child, then start ventilation.',
+      startRun: () => this.setState({ fpRun: true, armed: false }), toggleRun: () => !s.caseId && this.setState(st => ({ fpRun: !st.fpRun })),
+      ledColor: s.armed || (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? '#E9B54A' : '#6FBF73', ledLabel: s.armed || (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? 'STANDBY' : 'ON',
+      simParts: [['Free practice', !s.caseId, () => this.setState({ caseId: null, ventOn: true, fpRun: false, su: { ...SU_RESET }, armed: false })], ['Cases', !!s.caseId, () => this.setState({ screen: 'cases' })]].map(([label, on, go]) => ({ label, go, bg: on ? 'var(--surface-page)' : 'transparent', color: on ? 'var(--text-primary)' : 'var(--text-secondary)' })),
       homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `9 modules · ${d} of 74 lessons done` : '9 modules · 74 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum'], ['live', 'Live session', 'Join the talk on the screen', 'icon-presentation', 'dusk']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
       simRef: this.simRef, lessonRef: this.lessonRef,
       tabs: [['learn', 'Learn', 'icon-book-open'], ['sim', 'Simulator', 'icon-activity'], ['cases', 'Cases', 'icon-clipboard-list']].map(([id, label, icon]) => ({
@@ -4871,12 +4872,12 @@ class Component extends DCLogic {
           setTimeout(() => { const st = this.state, cc = CASES.find(x => x.id === st.caseId); if (!cc) return; const mm = model(st, PATIENTS[st.patient]), res = this.computeGas(cc, st, mm); const at = 'drawn ' + Math.round(mm.mv * 10) / 10 + ' L/min MV · PEEP ' + st.peep + ' · FiO₂ ' + (st.fio2 / 100).toFixed(2);
             this.setState(s2 => ({ gas: { ...s2.gas, [cc.id]: { pending: false, res, at } } })); }, 2500); };
         return this.onDemand('cx', this.mapA(c.assess), s.rv, k => this.setState(st => ({ rv: { ...st.rv, [k]: !st.rv[k] } })),
-          { vit, abg, learn: true, key: c.id, perf: c.id, head: gasSt.pending ? 'Blood gas · running…' : gasSt.res ? 'Blood gas · arterial · ' + gasSt.at : 'Blood gas · arterial · ' + (c.niv ? 'on oxygen, before NIV' : 'on arrival, hand ventilated'), btn: gasSt.pending || !s.ventOn ? '' : (gasSt.res ? 'Repeat gas' : 'Send a gas'), send });
+          { vit, abg, learn: true, key: c.id, perf: c.id, head: gasSt.pending ? 'Blood gas · running…' : gasSt.res ? 'Blood gas · arterial · ' + gasSt.at : 'Blood gas · arterial · ' + (c.niv ? 'on oxygen, before NIV' : 'on arrival, hand ventilated'), btn: gasSt.pending || !s.ventOn || s.armed ? '' : (gasSt.res ? 'Repeat gas' : 'Send a gas'), send });
       })() : { cx: null, cxChips: [], cxRv: {}, cxGasHead: '', cxGasBtn: '', cxSendGas: () => {} }),
       cxLearnLabel: c ? c.learn[1] : '', cxLearnGo: () => c && this.openBasics(c.learn[0], c.learn[2] || '01'),
       hasNextCase: !!c && (c.scen ? !!stageOf(c) : CASES.indexOf(c) < CASES.filter(x => !x.scen).length - 1),
       nextLabel: c && c.scen ? 'Next stage' : 'Next case',
-      nextCase: () => { const n = c.scen ? stageOf(c) : CASES[CASES.indexOf(c) + 1]; if (n && n.keep) { this.setState(st => ({ ...(n.set || {}), ...(n.set && n.set.vmode && VKEYS[n.set.vmode] ? { sel: VKEYS[n.set.vmode][0] } : {}), patient: n.patient, caseId: n.id, casePhase: 'bedside', ventOn: true, rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, acts: { ...(st.acts || {}), [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); return; } if (n) this.setState(st => ({ ...(PATIENTS[n.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: n.patient, caseId: n.id, sel: 'vt', casePhase: 'chart', rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); },
+      nextCase: () => { const n = c.scen ? stageOf(c) : CASES[CASES.indexOf(c) + 1]; if (n && n.keep) { this.setState(st => ({ ...(n.set || {}), ...(n.set && n.set.vmode && VKEYS[n.set.vmode] ? { sel: VKEYS[n.set.vmode][0] } : {}), patient: n.patient, caseId: n.id, casePhase: 'bedside', ventOn: true, rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, acts: { ...(st.acts || {}), [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); return; } if (n) this.setState(st => ({ ...(PATIENTS[n.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, armed: false, patient: n.patient, caseId: n.id, sel: 'vt', casePhase: 'chart', rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); },
       caseEvent: c && c.keep ? c.story : '', caseTeach: c && !c.scen && (s.finished || {})[c.id] ? (c.event || '') : '',
       ...(() => { const fin = c && c.scen && !stageOf(c) && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1]);
         const list = fin ? CASES.filter(x => x.scen === c.scen && x.event).sort((a, b) => a.stage - b.stage).map(x => ({ t: 'Stage ' + x.stage + ' · ' + x.t, e: x.event })) : [];
@@ -4902,20 +4903,20 @@ class Component extends DCLogic {
       hasDebrief: !!(c && c.debrief && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1])),
       hasReview: !!(c && c.debrief && (s.finished || {})[c.id] && (SIM_SCEN.find(x => x.id === c.scen) || {}).review && c.goals(m, acts, s).every(g => g[1])),
       reviewScen: () => { const sc = c && SIM_SCEN.find(x => x.id === c.scen); const i = sc ? SCENARIOS.findIndex(x => x.id === sc.review) : -1; if (i >= 0) this.setState({ screen: 'scen', scIdx: i, scStage: 0, caseId: null, ventOn: true }); },
-      caseOpen: !!c && s.ventOn && !(s.finished || {})[c.id], caseHead: c && (s.finished || {})[c.id] ? 'Goals · ' + c.goals(m, acts, s).filter(g => g[1]).length + ' of ' + c.goals(m, acts, s).length + ' met' : 'At the bedside', caseShown: !!c && !!(s.finished || {})[c.id],
+      caseOpen: !!c && s.ventOn && !s.armed && !(s.finished || {})[c.id], caseHead: c && (s.finished || {})[c.id] ? 'Goals · ' + c.goals(m, acts, s).filter(g => g[1]).length + ' of ' + c.goals(m, acts, s).length + ' met' : 'At the bedside', caseShown: !!c && !!(s.finished || {})[c.id],
       finishCase: () => { if (!c) return; const ok = c.goals(m, acts, s).every(g => g[1]); this.perfSet(c.id, q => ({ ...q, checks: (q.checks || 0) + 1, done: Date.now() })); this.setState(st => ({ finished: { ...st.finished, [c.id]: true }, solved: ok ? { ...st.solved, [c.id]: true } : st.solved })); },
       retryCase: () => c && (this.perfSet(c.id, q => ({ ...q, done: null })), this.setState(st => ({ finished: { ...st.finished, [c.id]: false } }))),
       caseVerdict: c && (s.finished || {})[c.id] ? (c.goals(m, acts, s).every(g => g[1]) ? (c.scen ? (stageOf(c) ? 'Targets met. On to the next stage.' : 'Scenario complete. All targets met.') : 'Case closed. All goals met.') : 'Not yet. Adjust and check again.') : '',
       goals: c && (s.finished || {})[c.id] ? c.goals(m, acts, s).map(([label, ok]) => ({ label, icon: ok ? 'icon-circle-check' : 'icon-circle', color: ok ? '#B3BDA3' : 'var(--danger)', text: ok ? 'var(--text-secondary)' : 'var(--text-primary)' })) : [],
-      endCase: () => this.setState({ caseId: null, ventOn: true }),
-      patients: Object.entries(PATIENTS).filter(([, p]) => !p.hidden).map(([id, p]) => ({ label: p.label, selected: s.patient === id, select: () => this.setState(p.infant && !pat.infant ? { patient: id, fpRun: false, su: { ...SU_RESET }, ...INFANT_START } : !p.infant && pat.infant ? { patient: id, fpRun: false, su: { ...SU_RESET }, ...ADULT_START } : { patient: id, fpRun: false, su: { ...SU_RESET } }) })),
+      endCase: () => this.setState({ armed: false, caseId: null, ventOn: true }),
+      patients: Object.entries(PATIENTS).filter(([, p]) => !p.hidden).map(([id, p]) => ({ label: p.label, selected: s.patient === id, select: () => this.setState(p.infant && !pat.infant ? { patient: id, fpRun: false, su: { ...SU_RESET }, armed: false, ...INFANT_START } : !p.infant && pat.infant ? { patient: id, fpRun: false, su: { ...SU_RESET }, armed: false, ...ADULT_START } : { patient: id, fpRun: false, su: { ...SU_RESET }, armed: false }) })),
       readouts: [
         ro('PPEAK', m.ppeak.toFixed(0), 'cmH₂O', m.ppeak > 40),
-        ro('PPLAT', m.pplat.toFixed(0), 'cmH₂O', m.pplat > 30),
+        ...(volMode ? [ro('PPLAT', m.pplat.toFixed(0), 'cmH₂O', m.pplat > 30)] : []),
         ro('PEEP TOT', m.totalPeep.toFixed(1), 'cmH₂O', m.auto >= 2),
         ro('VTE', m.vte.toFixed(0), 'mL', m.vte / ibw > 8),
         ro('MVE', m.mv.toFixed(1), 'L/min', false),
-        ro('ΔP', m.dp.toFixed(0), 'cmH₂O', m.dp > 15)],
+        ...(volMode ? [ro('ΔP', m.dp.toFixed(0), 'cmH₂O', m.dp > 15)] : [])],
       ...this.practiceVals(s, m, alarms),
       ...this.setupVals(s, c, m),
       hasAlarms: !c && alarms.length > 0 && (this.props.showAlarms ?? true), alarmText: alarms.join(' '),
@@ -4941,9 +4942,9 @@ class Component extends DCLogic {
       inc: () => this.setParam(sel, s[sel] + sd.step), dec: () => this.setParam(sel, s[sel] - sd.step),
 
       simScen: SIM_SCEN.map(z => { const first = CASES.find(x => x.id === z.stages[0]); const done = z.stages.filter(id => s.solved[id]).length; return { eyebrow: z.eyebrow, title: z.title, chord: z.chord, setting: z.setting, blurb: z.blurb, done: done === z.stages.length, count: done + ' / ' + z.stages.length + ' stages',
-        start: () => this.setState(st => ({ ...(PATIENTS[first.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: first.patient, caseId: first.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, modeMenu: false, perf: Object.fromEntries(Object.entries(st.perf || {}).filter(([k]) => !z.stages.includes(k)).concat([[first.id, { t0: Date.now() }]])), acts: { ...(st.acts || {}), [first.id]: {} }, cxrPick: { ...st.cxrPick, [first.id]: null }, ettPick: { ...st.ettPick, [first.id]: null }, finished: { ...st.finished, [first.id]: false }, gas: { ...st.gas, [first.id]: {} } })) }; }),
+        start: () => this.setState(st => ({ ...(PATIENTS[first.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, armed: false, patient: first.patient, caseId: first.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, modeMenu: false, perf: Object.fromEntries(Object.entries(st.perf || {}).filter(([k]) => !z.stages.includes(k)).concat([[first.id, { t0: Date.now() }]])), acts: { ...(st.acts || {}), [first.id]: {} }, cxrPick: { ...st.cxrPick, [first.id]: null }, ettPick: { ...st.ettPick, [first.id]: null }, finished: { ...st.finished, [first.id]: false }, gas: { ...st.gas, [first.id]: {} } })) }; }),
       cases: CASES.filter(cs => !cs.scen).map(cs => ({ eyebrow: cs.eyebrow, title: cs.title, chord: cs.chord, setting: cs.setting, done: !!s.solved[cs.id],
-        start: () => this.setState(st => ({ ...(PATIENTS[cs.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: cs.patient, caseId: cs.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, perf: { ...(st.perf || {}), [cs.id]: { t0: Date.now() } }, cxrPick: { ...st.cxrPick, [cs.id]: null }, ettPick: { ...st.ettPick, [cs.id]: null }, modeMenu: false, finished: { ...st.finished, [cs.id]: false }, gas: { ...st.gas, [cs.id]: {} } })) }))
+        start: () => this.setState(st => ({ ...(PATIENTS[cs.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, armed: false, patient: cs.patient, caseId: cs.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, perf: { ...(st.perf || {}), [cs.id]: { t0: Date.now() } }, cxrPick: { ...st.cxrPick, [cs.id]: null }, ettPick: { ...st.ettPick, [cs.id]: null }, modeMenu: false, finished: { ...st.finished, [cs.id]: false }, gas: { ...st.gas, [cs.id]: {} } })) }))
     };
   }
 }
