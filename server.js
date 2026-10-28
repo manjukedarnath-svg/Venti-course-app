@@ -47,7 +47,7 @@ function live(route, b) {
   switch (route) {
     case 'create': {
       const want = String(b.code || '').toUpperCase();
-      if (/^[A-Z][A-Z0-9]{2,5}$/.test(want) && rooms[want] && !b.reset) {  // reopened deck: same room, same key
+      if (/^[A-Z][A-Z0-9]{2,5}$/.test(want) && rooms[want] && !b.reset && Date.now() - rooms[want].at < 4 * 36e5) {  // reopened deck within 4 h: same room, same key, answers kept
         rooms[want].at = Date.now(); saveRooms();
         return [200, { room: want, key: rooms[want].key, cur: rooms[want].cur }];
       }
