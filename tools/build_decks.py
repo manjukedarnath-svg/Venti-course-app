@@ -306,7 +306,7 @@ def views_slide(eyebrow='POCUS · the views you need'):
 
 
 def opener(key, eyebrow, name, lines, n, notes, code):
-    LIVE_OUT[key] = {'t': name, 'illus': ipath(n, ''), 'lines': lines}
+    LIVE_OUT[key] = {'t': plain(name), 'illus': ipath(n, ''), 'lines': lines}
     body = (f'<div style="flex:1; display:grid; grid-template-columns:minmax(0,1fr) 1040px; gap:56px; align-items:center;">'
             f'<div style="display:flex; flex-direction:column; gap:32px;"><span style="{MONO} font-size:24px; color:var(--text-secondary);">{e(eyebrow)}</span>'
             f'<h2 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:104px; line-height:.98; letter-spacing:-.015em; text-wrap:balance;">{name}</h2>'
@@ -386,7 +386,8 @@ def join_slide(code, notes):
             f'<span style="font-size:44px; line-height:1.3;">2 · The case comes to your phone</span><span style="font-size:44px; line-height:1.3;">3 · Tap your order</span></div>'
             f'<div style="display:flex; gap:40px; align-items:baseline;"><span style="{MONO} font-size:24px; color:var(--text-secondary);">Or enter the code</span>'
             f'<span style="font-family:var(--font-display); font-size:150px; line-height:.85; color:var(--text-accent); letter-spacing:.04em;">{code}</span></div>'
-            f'<span style="font-family:var(--font-mono); font-size:22px; color:var(--text-secondary);">{e(HOST.replace("https://", ""))}</span></div>'
+            f'<span style="font-family:var(--font-mono); font-size:22px; color:var(--text-secondary);">{e(HOST.replace("https://", ""))}</span>'
+            f'<span data-live-status style="{MONO} font-size:22px; color:#F0A08C;">Connecting to the room…</span></div>'
             f'<div style="background:#FFFFFF; border-radius:12px; padding:30px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1px var(--border-subtle);">{qr_svg(url)}</div></div>')
     LIVE_OUT.setdefault('join', {'t': 'Connected', 'lines': ['Watch the screen. The case comes to your phone as the speaker reaches it.']})
     return section('Join', body, notes, chord='dusk', pad='90px 120px')
@@ -455,7 +456,36 @@ def shell(title, sections, code, thumb_from='cp-interactions.html'):
     # an empty video slot shows its note; a loaded clip hides it
     tail = tail.replace("    const syncVideos = () => document.querySelectorAll('deck-stage video').forEach(v => {",
         "    document.querySelectorAll('video[data-slot]').forEach(v => { const show = () => { const n = v.parentNode.querySelector('[data-slot-note]'); if (n) n.style.display = 'none'; }; v.addEventListener('loadeddata', show); v.addEventListener('error', () => { v.style.display = 'none'; }); if (v.readyState >= 2) show(); });\n    const syncVideos = () => document.querySelectorAll('deck-stage video').forEach(v => {")
+    # robust room: heartbeat every 3 s re-sends the current question, reconnects after a failure or a server restart,
+    # and shows the state (green: room open, phones connected; red: not connected) on the badge and the Join slide
+    tail = tail.replace("      if (room && key && q !== lastQ) { lastQ = q; post('set', { room, key, q }).catch(() => {}); }",
+                        "      if (q !== lastQ) { lastQ = q; sendSet(); }")
+    tail = tail.replace("      badge.style.display = 'block'; badge.textContent = room ? 'Live · code ' + room : 'Live · offline';",
+                        "      badge.style.display = 'block'; paint();")
+    tail = tail.replace("        badge.textContent = 'Live · code ' + room + ' · ' + r.j.n + (r.j.n === 1 ? ' answer' : ' answers'); } catch (x) {} };",
+                        "        nAns = r.j.n; if (r.j.phones !== undefined) phones = r.j.phones; okAt = Date.now(); paint(); } catch (x) {} };")
+    tail = tail.replace("    let room = null, key = null, lastQ, timer = null;",
+                        """    let room = null, key = null, lastQ, timer = null, okAt = 0, phones = 0, nAns = null, busy = false, moved = false;
+    // only the copy of the deck the speaker is actually driving moves the phones: a copy just opened elsewhere (a phone, a second tab) watches
+    ['keydown', 'pointerdown', 'touchstart'].forEach(ev => window.addEventListener(ev, () => { if (!moved) { moved = true; setTimeout(sendSet, 50); } }, { capture: true, passive: true }));
+    const keep = () => { try { localStorage.setItem('vc-live-room', JSON.stringify({ room, key, at: Date.now() })); } catch (x) {} };
+    const paint = () => { const ok = room && Date.now() - okAt < 8000;
+      badge.style.background = ok ? 'rgba(62,125,79,.95)' : 'rgba(176,68,40,.95)';
+      badge.textContent = ok ? 'Live · code ' + room + ' · ' + phones + (phones === 1 ? ' phone' : ' phones') + (nAns !== null ? ' · ' + nAns + (nAns === 1 ? ' answer' : ' answers') : '') : 'Live · not connected · check the internet';
+      document.querySelectorAll('[data-live-status]').forEach(e => { e.textContent = ok ? 'Room ' + room + ' is open · ' + phones + (phones === 1 ? ' phone' : ' phones') + ' connected' : 'Connecting to the room…';
+        e.style.color = ok ? '#7FD69A' : '#F0A08C'; }); };
+    const connect = async () => { try { const r = await post('create', { code: ROOM }); if (r.ok) { room = r.j.room; key = r.j.key; keep(); fill(); return true; } } catch (x) {} return false; };
+    const sendSet = async () => { if (busy) return; busy = true;
+      try { if (!room || !key) await connect();
+        if (room && key && !moved) { const r = await post('state', { room }); if (r.ok) { okAt = Date.now(); if (r.j.phones !== undefined) phones = r.j.phones; } else await connect(); }
+        else if (room && key) { let r = await post('set', { room, key, q: lastQ || null });
+          if (!r.ok && await connect()) r = await post('set', { room, key, q: lastQ || null });
+          if (r.ok) { okAt = Date.now(); if (r.j.phones !== undefined) phones = r.j.phones; } } } catch (x) {}
+      busy = false; paint(); };
+    setInterval(sendSet, 3000);""")
+    tail = tail.replace("      fill(); lastQ = undefined; syncLive();", "      fill(); lastQ = undefined; syncLive(); sendSet();")
     assert 'data-set-summary' in tail and 'data-slot-note' in tail, 'set patch failed'
+    assert 'sendSet(); }' in tail and 'paint();' in tail and 'setInterval(sendSet, 3000)' in tail and 'nAns = r.j.n' in tail, 'room patch failed'
     assert 'code: ROOM' in tail and 'data-live-results' in tail and 'sv.room === ROOM' in tail, 'tail patch failed'
     return head + '\n\n' + sections + tail
 

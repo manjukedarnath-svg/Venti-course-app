@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VentCourse · Present</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@300;400;500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0; background:#F3EDE3; color:#1B1A17; font-family:'Hanken Grotesk', system-ui, sans-serif;">
+<main style="max-width:860px; margin:0 auto; padding:48px 20px 64px; display:flex; flex-direction:column; gap:28px;">
+  <span style="font:500 12px/1 'IBM Plex Mono', monospace; letter-spacing:.16em; text-transform:uppercase; color:#6E6A63;">VentCourse · speaker</span>
+  <h1 style="margin:0; font:400 56px/1 'Instrument Serif', serif; letter-spacing:-.02em;">Present with <em>live</em> phones</h1>
+  <ol style="margin:0; padding-left:22px; font-size:18px; line-height:1.6; color:#3B3A36;">
+    <li>Open the talk below <b>on the laptop, in Chrome</b>. Not a PDF, not Google Slides: only these links run the live room.</li>
+    <li>Press <b>F</b> for full screen, then the arrow keys (or the clicker).</li>
+    <li>On the <b>Join</b> slide, check the green line: <b>"Room … is open · N phones connected"</b>. Red means no internet on the laptop.</li>
+    <li>Candidates scan the QR code. Phones that join early wait, and connect by themselves when you open the talk.</li>
+  </ol>
+  <div id="list" style="display:grid; gap:14px;"></div>
+  <p style="margin:0; font-size:15px; line-height:1.6; color:#6E6A63;">Opening the same talk on a second device is safe: it watches, it does not move the phones. The room keeps everyone's answers even if the server restarts.</p>
+</main>
+<script>
+const T = [['cp-part1', 'CP interactions · Part 1', 'CP1'], ['cp-part2', 'CP interactions · Part 2', 'CP2'], ['cp-complete', 'CP interactions · complete talk', 'CPF'],
+  ['ltv-cases', 'Long-term ventilation · five cases', 'LTV'], ['niv', 'Non-invasive ventilation', 'NIV'], ['niv-cases', 'NIV · three cases', 'NIVC'], ['niv-ltv', 'NIV and long-term ventilation', 'NIVL']];
+const list = document.getElementById('list');
+Promise.all(T.map(([f]) => fetch('talks/' + f + '.html', { method: 'GET' }).then(r => r.ok ? r.text() : '').catch(() => ''))).then(txts => {
+  T.forEach(([f, name], i) => { const m = (txts[i] || '').match(/<meta name="vc-live-room" content="([^"]+)">/); if (!txts[i]) return;
+    const a = document.createElement('a'); a.href = 'talks/' + f + '.html';
+    a.style.cssText = 'display:flex; justify-content:space-between; align-items:center; gap:16px; text-decoration:none; color:#1B1A17; background:#FFFFFF; border:1px solid #D2C5B1; border-radius:6px; padding:20px 24px; min-height:44px;';
+    a.innerHTML = '<span style="font-size:22px;">' + name + '</span><span style="font:500 14px/1 \'IBM Plex Mono\', monospace; letter-spacing:.14em; color:#B04428;">CODE ' + (m ? m[1] : '') + ' →</span>';
+    list.appendChild(a); });
+});
+</script>
+</body>
+</html>

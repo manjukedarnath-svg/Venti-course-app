@@ -29,28 +29,47 @@ const okUser = (b) => b && typeof b.u === 'string' && users[b.u] && users[b.u].p
 const isAdmin = (b) => okUser(b) && users[b.u].role === 'admin';
 const admins = () => Object.values(users).filter(v => v.role === 'admin').length;
 // Live sessions: a talk deck creates a room, sets the current question; candidates answer from the app.
-const rooms = {};
-const sweepRooms = () => { const t = Date.now(); for (const k in rooms) if (t - rooms[k].at > 864e5) delete rooms[k]; };
+// Rooms are saved to disk so a restart does not drop a session. A fixed-code room (CP1, LTV …) is never reset by
+// opening the deck again: every copy of the deck (laptop, second tab, Present bundle) gets the same presenter key.
+const ROOMS = path.join(DATA, 'rooms.json');
+let rooms = {};
+try { rooms = JSON.parse(fs.readFileSync(ROOMS, 'utf8')) || {}; } catch (e) { rooms = {}; }
+let roomsDirty = null;
+const saveRooms = () => { if (roomsDirty) return; roomsDirty = setTimeout(() => { roomsDirty = null;
+  try { fs.writeFileSync(ROOMS + '.tmp', JSON.stringify(rooms)); fs.renameSync(ROOMS + '.tmp', ROOMS); } catch (e) {} }, 800); };
+const sweepRooms = () => { const t = Date.now(); for (const k in rooms) if (t - rooms[k].at > 864e5) { delete rooms[k]; saveRooms(); } };
 const who = (b) => okUser(b) ? 'u:' + b.u : 'g:' + String(b.d || '').slice(0, 40);
+const phonesIn = (r) => { const t = Date.now(); return Object.values(r.seen || {}).filter(x => t - x < 3e4).length; };
 function live(route, b) {
   sweepRooms();
-  const r = rooms[String(b.room || '')] || rooms[String(b.room || '').toUpperCase()];
+  const code0 = String(b.room || '').toUpperCase();
+  const r = rooms[code0];
   switch (route) {
     case 'create': {
-      // A deck may ask for a fixed code (e.g. CP1) so a printed QR code always lands in its room; asking again resets it.
       const want = String(b.code || '').toUpperCase();
+      if (/^[A-Z][A-Z0-9]{2,5}$/.test(want) && rooms[want] && !b.reset) {  // reopened deck: same room, same key
+        rooms[want].at = Date.now(); saveRooms();
+        return [200, { room: want, key: rooms[want].key, cur: rooms[want].cur }];
+      }
       let code; if (/^[A-Z][A-Z0-9]{2,5}$/.test(want)) code = want; else do { code = String(1000 + Math.floor(Math.random() * 9000)); } while (rooms[code]);
       const key = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-      rooms[code] = { key, cur: null, at: Date.now(), opened: {}, ans: {} };
+      rooms[code] = { key, cur: null, at: Date.now(), opened: {}, ans: {}, seen: {} };
+      saveRooms();
       return [200, { room: code, key }];
     }
     case 'set': {
-      if (!r || r.key !== b.key) return [403, { error: 'no' }];
-      r.cur = typeof b.q === 'string' && b.q.length < 40 ? b.q : null; r.at = Date.now();
-      if (r.cur) r.opened[r.cur] = true;
-      return [200, { ok: true }];
+      if (!r) return [404, { error: 'no room' }];
+      if (r.key !== b.key) return [403, { error: 'no' }];
+      const cur = typeof b.q === 'string' && b.q.length < 40 ? b.q : null;
+      r.at = Date.now();
+      if (cur !== r.cur || (cur && !r.opened[cur])) { r.cur = cur; if (cur) r.opened[cur] = true; saveRooms(); }
+      return [200, { ok: true, phones: phonesIn(r) }];
     }
-    case 'state': { const rr = rooms[String(b.room || '').toUpperCase()] || r; return rr ? [200, { cur: rr.cur }] : [404, { error: 'no room' }]; }
+    case 'state': {
+      if (!r) return [404, { error: 'no room' }];
+      if (b.d) { (r.seen = r.seen || {})[String(b.d).slice(0, 40)] = Date.now(); }
+      return [200, { cur: r.cur, phones: phonesIn(r) }];
+    }
     case 'answer': {
       if (!r) return [404, { error: 'no room' }];
       const q = String(b.q || ''), id = who(b);
@@ -58,13 +77,15 @@ function live(route, b) {
       const a = String(b.a || '').replace(/\s+/g, ' ').trim().slice(0, 80);
       if (!a) return [400, { error: 'empty' }];
       (r.ans[q] = r.ans[q] || {})[id] = a;
+      if (b.d) (r.seen = r.seen || {})[String(b.d).slice(0, 40)] = Date.now();
+      saveRooms();
       return [200, { ok: true }];
     }
     case 'results': {
       if (!r) return [404, { error: 'no room' }];
       const all = Object.values(r.ans[String(b.q || '')] || {}), counts = {}, texts = {};
       for (const a of all) { if (/^[A-F]$/.test(a)) counts[a] = (counts[a] || 0) + 1; const k = a.toLowerCase(); texts[k] = texts[k] || { t: a, n: 0 }; texts[k].n++; }
-      return [200, { n: all.length, counts, texts: Object.values(texts).sort((x, y) => y.n - x.n).slice(0, 60) }];
+      return [200, { n: all.length, counts, texts: Object.values(texts).sort((x, y) => y.n - x.n).slice(0, 60), phones: phonesIn(r) }];
     }
   }
   return [404, { error: 'not found' }];
