@@ -195,6 +195,7 @@ def live_vent(scr):
     v = {'mode': scr.get('modeLong') or scr.get('mode', ''), 'set': scr.get('set') or [], 'meas': scr.get('meas') or []}
     n = scr.get('note') or scr.get('gas')
     if n: v['note'] = n
+    if scr.get('wave'): v['wave'] = scr['wave']
     return v
 
 
@@ -217,7 +218,7 @@ def stage_slides(d, code):
     story = d.get('hist') or st['story']
     # phone: the bedside, the support to set, the orders
     LIVE_OUT[sid] = {'t': d['eyebrow'] + ' · ' + title_plain, 'illus': ipath(n_before, ''), 'mon': scr['mon'], 'vent': live_vent(scr),
-                     'lines': [story], 'q': st['live']['q'], 'opts': [[L, label] for L, label, *_ in ords]}
+                     'lines': [story], 'q': st['live']['q'], 'opts': [[L, sh] for L, label, ok, resp, sh, cons in ords]}
     if T: LIVE_OUT[sid]['set'] = {k: T[k] for k in ('q', 'ifaces', 'start')}
     if not n_before: LIVE_OUT[sid].pop('illus')
     n_after = aft.get('illus') or n_before
@@ -228,7 +229,7 @@ def stage_slides(d, code):
     aft_scr['gas'] = ''
     aft_scr['msg'] = aft.get('msg', '')
     LIVE_OUT[sid + '_r'] = {'t': d['eyebrow'] + ' · the response', 'illus': ipath(n_after, ''), 'mon': aft['mon'], 'of': sid,
-                            'reveal': [[L, label, ok, resp] for L, label, ok, resp, *_ in ords], 'lines': [aft['happen']] + ([aft['why']] if aft.get('why') else [])}
+                            'reveal': [[L, sh, ok, resp] for L, label, ok, resp, sh, cons in ords], 'lines': [aft['happen']] + ([aft['why']] if aft.get('why') else [])}
     if 'set' in aft: LIVE_OUT[sid + '_r']['vent'] = live_vent(aft_scr)
     if not n_after: LIVE_OUT[sid + '_r'].pop('illus')
     right = next(o for o in ords if o[2])
@@ -409,8 +410,69 @@ def close_slide(head, sub, notes, code_hint):
 
 
 # ------------------------------------------------------------------ assemble ----------------------------------------
+def _txt(h):
+    return html.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', h))).strip()
+
+
+def key_points(sec):
+    """The words on a slide that has no live question, for the phones: its title and its key points in reading order."""
+    body = re.sub(r'<(svg|script|style|x-import|video)\b.*?</\1>', ' ', sec, flags=re.S)
+    body = re.sub(r'<div data-logo-plate.*?</div></div>|<div data-logo-plate[^>]*>.*?</div>', ' ', body, flags=re.S)
+    m = re.search(r'<h[12][^>]*>(.*?)</h[12]>', body, re.S)
+    title = _txt(m.group(1)) if m else ''
+    if m: body = body.replace(m.group(0), ' ', 1)
+    leaves = [_txt(x) for x in re.findall(r'>([^<>]+)<', body)]
+    out, buf = [], ''
+    for t in leaves:
+        if not t or t == title or t in ('KIMS Hospitals Bengaluru',) or re.fullmatch(r'[·\-–—|/]+', t):
+            continue
+        if len(t) < 26:  # short labels and numbers: join into one line
+            buf = (buf + ' · ' + t) if buf else t
+            if len(buf) > 70: out.append(buf); buf = ''
+            continue
+        if buf: out.append(buf); buf = ''
+        out.append(t)
+    if buf: out.append(buf)
+    seen, lines = set(), []
+    for l in out:
+        if l.lower() not in seen: seen.add(l.lower()); lines.append(l)
+    return title, lines[:9]
+
+
+def join_chip(code):
+    q = segno.make(f'{HOST}/#live-{code}', error='m')
+    svg = q.svg_inline(scale=4, border=1, dark='#1B1A17', light='#FFFFFF')
+    w = re.search(r'width="(\d+)"', svg).group(1)
+    svg = re.sub(r'width="\d+" height="\d+"', f'width="80" height="80" viewBox="0 0 {w} {w}"', svg, count=1)
+    return (f'<div data-join-chip style="position:absolute; bottom:12px; right:336px; z-index:6; display:flex; align-items:center; gap:12px; background:#FFFFFF; border:1px solid #D2C5B1; border-radius:6px; padding:5px 14px 5px 5px; pointer-events:none;">'
+            f'{svg}<div style="display:flex; flex-direction:column; gap:6px;"><span style="font:500 13px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:#6E6A63;">Join late?</span>'
+            f'<span style="font:400 36px/.9 var(--font-display); color:#B04428; letter-spacing:.04em;">{code}</span></div></div>')
+
+
 def shell(title, sections, code, thumb_from='cp-interactions.html'):
     s = SRC[thumb_from]
+    # every visible slide: the join code in the corner; a slide with no live question still sends its title and key points to the phones
+    chip = join_chip(code)
+    n_ = [0]
+    CHIP_RE = re.compile(r'\n?<div data-join-chip.*?</svg><div style="display:flex; flex-direction:column; gap:6px;">.*?</div></div>', re.S)
+    def per_section(m):
+        sec = CHIP_RE.sub('', m.group(0))  # a slide reused from a built talk: drop its old chip and phone entry
+        sec = re.sub(r' data-live="x[a-z0-9]+\d+" data-live-mode="info"', '', sec, count=1)
+        open_tag = re.match(r'<section [^>]*>', sec).group(0)
+        if 'data-deck-skip' in open_tag:
+            return sec
+        lab = re.search(r'data-label="([^"]*)"', open_tag).group(1)
+        n_[0] += 1
+        if 'data-live=' not in open_tag and lab not in ('Join',):
+            t, lines = key_points(sec)
+            k = f'x{code.lower()}{n_[0]}'
+            LIVE_OUT[k] = {'t': t or html.unescape(lab), 'lines': lines or ['Watch the screen.']}
+            open_tag2 = open_tag.replace('<section ', f'<section data-live="{k}" data-live-mode="info" ', 1)
+            sec = sec.replace(open_tag, open_tag2, 1); open_tag = open_tag2
+        if lab != 'Join':
+            sec = sec.replace(open_tag, open_tag + '\n' + chip, 1)
+        return sec
+    sections = re.sub(r'<section [^>]*>.*?</section>', per_section, sections, flags=re.S)
     head_end = s.index('<x-import component-from-global-scope="deck-stage"')
     head_end = s.index('>', head_end) + 1
     head = s[:head_end]

@@ -518,6 +518,6 @@ if __name__ == '__main__':
     bd.USED.clear(); joint = build_joint()
     open(os.path.join(talks, 'niv-ltv.html'), 'w').write(joint)
     print('niv-ltv.html', len(joint), joint.count('<section '), 'slides')
-    keep = {k: v for k, v in bd.LIVE_OUT.items() if k[:3] in ('nb1', 'nb2', 'np1', 'np2', 'nx1', 'nx2') or k in ('anaya_case', 'ishaan_case', 'zara_case')}
+    keep = {k: v for k, v in bd.LIVE_OUT.items() if k[:3] in ('nb1', 'nb2', 'np1', 'np2', 'nx1', 'nx2') or k in ('anaya_case', 'ishaan_case', 'zara_case') or re.match(r'x(nivt|niv|nlv)\d+$', k)}
     write_live(keep)
     print('LIVE entries added', len(keep))
