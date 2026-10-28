@@ -1379,7 +1379,7 @@
       <sc-if value="{{ isCases }}" hint-placeholder-val="{{ false }}">
         <div style="padding:12px 20px 32px; display:flex; flex-direction:column; gap:24px;">
           <div style="display:flex; flex-direction:column; gap:10px;">
-            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Cases · 2 scenarios · 5 cases</span>
+            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Cases · {{ simScenCount }} simulation scenarios</span>
             <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:44px; line-height:1; letter-spacing:-.02em;">At the <em>bedside</em></h1>
             <p style="margin:0; font-weight:300; font-size:16px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">Read the chart, take over the patient, then ask for what you need. Finish the case when the ventilator is right.</p>
           </div>
@@ -3503,6 +3503,269 @@ SIM_STAGES.push(
  ['sp1', 'Severe BPD on acute settings: rate 40, Ti 0.4, PEEP 5, auto-PEEP 2.5, PaCO₂ 76. Which strategy?', [['Rate 50 for the CO₂', 0, 'Less time to empty: more trapping, a higher CO₂.'], ['Rate 20, VT 55, Ti 0.7, PEEP 10', 1, 'Flow reaches zero every breath, auto-PEEP 0, PaCO₂ 76 → 54, SpO₂ 93%.'], ['PEEP 3 for the hyperinflation', 0, 'The malacic airways collapse: more trapping, not less.'], ['HFOV now', 0, 'A rescue for an acute lung; this is a chronic lung on the wrong settings.']]],
  ['sp2', 'Day 3, suction: crying, arching, SpO₂ 75%, HR 190 → 110, BP 55/30. What do you do?', [['Hand-bag at 60 to blow off CO₂', 0, 'It stacks gas in this lung and squeezes the RV: the BP falls further.'], ['Stop the stimulus, FiO₂ 1.0, fentanyl, iNO 20, support the BP; keep the settings', 1, 'SpO₂ 99%, BP 76/44, HR 150. The chronic settings stay.'], ['Raise the rate to 40', 0, 'Trapping returns and the RV load rises.'], ['Paralyse and wait', 0, 'Without oxygen, iNO and a blood pressure the crisis carries on.']]]
 ].forEach(([id, q, opts]) => { const c = SIM_STAGES.find(x => x.id === id); if (c) c.live = { q, opts }; });
+// ---------- Sim scenarios 16–20: the five original bedside cases (Case 01–05), each now stage 1 of a three-stage scenario ----------
+const ARDS17_C = p => ARDS_C(p) * 7.5;
+Object.assign(PATIENTS, {
+  sc16Peep: { label: 'ARDS · 17-year-old', C: 24, Cfn: ARDS17_C, R: 12, ibw: 62, hidden: true },
+  sc17Ptx: { label: 'Asthma · pneumothorax', C: 16, R: 30, autoBase: 3, ibw: 70, hidden: true },
+  sc17Wean: { label: 'Asthma · day 2', C: 50, R: 12, eff: 7, rrOwn: 20, ibw: 70, hidden: true },
+  sc18Abdo: { label: 'Tight abdomen', C: 18, R: 8, ibw: 60, hidden: true },
+  sc18Awake: { label: 'Normal lungs · awake', C: 60, R: 8, eff: 8, rrOwn: 18, ibw: 60, hidden: true },
+  sc19Plug: { label: 'Bronchiolitis · plugged tube', C: 2.4, R: 120, ibw: 7, infant: true, hidden: true },
+  sc19Obs: { label: 'Bronchiolitis · obstructive phase', C: 3.3, R: 260, ibw: 7, infant: true, hidden: true },
+  sc20Trig: { label: 'Bronchiolitis · triggering', C: 2.85, R: 220, autoBase: 4, ibw: 5, infant: true, hidden: true }
+});
+SIM_SCEN.push(
+  { id: 'c16', eyebrow: 'Sim scenario 16', title: '17-year-old boy · 62 kg', chord: 'paper', setting: 'Pneumonia → ARDS · handover settings, PEEP, then CO₂',
+    blurb: 'Intubated last night for pneumonia and still on the settings used at intubation. Make the breath fit a small lung, find the PEEP his oxygen needs, then deal with the CO₂ that small breaths bring.',
+    review: '', stages: ['ards', 'c16b', 'c16c'] },
+  { id: 'c17', eyebrow: 'Sim scenario 17', title: '16-year-old girl · 70 kg', chord: 'dusk', setting: 'Acute severe asthma · trapping, a pneumothorax, weaning',
+    blurb: 'Intubated in the ER after back-to-back nebulisers, magnesium and aminophylline, brought to you on the ER settings with a falling blood pressure. Let her empty, then find the cause when she collapses again, then wean her.',
+    review: '', stages: ['asthma', 'c17b', 'c17c'] },
+  { id: 'c18', eyebrow: 'Sim scenario 18', title: '15-year-old girl · 60 kg', chord: 'paper', setting: 'After laparotomy · normal lungs, a tight abdomen, extubation',
+    blurb: 'Perforated appendix, a long operation and a big fluid balance. Ventilate normal lungs normally, recognise when the abdomen is stiffening the chest, then get her off the ventilator.',
+    review: '', stages: ['postop', 'c18b', 'c18c'] },
+  { id: 'c19', eyebrow: 'Sim scenario 19', title: '6-month-old · 7 kg', chord: 'grove', setting: 'RSV bronchiolitis · collapse, a blocked tube, then trapping',
+    blurb: 'RSV with apnoeas and a rising CO₂, intubated an hour ago on big breaths and low PEEP. Recruit the collapsed lobe, clear a plugged tube, then change strategy when the same lungs start to trap.',
+    review: '', stages: ['bronch1', 'c19b', 'c19c'] },
+  { id: 'c20', eyebrow: 'Sim scenario 20', title: '4-month-old · 5 kg', chord: 'ochre', setting: 'Obstructive bronchiolitis · transfer, low blood pressure, triggering',
+    blurb: 'Transferred by road on a rate of 30 and rising pressures. The problem is expiratory time. Empty the chest, restore the circulation trapping squeezed, then set PEEP against the auto-PEEP once he breathes.',
+    review: '', stages: ['bronch2', 'c20b', 'c20c'] }
+);
+// Stage 1 of each: the original case, unchanged clinically, given a stage title, the senior's advice and what was going on.
+[
+  ['ards', 'c16', 16, { t: 'Intubated last night · handover settings', brief: 'Bring the tidal volume down to 6 mL/kg of ideal body weight (about 370–400 mL), raise the rate to hold the minute ventilation, and check the plateau and driving pressure after each change.',
+    event: 'He came to you on 9 mL/kg. In ARDS the open lung is small, so a breath sized for his body overstretches it: plateau 32, driving pressure 27. Scale the breath to the lung that is open, then hold the minute ventilation with the rate.' }],
+  ['asthma', 'c17', 17, { t: 'From the ER · on the ER settings', brief: 'Lower the rate first, keep the tidal volume small, keep Ti short, and watch the expiratory flow reach zero and the total PEEP fall. Accept the CO₂.',
+    event: 'The ER rate of 22 left too little time to exhale through narrowed airways. Each breath started before the last one finished, the trapped gas raised intrathoracic pressure and squeezed the venous return: that was the falling blood pressure. Time is the treatment, not pressure.' }],
+  ['postop', 'c18', 18, { t: 'Arrives from theatre · anaesthetic settings', brief: 'Normal lungs: aim for normal. 6–8 mL/kg, a rate that brings the CO₂ back to normal, a low driving pressure, and wean the oxygen to the lowest FiO₂ that keeps her saturations in range.',
+    event: 'The anaesthetic settings were sized for her actual weight and a long case: 10 mL/kg, a minute ventilation that blew her CO₂ down to 28, and FiO₂ 0.8 giving a PaO₂ over 300. Normal lungs do not need protecting from disease, only from the ventilator.' }],
+  ['bronch1', 'c19', 19, { t: 'Intubated an hour ago · big breaths, low PEEP', brief: 'Smaller breaths, 6–8 mL/kg (42–56 mL), and more PEEP, 7–10, to recruit the right upper lobe. Check the driving pressure falls as the lung opens.',
+    event: 'RSV bronchiolitis in this phase is a collapse-and-consolidation lung: the right upper lobe is shut and the rest is patchy. Low PEEP lets it close every breath; a big breath goes to the open parts and overstretches them. PEEP opens the lobe, a smaller breath protects what is open.' }],
+  ['bronch2', 'c20', 20, { t: 'Arrives from the district hospital', brief: 'The problem is expiratory time. Lower the rate towards 15–20, keep the inspiratory time short, and watch the expiratory flow return to zero. Do not chase the CO₂ with pressure.',
+    event: 'A rate of 30 in a baby with obstructed airways leaves less than a second to exhale. Each breath stacked on the last, the referring team raised the pressure to chase the CO₂ and made the trapping worse, and the full chest squeezed his venous return: the falling blood pressure.' }]
+].forEach(([id, scen, n, extra]) => Object.assign(CASES.find(x => x.id === id), { scen, stage: 1, eyebrow: `Sim scenario ${n} · stage 1 of 3`, ...extra }));
+SIM_STAGES.push(
+  // ---------- 16 · ARDS, 17-year-old ----------
+  { id: 'c16b', scen: 'c16', stage: 2, keep: true, t: 'Hour 4 · still hypoxaemic on FiO₂ 0.7', eyebrow: 'Sim scenario 16 · stage 2 of 3', title: '17-year-old boy · 62 kg', chord: 'paper', ibw: 62, setting: 'PICU · hour 4',
+    story: 'Four hours on protective breaths. The plateau is safe, but his SpO₂ is 89% on FiO₂ 0.7 and the PaO₂ is 58.',
+    event: 'Protective volumes fixed the stretch, not the collapse. At FiO₂ 0.7 the lower PEEP–FiO₂ table already asks for a PEEP of 10–14, and PALICC-2 says at or above it. Each step up opened more lung: compliance rose, the driving pressure fell at the same tidal volume, and the oxygen followed. Above 14 the compliance falls again: overdistension.',
+    dx: 'Moderate PARDS with too little PEEP. PEEP follows FiO₂; titrate to the lowest driving pressure.', learn: [6, 'Plateau and driving pressure'],
+    assess: { vit: [['HR', '122'], ['BP', '102/58'], ['SpO₂', 'live'], ['Temp', '38.4 °C']], exam: ['Bilateral coarse crackles, reduced at both bases', 'Sedated, not triggering', 'Warm, well perfused'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Diffuse alveolar opacities in both lungs, unchanged. Tube 3 cm above the carina.', img: 'assets/cxr/cxr-case01-ards.png', abg: [['pH', '7.33'], ['PaCO₂', '46'], ['PaO₂', '58'], ['HCO₃', '23']], vent: 'Your settings carry over' },
+    patient: 'sc16Peep', start: { mode: 'VC', vt: 400, rr: 18, peep: 5, ti: 1.0, fio2: 70, pinsp: 20 },
+    brief: 'FiO₂ 0.7 means PEEP 10–14 on the PEEP–FiO₂ table. Go up in steps of 2, keep the tidal volume fixed, read the driving pressure and plateau at each step, and settle where ΔP is lowest. Then wean the FiO₂.',
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c) }),
+    vitals: (m, a, s) => [['HR', s.peep >= 16 ? '135' : '122'], ['BP', s.peep >= 16 ? '84/46' : '102/58'], ['SpO₂', 'live'], ['Temp', '38.4 °C']],
+    goals: (m, a, s) => [
+      ['PEEP 10–14 for FiO₂ 0.7', s.peep >= 10 && s.peep <= 14],
+      ['Driving pressure ≤ 15 cmH₂O', m.dp <= 15],
+      ['Tidal volume ≤ 6.5 mL/kg (≤ 403 mL)', m.vte <= 405],
+      ['Plateau ≤ 30 cmH₂O', m.pplat <= 30],
+      ['FiO₂ weaned to ≤ 0.6', m.fio2 <= 60],
+      ['SpO₂ ≥ 90%', m.spo2 >= 90]] },
+  { id: 'c16c', scen: 'c16', stage: 3, keep: true, t: 'Day 2 · pH 7.18', eyebrow: 'Sim scenario 16 · stage 3 of 3', title: '17-year-old boy · 62 kg', chord: 'paper', ibw: 62, setting: 'PICU · day 2',
+    story: 'Oxygenating on PEEP 12 and FiO₂ 0.5. The morning gas: pH 7.18, PaCO₂ 72. A heat-and-moisture exchanger sits between the Y-piece and the tube.',
+    event: 'Small breaths in a lung with more dead space let the CO₂ climb. The fix is minute ventilation without stretch: raise the rate while expiration still finishes (a stiff lung empties fast, so there is room), and take out the dead space you added, the HME and any extra tubing. Bicarbonate only adds CO₂. Accept a pH of 7.20 or more rather than buying a normal CO₂ with a bigger breath.',
+    dx: 'Hypercapnia from small tidal volumes and dead space. Rate, not volume; remove instrumental dead space; permissive hypercapnia to pH ≥ 7.20.', learn: [7, 'Deadspace'],
+    assess: { vit: [['HR', '118'], ['BP', '108/62'], ['SpO₂', 'live'], ['Temp', '37.9 °C']], exam: ['Crackles less coarse, air entry better at the bases', 'Sedated, not triggering', 'HME on the circuit at the tube'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Opacities a little less dense. Tube 3 cm above the carina.', img: 'assets/cxr/cxr-case01-ards.png', abg: [['pH', '7.18'], ['PaCO₂', '72'], ['PaO₂', '78'], ['HCO₃', '26']], vent: 'Your settings carry over' },
+    patient: 'sc16Peep', start: { mode: 'VC', vt: 390, rr: 14, peep: 12, ti: 1.0, fio2: 50, pinsp: 20 },
+    brief: 'Do not raise the tidal volume. Raise the rate in steps, checking the expiratory flow still reaches zero, take the HME off for a heated humidifier, and accept a pH of 7.20 or more.',
+    actions: [
+      { id: 'hme', label: 'Remove the HME, heated humidifier', fb: 'About 50 mL of dead space gone from every breath. At 390 mL that is an eighth of each breath that never reached the alveoli. The next gas is better for it.' },
+      { id: 'bicarb', label: 'Sodium bicarbonate', fb: 'Bicarbonate becomes CO₂, and he cannot blow off what he already has. Not given.', bad: true },
+      { id: 'accept', label: 'Accept pH ≥ 7.20', fb: 'Permissive hypercapnia: no raised intracranial pressure, no pulmonary hypertension, a normal right heart. pH 7.20 is the floor.' }
+    ],
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c), co2: a.hme ? 0.88 : 1 }),
+    goals: (m, a, s) => [
+      ['Rate 22–30', m.rr >= 22 && m.rr <= 30],
+      ['Minute ventilation ≥ 8.5 L/min', m.mv >= 8.5],
+      ['Expiration complete: auto-PEEP ≤ 1', m.auto <= 1],
+      ['Tidal volume still ≤ 6.5 mL/kg', m.vte <= 405],
+      ['Dead space removed (HME off)', !!a.hme],
+      ['No bicarbonate', !a.bicarb]],
+    debrief: ['Scale the breath to the open lung: 6 mL/kg of ideal body weight, not actual weight.', 'Plateau − PEEP is the stretch: keep the driving pressure ≤ 15 and the plateau ≤ 30.', 'PEEP follows FiO₂: at FiO₂ 0.7, PEEP 10–14 or more. Titrate to the lowest driving pressure.', 'Small breaths raise the CO₂. Fix it with rate while expiration finishes, and remove instrumental dead space.', 'Accept pH ≥ 7.20. Bicarbonate makes CO₂.'] },
+  // ---------- 17 · Asthma, 16-year-old ----------
+  { id: 'c17b', scen: 'c17', stage: 2, keep: true, t: 'Hour 5 · she collapses again', eyebrow: 'Sim scenario 17 · stage 2 of 3', title: '16-year-old girl · 70 kg', chord: 'dusk', ibw: 70, setting: 'PICU · hour 5',
+    story: 'Settled on your settings for four hours. Now the high-pressure alarm, SpO₂ 82%, BP 72/40. The left side of her chest is hardly moving.',
+    event: 'This time disconnecting did not bring the pressure back: it was not trapping alone. The chest moved unequally, and ultrasound showed no lung sliding on the left with a lung point: a tension pneumothorax, the barotrauma that trapping invites. Needle decompression bought time, the drain fixed it, and the low rate stayed. Ultrasound first prevented a needle into a hyperinflated but intact lung.',
+    dx: 'Left tension pneumothorax on a background of gas trapping. Disconnect, then DOPE: the P was real.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', '150'], ['BP', '72/40'], ['SpO₂', 'live'], ['PIP', 'alarm']], exam: ['Left chest hyperexpanded and still, right chest moving', 'Breath sounds absent on the left', 'Trachea central, neck veins full'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Portable film requested. Use the ultrasound at the bedside first.', img: '', abg: [['pH', '7.15'], ['PaCO₂', '85'], ['PaO₂', '52'], ['HCO₃', '28']], vent: 'Your settings carry over · PIP alarm' },
+    patient: 'sc17Ptx', start: { mode: 'VC', vt: 450, rr: 10, peep: 0, ti: 1.0, fio2: 60, pinsp: 20 },
+    brief: 'Disconnect first, as always. If the blood pressure does not come back, go through DOPE. Scan both sides with the ultrasound before any needle. Decompress, then a drain. Keep the rate low afterwards.',
+    actions: [
+      { id: 'disconnect', label: 'Disconnect, let the chest fall', fb: 'Circuit off, a long exhalation. The right side falls, the left stays full. Thirty seconds on, the BP is still 72/40. Not trapping alone. Reconnect and go through DOPE.' },
+      { id: 'suction', label: 'Suction, check the tube', fb: 'Catheter passes freely, tube at 21 cm at the lip, EtCO₂ trace present. Tube in and patent.', needs: 'disconnect', needsFb: 'Disconnect first. Five seconds tells you whether this is trapping.' },
+      { id: 'us', label: 'Bedside ultrasound, both sides', fb: 'Right: lung sliding present. Left: no sliding, no B-lines, a lung point in the mid-axillary line. Left pneumothorax.', needs: 'disconnect', needsFb: 'Disconnect first. Five seconds tells you whether this is trapping.' },
+      { id: 'needle', label: 'Needle decompression, left', fb: 'Second intercostal space, mid-clavicular line. A hiss of air. Within a minute the BP is 96/58 and the SpO₂ climbing.', needs: 'us', needsFb: 'Confirm it first. A needle into a hyperinflated lung that has not collapsed creates the pneumothorax you were looking for.', patient: 'asthma' },
+      { id: 'drain', label: 'Chest drain, left', fb: 'Intercostal drain in the fifth space, mid-axillary line, swinging and bubbling. The needle is out.', needs: 'needle', needsFb: 'Decompress first. The drain takes minutes she does not have.' },
+      { id: 'rateup', label: 'Raise the rate to clear the CO₂', fb: 'More breaths into a chest that cannot empty, through a leaking lung. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.05), o2: a.needle ? 1.7 * noShunt(m, m0) : noShunt(m, m0) }),
+    vitals: (m, a, s) => a.needle ? [['HR', '118'], ['BP', m.auto > 4 ? '84/48' : '98/60'], ['SpO₂', 'live'], ['PIP', 'alarm cleared']] : [['HR', '150'], ['BP', '72/40'], ['SpO₂', 'live'], ['PIP', 'alarm · > 50']],
+    goals: (m, a, s) => [
+      ['Disconnected first', !!a.disconnect],
+      ['Pneumothorax confirmed by ultrasound', !!a.us],
+      ['Needle decompression', !!a.needle],
+      ['Chest drain placed', !!a.drain],
+      ['Rate kept ≤ 12', m.rr <= 12 && !a.rateup],
+      ['Plateau ≤ 30 cmH₂O', m.pplat <= 30]] },
+  { id: 'c17c', scen: 'c17', stage: 3, keep: true, t: 'Day 2 · airways opening', eyebrow: 'Sim scenario 17 · stage 3 of 3', title: '16-year-old girl · 70 kg', chord: 'dusk', ibw: 70, setting: 'PICU · day 2',
+    story: 'Drain bubbling less, wheeze now audible, auto-PEEP gone. Sedation is lighter and she is pulling breaths of her own against the set rate.',
+    event: 'Weaning in asthma is often fast: once the airways open, the trapped volume goes and a lung that could not be ventilated yesterday takes a supported breath of its own. Pressure support lets her set her own rate and inspiratory time; low support and low PEEP is a spontaneous breathing trial. Extubation needs an awake child, a cough and a leak around the tube, never a sedated one, and the drain can stay in.',
+    dx: 'Resolving asthma. Pressure support, low PEEP, wean the oxygen, a breathing trial, then extubate awake.', learn: [3, 'From intubation to extubation', '05'],
+    assess: { vit: [['HR', '104'], ['BP', '112/66'], ['SpO₂', 'live'], ['Temp', '37.1 °C']], exam: ['Wheeze audible both sides, expiration shorter', 'Left drain swinging, a little air on coughing', 'Opens eyes to voice, squeezes hands'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Left lung re-expanded, drain in place. Less hyperinflated.', img: 'assets/cxr/cxr-case02-asthma.png', abg: [['pH', '7.36'], ['PaCO₂', '48'], ['PaO₂', '96'], ['HCO₃', '27']], vent: 'Your settings carry over · triggering above the set rate' },
+    patient: 'sc17Wean', start: { mode: 'PS', ps: 10, peep: 5, rr: 20, ti: 1.0, fio2: 40, eff: 7 },
+    brief: 'Change to pressure support. Bring the support down to 5–10 and PEEP to 5 or less, wean the FiO₂ to 0.4. Lighten the sedation, run a breathing trial, check the leak, then extubate.',
+    actions: [
+      { id: 'sat', label: 'Sedation hold', fb: 'Ketamine and the opioid stopped. Twenty minutes later she opens her eyes, follows commands and coughs on suction.' },
+      { id: 'sbt', label: 'Spontaneous breathing trial', fb: 'Thirty minutes on low support: rate 20, tidal volumes 6–7 mL/kg, no wheeze worse, no sweating. Passed.', needs: 'sat', needsFb: 'Wake her first. A breathing trial in a sedated child tests the drugs, not the child.' },
+      { id: 'leak', label: 'Cuff leak test', fb: 'Cuff down: an audible leak at 20 cmH₂O. No upper airway swelling expected.' },
+      { id: 'extubate', label: 'Extubate', fb: 'Extubated to high-flow. Coughing, talking within the hour, saturations 96% on FiO₂ 0.35.', needs: 'sbt', needsFb: 'Not yet. A breathing trial first, awake.' },
+      { id: 'nmb', label: 'Restart the blocker overnight', fb: 'Steroids plus days of blocker is the recipe for critical-illness myopathy. Not given.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Pressure support mode', ['PS', 'CPAP'].includes(vmodeOf(s))],
+      ['Support 5–10 cmH₂O', s.ps >= 5 && s.ps <= 10],
+      ['PEEP ≤ 5', s.peep <= 5],
+      ['FiO₂ ≤ 0.4', m.fio2 <= 40],
+      ['Awake breathing trial passed', !!a.sbt],
+      ['Leak checked, then extubated', !!a.leak && !!a.extubate]],
+    debrief: ['Asthma: low rate, small breath, short Ti, let the expiratory flow reach zero. Accept the CO₂.', 'Sudden collapse: disconnect first. If the pressure does not come back, it is not trapping alone.', 'DOPE: displaced tube, obstructed tube, pneumothorax, equipment. Ultrasound before a needle.', 'Decompress, then drain, and keep the rate low: a leaking lung still traps.', 'Weaning is fast once the airways open: pressure support, awake, a breathing trial, a leak, then extubate.'] },
+  // ---------- 18 · After laparotomy, 15-year-old ----------
+  { id: 'c18b', scen: 'c18', stage: 2, keep: true, t: 'Night · the abdomen tightens', eyebrow: 'Sim scenario 18 · stage 2 of 3', title: '15-year-old girl · 60 kg', chord: 'paper', ibw: 60, setting: 'PICU · 2 am',
+    story: 'Eight hours after theatre. Her abdomen is distended and tense, the urine has dried up to a few mL an hour, and the plateau has climbed on the same tidal volume.',
+    event: 'The lungs did not change: the chest wall did. A tense abdomen pushes the diaphragm up and stiffens the whole respiratory system, so the same breath needs a higher plateau, and the same pressure squeezes the kidneys and the venous return. Bladder pressure measures it. Decompress what you can (stomach, sedation and analgesia), give no fluid for the oliguria, and call the surgeons: intra-abdominal pressure above 20 with new organ failure is abdominal compartment syndrome. Once the abdomen is opened the plateau falls back.',
+    dx: 'Abdominal compartment syndrome stiffening the chest wall. Measure, decompress, call the surgeons; do not fill.', learn: [2, 'Lung compliance'],
+    assess: { vit: [['HR', '128'], ['BP', '96/52'], ['SpO₂', 'live'], ['Urine', '4 mL/h']], exam: ['Abdomen distended, tense, tympanic', 'Air entry equal but reduced at both bases', 'Peripheries cool, CRT 3 s'], cxrAns: 'normal', ettAns: 'ok', cxr: 'Small-volume lungs, raised hemidiaphragms, basal atelectasis. Nasogastric tube coiled in the oesophagus.', img: 'assets/cxr/cxr-case03-postop.png', abg: [['pH', '7.30'], ['PaCO₂', '50'], ['PaO₂', '78'], ['HCO₃', '21'], ['Lactate', '3.1']], vent: 'Your settings carry over · plateau rising' },
+    patient: 'sc18Abdo', start: { mode: 'VC', vt: 420, rr: 16, peep: 5, ti: 1.0, fio2: 40, pinsp: 20 },
+    brief: 'Measure the bladder pressure. Decompress the stomach and make sure she is comfortable. No fluid bolus for the oliguria. Call the surgeons. Keep the tidal volume at 6–8 mL/kg while you wait.',
+    actions: [
+      { id: 'iap', label: 'Measure bladder pressure', fb: 'Transvesical pressure 24 mmHg, end-expiration, supine, zeroed at the mid-axillary line. Above 20 with new oliguria: abdominal compartment syndrome.' },
+      { id: 'ng', label: 'Re-site the NG, free drainage', fb: 'The tube was coiled in the oesophagus. Re-sited: 400 mL of bile-stained fluid and a lot of air. The abdomen is a little softer.' },
+      { id: 'bolus', label: '20 mL/kg bolus for the urine', fb: 'The kidneys are being squeezed, not underfilled. The fluid goes into the gut wall and the bladder pressure rises. Not given.', bad: true },
+      { id: 'surg', label: 'Call the surgeons', fb: 'Seen at the bedside. Back to theatre for a decompressive laparotomy, abdomen left open under a vacuum dressing.', needs: 'iap', needsFb: 'Measure it first. The surgeon will ask for the number.', patient: 'normal' },
+      { id: 'vtup', label: 'Raise VT to beat the stiffness', fb: 'The lungs are normal; the chest wall is the problem. A bigger breath raises the plateau further and the venous return falls. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: a.surg ? 1.35 : a.ng ? 1.1 : 1 }),
+    vitals: (m, a, s) => a.surg ? [['HR', '104'], ['BP', '112/64'], ['SpO₂', 'live'], ['Urine', '1 mL/kg/h by morning']] : [['HR', a.bolus ? '132' : '128'], ['BP', '96/52'], ['SpO₂', 'live'], ['Urine', '4 mL/h']],
+    goals: (m, a, s) => [
+      ['Bladder pressure measured', !!a.iap],
+      ['Stomach decompressed', !!a.ng],
+      ['Surgeons called', !!a.surg],
+      ['No fluid bolus', !a.bolus],
+      ['Tidal volume 6–8 mL/kg', m.vte >= 360 && m.vte <= 480 && !a.vtup],
+      ['Plateau ≤ 25 cmH₂O', m.pplat <= 25]] },
+  { id: 'c18c', scen: 'c18', stage: 3, keep: true, t: 'Day 2 · ready to come off?', eyebrow: 'Sim scenario 18 · stage 3 of 3', title: '15-year-old girl · 60 kg', chord: 'paper', ibw: 60, setting: 'PICU · day 2 after re-look',
+    story: 'Abdomen closed this morning, soft, bladder pressure 8. On minimal settings, breathing over the set rate. The surgeons want her extubated.',
+    event: 'Normal lungs, a ventilated reason that has gone: the question is only whether she can protect her airway and breathe for herself. A daily sedation hold and a breathing trial on low pressure support answer it. Good analgesia without heavy sedation lets a laparotomy cough. Extubate awake, sitting up, with the epidural or the opioid running.',
+    dx: 'Ready to wean. Sedation hold, breathing trial on low support, extubate awake with good analgesia.', learn: [3, 'From intubation to extubation', '05'],
+    assess: { vit: [['HR', '96'], ['BP', '116/70'], ['SpO₂', 'live'], ['Temp', '37.4 °C']], exam: ['Clear chest, equal air entry', 'Abdomen soft, wound dressed', 'Rousable, following commands'], cxrAns: 'normal', ettAns: 'ok', cxr: 'Clear lungs, normal diaphragms. Tube and NG in position.', img: 'assets/cxr/cxr-case03-postop.png', abg: [['pH', '7.40'], ['PaCO₂', '40'], ['PaO₂', '110'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'sc18Awake', start: { mode: 'PS', ps: 8, peep: 5, rr: 18, ti: 1.0, fio2: 35, eff: 8 },
+    brief: 'Change to pressure support 5–8 with PEEP 5 and FiO₂ 0.35 or less. Hold the sedation, keep the analgesia, run a breathing trial, then extubate awake.',
+    actions: [
+      { id: 'sat', label: 'Sedation hold, analgesia on', fb: 'Propofol off, the epidural running. She wakes, nods, coughs strongly on suction.' },
+      { id: 'sbt', label: 'Spontaneous breathing trial', fb: 'Thirty minutes on PS 5, PEEP 5: rate 18, 7 mL/kg, calm. Passed.', needs: 'sat', needsFb: 'Wake her first. A breathing trial in a sedated child tests the drugs, not the child.' },
+      { id: 'extubate', label: 'Extubate, sitting up', fb: 'Extubated to 2 L nasal oxygen. Coughing with the wound splinted, saturations 97%.', needs: 'sbt', needsFb: 'Not yet. A breathing trial first, awake.' },
+      { id: 'stopopioid', label: 'Stop all analgesia to wake her', fb: 'A laparotomy that hurts cannot cough or take a deep breath; she will splint and collapse her bases. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Pressure support mode', ['PS', 'CPAP'].includes(vmodeOf(s))],
+      ['Support 5–8 cmH₂O', s.ps >= 5 && s.ps <= 8],
+      ['PEEP ≤ 5', s.peep <= 5],
+      ['FiO₂ ≤ 0.35', m.fio2 <= 35],
+      ['Breathing trial passed awake', !!a.sbt && !a.stopopioid],
+      ['Extubated', !!a.extubate]],
+    debrief: ['Normal lungs: aim for normal. 6–8 mL/kg of ideal weight, normal CO₂, the lowest FiO₂ that keeps the saturations in range.', 'A rising plateau on the same breath means the respiratory system got stiffer: lung, chest wall or abdomen.', 'Bladder pressure above 20 with new organ failure is abdominal compartment syndrome. Decompress, do not fill, call the surgeons.', 'Once the reason for ventilation has gone: sedation hold, breathing trial, extubate awake.', 'Analgesia is part of weaning: a laparotomy that hurts cannot cough.'] },
+  // ---------- 19 · Bronchiolitis, 6-month-old ----------
+  { id: 'c19b', scen: 'c19', stage: 2, keep: true, t: 'Day 2 · desaturates on handling', eyebrow: 'Sim scenario 19 · stage 2 of 3', title: '6-month-old · 7 kg', chord: 'grove', ibw: 7, setting: 'PICU · day 2, after a nappy change',
+    story: 'He was settled on your settings overnight. After a nappy change his SpO₂ fell to 78% and has not come back. The tidal volume alarm is sounding.',
+    event: 'Thick RSV secretions had plugged the 3.5 tube: resistance rose, the delivered volume fell and the right upper lobe closed again. Going through DOPE in order found it: tube at the same depth, a catheter that met resistance, and a cast of mucus on suction. Once the tube was clear the lung needed its PEEP back and a gentle recruitment, not a needle.',
+    dx: 'Obstructed tube from secretions. DOPE: displaced, obstructed, pneumothorax, equipment.', learn: [4, 'Asynchrony, leaks and secretions', '06'],
+    assess: { vit: [['HR', '186'], ['BP', '82/48'], ['SpO₂', 'live'], ['Temp', '37.9 °C']], exam: ['Chest barely moving, quiet on both sides', 'Tube at the same mark, 10.5 cm at the lip', 'Suction catheter meets resistance at 9 cm'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Film not needed yet. The right upper lobe was collapsed on this morning’s film.', img: '', abg: [['pH', '7.20'], ['PaCO₂', '68'], ['PaO₂', '48'], ['HCO₃', '26']], vent: 'Your settings carry over · low VTe alarm' },
+    patient: 'sc19Plug', start: { mode: 'VC', vt: 50, rr: 30, peep: 8, ti: 0.6, fio2: 50, pinsp: 18 },
+    brief: 'Hand-bag if you need to, then DOPE in order: tube position, suction, both sides of the chest, the circuit. Clear the tube, then put back the PEEP and the oxygen he needs.',
+    actions: [
+      { id: 'check', label: 'Check tube depth and EtCO₂', fb: 'Tube at 10.5 cm, as this morning. EtCO₂ trace present but small and shark-finned. In, but something is in the way.' },
+      { id: 'suction', label: 'Suction with saline', fb: 'Saline 0.5 mL, then suction: a thick cast of mucus. The catheter now passes freely, the chest moves, the volume alarm stops.', patient: 'bronch' },
+      { id: 'us', label: 'Ultrasound both sides', fb: 'Lung sliding on both sides. No pneumothorax.' },
+      { id: 'needle', label: 'Needle the chest', fb: 'Both sides are sliding on ultrasound and the breath sounds are equal. Not done.', bad: true },
+      { id: 'peepdown', label: 'Drop the PEEP to 4', fb: 'Lower PEEP lets the right upper lobe close again. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: a.suction ? 1.6 * noShunt(m, m0) : noShunt(m, m0), co2: a.suction ? 0.85 : 1 }),
+    vitals: (m, a, s) => a.suction ? [['HR', '156'], ['BP', '88/52'], ['SpO₂', 'live'], ['Temp', '37.9 °C']] : [['HR', '186'], ['BP', '82/48'], ['SpO₂', 'live'], ['Temp', '37.9 °C']],
+    goals: (m, a, s) => [
+      ['Tube position checked', !!a.check],
+      ['Tube cleared', !!a.suction],
+      ['No needle', !a.needle],
+      ['PEEP kept 7–10', s.peep >= 7 && s.peep <= 10 && !a.peepdown],
+      ['Tidal volume 6–8 mL/kg (42–56 mL)', m.vte >= 42 && m.vte <= 56],
+      ['SpO₂ ≥ 92%', m.spo2 >= 92]] },
+  { id: 'c19c', scen: 'c19', stage: 3, keep: true, t: 'Day 3 · now it traps', eyebrow: 'Sim scenario 19 · stage 3 of 3', title: '6-month-old · 7 kg', chord: 'grove', ibw: 7, setting: 'PICU · day 3',
+    story: 'The collapse has opened up. Now the expiration is long, there is wheeze everywhere, the chest looks fuller and the CO₂ is rising on the same settings.',
+    event: 'Bronchiolitis is both lungs on different days. The collapse-and-consolidation lung of day 1 needed PEEP; by day 3 the small airways are full of debris and the same infant has an obstructive lung that cannot empty. Expiratory flow no longer reaches zero, total PEEP climbs above set PEEP. Same baby, opposite strategy: a lower rate, a longer expiration, less PEEP, and accept the CO₂.',
+    dx: 'Obstructive phase of bronchiolitis. Lower rate, longer expiration, accept the CO₂.', learn: [4, 'Bronchiolitis: both lungs, on different days', '07'],
+    assess: { vit: [['HR', '164'], ['BP', '84/50'], ['SpO₂', 'live'], ['Temp', '37.6 °C']], exam: ['Widespread wheeze, prolonged expiration', 'Chest hyperexpanded, liver edge 3 cm', 'Sedated, occasional trigger'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Right upper lobe re-expanded. Both lungs now hyperinflated, 9 posterior ribs.', img: 'assets/cxr/cxr-case04-bronchiolitis.png', abg: [['pH', '7.24'], ['PaCO₂', '66'], ['PaO₂', '70'], ['HCO₃', '28']], vent: 'Your settings carry over' },
+    patient: 'sc19Obs', start: { mode: 'VC', vt: 50, rr: 30, peep: 8, ti: 0.6, fio2: 45, pinsp: 18 },
+    brief: 'Watch the expiratory flow and the total PEEP. Bring the rate down and keep Ti short so expiration gets longer; bring the PEEP down now the lobe is open. Accept the CO₂.',
+    actions: [
+      { id: 'salb', label: 'Trial of salbutamol', fb: 'Salbutamol through the circuit. A small fall in the peak-to-plateau gap; worth continuing if it helps, stop if it does not.' },
+      { id: 'rateup', label: 'Raise the rate for the CO₂', fb: 'Less time to empty: total PEEP goes up and the CO₂ with it. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.12), o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Auto-PEEP ≤ 2 cmH₂O', m.auto <= 2],
+      ['Rate ≤ 24', m.rr <= 24 && !a.rateup],
+      ['Set PEEP ≤ 7', s.peep <= 7],
+      ['Tidal volume ≥ 6 mL/kg (≥ 42 mL)', m.vte >= 42],
+      ['Plateau ≤ 28 cmH₂O', m.pplat <= 28],
+      ['SpO₂ ≥ 90%', m.spo2 >= 90]],
+    debrief: ['Bronchiolitis day 1 can be collapse and consolidation: PEEP 7–10 and 6–8 mL/kg.', 'Watch the driving pressure fall as the lobe opens.', 'Sudden desaturation: DOPE in order. RSV plugs small tubes.', 'By day 3 the same infant can be obstructive: total PEEP above set PEEP, expiratory flow not reaching zero.', 'Then the strategy flips: lower rate, longer expiration, less PEEP, accept the CO₂.'] },
+  // ---------- 20 · Obstructive bronchiolitis, 4-month-old ----------
+  { id: 'c20b', scen: 'c20', stage: 2, keep: true, t: 'Hour 1 · the blood pressure stays low', eyebrow: 'Sim scenario 20 · stage 2 of 3', title: '4-month-old · 5 kg', chord: 'ochre', ibw: 5, setting: 'Your ER · hour 1',
+    story: 'The chest has emptied on your settings, but his BP is still 70/40, the liver is 3 cm down and his hands are cold.',
+    event: 'Hours of trapping had squeezed his venous return while he also went without feeds or fluid on the road. With the trapping gone, the heart could fill again if there was something to fill it with: a 10 mL/kg bolus and a quick echo (an underfilled, well-contracting heart) answered it. Raising the rate to clear the CO₂ would have put the trapping, and the low pressure, straight back.',
+    dx: 'Hypotension from trapping and underfilling. Empty the chest first, then a measured bolus; echo to check.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', '172'], ['BP', '70/40'], ['SpO₂', 'live'], ['CRT', '4 s']], exam: ['Chest less full, expiratory flow reaching zero', 'Cold hands and feet, CRT 4 s', 'Liver 3 cm, no gallop'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Hyperinflated, a little less than the transfer film. Tube in position.', img: '', abg: [['pH', '7.16'], ['PaCO₂', '82'], ['PaO₂', '74'], ['HCO₃', '28'], ['Lactate', '3.4']], vent: 'Your settings carry over' },
+    patient: 'bronchObs', start: { mode: 'PC', vt: 40, rr: 18, peep: 5, ti: 0.8, fio2: 50, pinsp: 22 },
+    brief: 'Keep the chest empty: rate stays low. Then treat the circulation: a 10 mL/kg bolus, a look at the heart, and reassess.',
+    actions: [
+      { id: 'bolus', label: '10 mL/kg crystalloid', fb: 'Over ten minutes. The BP is 82/48, the hands warmer, the CRT 2–3 s.' },
+      { id: 'echo', label: 'Bedside echo', fb: 'Small, underfilled ventricles contracting well; collapsing IVC. No effusion.' },
+      { id: 'adren', label: 'Start adrenaline', fb: 'He responded to fluid once the chest was empty. Not needed now; ready if the pressure falls again.', bad: true },
+      { id: 'rateup', label: 'Raise the rate for the CO₂', fb: 'The trapping comes straight back, and the blood pressure falls with it. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.05), o2: noShunt(m, m0) }),
+    vitals: (m, a, s) => m.auto > 2 || a.rateup ? [['HR', '180'], ['BP', '62/34'], ['SpO₂', 'live'], ['CRT', '5 s']] : a.bolus ? [['HR', '154'], ['BP', '82/48'], ['SpO₂', 'live'], ['CRT', '2–3 s']] : [['HR', '172'], ['BP', '70/40'], ['SpO₂', 'live'], ['CRT', '4 s']],
+    goals: (m, a, s) => [
+      ['Auto-PEEP ≤ 2 cmH₂O', m.auto <= 2],
+      ['Rate ≤ 20', m.rr <= 20 && !a.rateup],
+      ['Fluid bolus given', !!a.bolus],
+      ['Heart looked at', !!a.echo],
+      ['No adrenaline yet', !a.adren],
+      ['Plateau ≤ 28 cmH₂O', m.pplat <= 28]] },
+  { id: 'c20c', scen: 'c20', stage: 3, keep: true, t: 'Day 3 · he starts to breathe', eyebrow: 'Sim scenario 20 · stage 3 of 3', title: '4-month-old · 5 kg', chord: 'ochre', ibw: 5, setting: 'PICU · day 3',
+    story: 'Sedation lighter. He is making breathing efforts, but many do not trigger the ventilator. The measured auto-PEEP on an expiratory hold is 4 cmH₂O.',
+    event: 'With set PEEP below the intrinsic PEEP, each effort has to pull the airway pressure down through the trapped gas before the trigger sees it, and many efforts never get there. Set PEEP just below the auto-PEEP (about 3 here) splints the small airways, and the trigger answers. Above the auto-PEEP it adds to the trapped volume. The low rate and long expiration stay until the wheeze settles.',
+    dx: 'Ineffective triggering from auto-PEEP. External PEEP just below the intrinsic PEEP, never above it.', learn: [5, 'Time constants and auto-PEEP'],
+    assess: { vit: [['HR', '148'], ['RR', '40 efforts, 20 triggered'], ['BP', '86/52'], ['SpO₂', 'live']], exam: ['Visible efforts without a breath', 'Wheeze, expiration still long', 'Liver 2 cm'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Hyperinflation improving.', img: '', abg: [['pH', '7.28'], ['PaCO₂', '64'], ['PaO₂', '80'], ['HCO₃', '30']], vent: 'Your settings carry over · auto-PEEP 4 on an expiratory hold' },
+    patient: 'sc20Trig', start: { mode: 'PC', vt: 40, rr: 18, peep: 2, ti: 0.8, fio2: 40, pinsp: 22 },
+    brief: 'Set PEEP against the measured auto-PEEP of 4: about 3. Never above 4. Keep the rate low and the inspiratory time short. Do not paralyse him again.',
+    actions: [
+      { id: 'paralyse', label: 'Paralyse to stop the efforts', fb: 'The efforts are the start of weaning. Paralysis would stop the asynchrony and the recovery. Not given.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.04), o2: noShunt(m, m0) }),
+    vitals: (m, a, s) => [['HR', s.peep >= 3 && s.peep <= 4 ? '132' : '148'], ['RR', s.peep >= 3 && s.peep <= 4 ? '34, every effort triggers' : '40 efforts, 20 triggered'], ['BP', s.peep > 4 ? '74/42' : '86/52'], ['SpO₂', 'live']],
+    goals: (m, a, s) => [
+      ['External PEEP 3–4 (just below auto-PEEP 4)', s.peep >= 3 && s.peep <= 4],
+      ['Never above the intrinsic PEEP', s.peep <= 4],
+      ['Rate ≤ 24', m.rr <= 24],
+      ['Expiratory time ≥ 1.5 s', teOf(s, m) >= 1.5],
+      ['Plateau ≤ 28 cmH₂O', m.pplat <= 28],
+      ['Not paralysed again', !a.paralyse]],
+    debrief: ['Obstructive bronchiolitis is an expiratory-time problem: lower the rate before you touch the pressure.', 'Trapping squeezes the venous return. Empty the chest first, then a measured bolus.', 'Chasing the CO₂ with rate brings the trapping and the low blood pressure back.', 'Once he triggers, set PEEP just below the measured auto-PEEP, never above it.', 'Accept the CO₂ while the pH is safe and the airways recover.'] }
+);
 SIM_STAGES.forEach(x => CASES.push(x));
 const SU_MODES = [['AC-PC', 'Pressure A/C'], ['AC-VC', 'Volume A/C'], ['SIMV-PC', 'Pressure SIMV+PS'], ['SIMV-VC', 'Volume SIMV+PS'], ['PS', 'Pressure PS/CPAP']];
 const SU_MODES_NIV = [['NIV-CPAP', 'CPAP'], ['NIV-S', 'Bilevel S'], ['NIV-ST', 'Bilevel ST'], ['NIV-T', 'Bilevel T'], ['iVAPS', 'iVAPS']];
@@ -5024,6 +5287,7 @@ class Component extends DCLogic {
       onSlide: e => this.setParam(sel, +e.target.value),
       inc: () => this.setParam(sel, s[sel] + sd.step), dec: () => this.setParam(sel, s[sel] - sd.step),
 
+      simScenCount: String(SIM_SCEN.length),
       simScen: SIM_SCEN.map(z => { const first = CASES.find(x => x.id === z.stages[0]); const done = z.stages.filter(id => s.solved[id]).length; return { eyebrow: z.eyebrow, title: z.title, chord: z.chord, setting: z.setting, blurb: z.blurb, done: done === z.stages.length, count: done + ' / ' + z.stages.length + ' stages',
         start: () => this.setState(st => ({ ...(PATIENTS[first.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, armed: false, patient: first.patient, caseId: first.id, sel: 'vt', screen: 'sim', casePhase: 'chart', rv: {}, modeMenu: false, perf: Object.fromEntries(Object.entries(st.perf || {}).filter(([k]) => !z.stages.includes(k)).concat([[first.id, { t0: Date.now() }]])), acts: { ...(st.acts || {}), [first.id]: {} }, cxrPick: { ...st.cxrPick, [first.id]: null }, ettPick: { ...st.ettPick, [first.id]: null }, finished: { ...st.finished, [first.id]: false }, gas: { ...st.gas, [first.id]: {} } })) }; }),
       cases: CASES.filter(cs => !cs.scen).map(cs => ({ eyebrow: cs.eyebrow, title: cs.title, chord: cs.chord, setting: cs.setting, done: !!s.solved[cs.id],
