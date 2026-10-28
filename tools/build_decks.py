@@ -134,8 +134,8 @@ def device(scr, dim=False, foot=''):
     wave = scr.get('wave')
     meas = scr.get('meas') or []
     mon = {k: v for k, v in (scr.get('mon') or [])}
-    spo2 = re.sub(r'[^0-9]', '', str(mon.get('SpO₂', '--')))[:3] or '--'
-    etco2 = re.sub(r'[^0-9]', '', str(mon.get('EtCO₂', '')))[:3] or '--'
+    spo2 = (re.search(r'\d+', str(mon.get('SpO₂', ''))) or [None])[0] or '--'
+    etco2 = (re.search(r'\d+', str(mon.get('EtCO₂', ''))) or [None])[0] or '--'
     on = bool(wave)
     readouts = ''.join(f'<div style="display:flex; flex-direction:column; gap:3px;"><span style="font:500 13px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:#8A9096;">{e(k)}</span>'
                        f'<span style="font:500 30px/1 var(--font-mono); color:#F2EFE8; white-space:nowrap;">{e(v)}</span></div>' for k, v in meas)
@@ -243,7 +243,7 @@ def stage_slides(d, code):
     col1 = f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0; min-height:0;">{picture(n_before, sid=sid)}{monitor(scr["mon"])}</div>'
     col3 = (f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Your order</span>{order_cards(ords)}'
             '</div>')
-    body = header(d['eyebrow'], d['head'], 'Live · set it, then order') + \
+    body = header(d['eyebrow'], d['head'], 'Live · set it, then order' if T else 'Live · your order') + \
         f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:540px minmax(0,1fr) 470px; gap:30px;">{col1}{device(scr, foot=setfoot)}{col3}</div>'
     s1 = section(f'{title_plain}', body, notes1, live=sid, mode='ask', setq=T and T['q'])
     # slide 2: the settings revealed, what the room set, each order and the response
@@ -255,7 +255,7 @@ def stage_slides(d, code):
                    f'<span data-set-summary style="font-size:22px; line-height:1.35; color:var(--text-secondary);">No settings sent</span></div>')
     col1 = f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0; min-height:0;">{picture(n_after, sid=sid)}{monitor(aft["mon"])}</div>'
     col3 = f'<div style="display:flex; flex-direction:column; gap:14px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Each order · the response</span>{order_cards(ords, reveal=True)}</div>'
-    foot = (f'<div style="flex:none; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border-subtle); padding-top:14px;">'
+    foot = (f'<div style="flex:none; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border-subtle); padding-top:14px; padding-right:540px;">'
             f'<div style="display:flex; gap:22px; align-items:baseline;"><span style="{MONO} font-size:20px; color:var(--text-accent); flex:none;">What happened</span><span style="font-size:30px; line-height:1.25;">{e(aft["happen"])}</span></div>'
             + (f'<div style="display:flex; gap:22px; align-items:baseline;"><span style="{MONO} font-size:20px; color:var(--text-secondary); flex:none; min-width:205px;">Why</span><span style="font-size:26px; line-height:1.3; color:var(--text-secondary);">{e(aft["why"])}</span></div>' if aft.get('why') else '') +
             '</div>')
@@ -546,6 +546,16 @@ def shell(title, sections, code, thumb_from='cp-interactions.html'):
       busy = false; paint(); };
     setInterval(sendSet, 3000);""")
     tail = tail.replace("      fill(); lastQ = undefined; syncLive();", "      fill(); lastQ = undefined; syncLive(); sendSet();")
+    # branching cases: word cloud of the settings, the room's support percentages, and the severity of the room's patients
+    GRADE_JS = open(os.path.join(APP, 'tools', 'grade.js')).read()
+    tail = tail.replace("      if (mode === 'show' || mode === 'poll') {", "      if (mode === 'show' || mode === 'poll' || mode === 'cloud') {")
+    tail = tail.replace("        s.querySelectorAll('[data-set-summary]').forEach(el => { el.textContent = txt ? 'median of ' + all.length + ' · ' + txt : 'No settings sent'; }); } catch (x) {} };",
+        "        s.querySelectorAll('[data-set-summary]').forEach(el => { el.textContent = txt ? 'median of ' + all.length + ' · ' + txt : 'No settings sent'; });\n        vcRoomSet(s, all); } catch (x) {} };")
+    tail = tail.replace("        nAns = r.j.n; if (r.j.phones !== undefined) phones = r.j.phones; okAt = Date.now(); paint(); } catch (x) {} };",
+        "        nAns = r.j.n; if (r.j.phones !== undefined) phones = r.j.phones; okAt = Date.now(); paint(); vcRoomOrd(s, r.j); if (s.querySelector('[data-cq]')) vcCourse(s, post, room); } catch (x) {} };")
+    tail = tail.replace("    const ROOM = ((document.querySelector('meta[name=vc-live-room]') || {}).content || '').toUpperCase() || undefined;",
+        GRADE_JS + "\n    const ROOM = ((document.querySelector('meta[name=vc-live-room]') || {}).content || '').toUpperCase() || undefined;")
+    assert 'vcRoomSet(s, all)' in tail and 'vcRoomOrd(s, r.j)' in tail and 'function vcGrade' in tail and "mode === 'cloud'" in tail, 'branch patch failed'
     assert 'data-set-summary' in tail and 'data-slot-note' in tail, 'set patch failed'
     assert 'sendSet(); }' in tail and 'paint();' in tail and 'setInterval(sendSet, 3000)' in tail and 'nAns = r.j.n' in tail, 'room patch failed'
     assert 'code: ROOM' in tail and 'data-live-results' in tail and 'sv.room === ROOM' in tail, 'tail patch failed'

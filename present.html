@@ -21,7 +21,7 @@
   <p style="margin:0; font-size:15px; line-height:1.6; color:#6E6A63;">Opening the same talk on a second device is safe: it watches, it does not move the phones. The room keeps everyone's answers even if the server restarts.</p>
 </main>
 <script>
-const T = [['cp-part1', 'CP interactions · Part 1', 'CP1'], ['cp-part2', 'CP interactions · Part 2', 'CP2'], ['cp-complete', 'CP interactions · complete talk', 'CPF'],
+const T = [['ards-asthma', 'Difficult ventilatory scenarios · ARDS and asthma (branching)', 'ARDS'], ['cp-part1', 'CP interactions · Part 1', 'CP1'], ['cp-part2', 'CP interactions · Part 2', 'CP2'], ['cp-complete', 'CP interactions · complete talk', 'CPF'],
   ['ltv-cases', 'Long-term ventilation · five cases', 'LTV'], ['niv', 'Non-invasive ventilation', 'NIV'], ['niv-cases', 'NIV · three cases', 'NIVC'], ['niv-ltv', 'NIV and long-term ventilation', 'NIVL']];
 const list = document.getElementById('list');
 Promise.all(T.map(([f]) => fetch('talks/' + f + '.html', { method: 'GET' }).then(r => r.ok ? r.text() : '').catch(() => ''))).then(txts => {
