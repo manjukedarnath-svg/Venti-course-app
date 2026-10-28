@@ -94,6 +94,26 @@
     'cpv-su2': { mode: "VC", vt: 170, peep: 5, C: 13, R: 20, rr: 16, ti: 0.8, pause: 0.15, window: 8 },
     'cpv-su3': { mode: "VC", vt: 170, peep: 8, C: 13, R: 20, rr: 26, ti: 0.8, pause: 0.15, window: 6 },
     // CPV-END
+    // LTV-START (rapid cases ventilator screens, generated)
+    'ltv-o1': {"mode": "PS", "ps": 0.5, "peep": 10, "C": 15, "R": 10, "rr": 34, "window": 5, "efforts": [{"t": 0.22, "amp": 6, "dur": 0.6}, {"t": 1.985, "amp": 6, "dur": 0.6}, {"t": 3.749, "amp": 6, "dur": 0.6}]},
+    'ltv-o2p': {"mode": "PS", "ps": 0.5, "peep": 8, "C": 18, "R": 14, "rr": 14, "window": 8, "efforts": [{"t": 0.22, "amp": 2.5, "dur": 0.8}, {"t": 4.506, "amp": 2.5, "dur": 0.8}], "scale": {"v": 140}},
+    'ltv-o2f': {"mode": "PC", "pinsp": 6, "peep": 8, "C": 18, "R": 14, "rr": 20, "ti": 0.8, "window": 6, "scale": {"v": 140}},
+    'ltv-d1': {"mode": "PS", "ps": 11, "peep": 5, "C": 30, "R": 6, "rr": 30, "window": 6, "efforts": [{"t": 0.22, "amp": 3.2, "dur": 0.7}, {"t": 2.22, "amp": 3.2, "dur": 0.7}, {"t": 4.22, "amp": 3.2, "dur": 0.7}], "scale": {"v": 450}},
+    'ltv-d2p': {"mode": "PC", "pinsp": 11, "peep": 5, "C": 30, "R": 6, "rr": 14, "ti": 1.1, "window": 9, "scale": {"v": 450}},
+    'ltv-d2f': {"mode": "PC", "pinsp": 11, "peep": 5, "C": 30, "R": 6, "rr": 16, "ti": 1.2, "window": 7.5, "scale": {"v": 450}},
+    'ltv-d3': {"mode": "PS", "ps": 13, "peep": 5, "C": 32, "R": 6, "rr": 18, "window": 7, "efforts": [{"t": 0.22, "amp": 2.6, "dur": 0.9}, {"t": 3.553, "amp": 2.6, "dur": 0.9}], "scale": {"v": 450}},
+    'ltv-m1': {"mode": "PC", "pinsp": 9, "peep": 5, "C": 6, "R": 38, "rr": 35, "ti": 0.6, "window": 4, "scale": {"v": 70}},
+    'ltv-m2p': {"mode": "PC", "pinsp": 9, "peep": 5, "C": 2.8, "R": 70, "rr": 35, "ti": 0.6, "window": 4, "scale": {"v": 70}},
+    'ltv-m2f': {"mode": "PC", "pinsp": 9, "peep": 5, "C": 6, "R": 38, "rr": 35, "ti": 0.6, "window": 4, "scale": {"v": 70}},
+    'ltv-g1': {"mode": "VC", "vt": 210, "peep": 6, "C": 40, "R": 14, "rr": 18, "ti": 1.0, "pause": 0.15, "window": 7, "scale": {"p": 30}},
+    'ltv-g2p': {"mode": "VC", "vt": 210, "peep": 6, "C": 28, "R": 16, "rr": 18, "ti": 1.0, "pause": 0.15, "window": 7, "scale": {"p": 30}},
+    'ltv-g2f': {"mode": "VC", "vt": 210, "peep": 10, "C": 40, "R": 16, "rr": 18, "ti": 1.0, "pause": 0.15, "window": 7, "scale": {"p": 30}},
+    'ltv-g3': {"mode": "PS", "ps": 5, "peep": 5, "C": 40, "R": 12, "rr": 28, "window": 6, "efforts": [{"t": 0.22, "amp": 3, "dur": 0.7}, {"t": 2.363, "amp": 3, "dur": 0.7}, {"t": 4.506, "amp": 3, "dur": 0.7}], "scale": {"v": 300}},
+    'ltv-b0': {"mode": "VC", "vt": 30, "peep": 5, "C": 4, "R": 200, "rr": 40, "ti": 0.4, "window": 4, "scale": {"v": 70}},
+    'ltv-b1': {"mode": "VC", "vt": 55, "peep": 10, "C": 4, "R": 95, "rr": 20, "ti": 0.7, "window": 6, "scale": {"v": 70}},
+    'ltv-b2p': {"mode": "VC", "vt": 55, "peep": 10, "C": 3.6, "R": 95, "rr": 20, "ti": 0.7, "window": 6, "scale": {"v": 70}, "efforts": [{"t": 0.9, "amp": 9, "dur": 0.4}, {"t": 1.6, "amp": 9, "dur": 0.4}, {"t": 2.4, "amp": 9, "dur": 0.4}, {"t": 3.9, "amp": 9, "dur": 0.4}, {"t": 4.5, "amp": 9, "dur": 0.4}, {"t": 5.4, "amp": 9, "dur": 0.4}]},
+    'ltv-b2f': {"mode": "VC", "vt": 55, "peep": 10, "C": 4, "R": 95, "rr": 20, "ti": 0.7, "window": 6, "scale": {"v": 70}},
+    // LTV-END
     'asthma-pc': { mode: 'PC', C: 50, R: 30, pinsp: 20, peep: 5, ti: 1.0, rr: 22, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'v', at: 'endinsp', text: 'VT shrinks as gas traps' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] }
   };
 
