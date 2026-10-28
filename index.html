@@ -2011,7 +2011,7 @@ const SIM_STAGES = [
     dx: 'Paediatric ARDS from bacterial pneumonia. Small breaths, a starting PEEP, then titrate.', learn: [6, 'Plateau and driving pressure'],
     assess: { vit: [['HR', '165'], ['BP', '92/50 after bolus'], ['SpO₂', 'live'], ['Temp', '38.6 °C']], exam: ['Equal air entry, bilateral crackles', 'Tube at 12 cm at the lip, EtCO₂ confirmed', 'Sedated and paralysed, not triggering'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Bilateral patchy alveolar opacities, worse on the right. Tube tip at T2. No pneumothorax.', img: 'assets/cxr/cxr-scen01-intubated.jpg', abg: [['pH', '7.25'], ['PaCO₂', '65'], ['PaO₂', '55'], ['HCO₃', '18'], ['Lactate', '2.0']], vent: 'Hand ventilation · FiO₂ 1.0 · ER suggested VC · VT 100 mL · RR 20 · PEEP 5' },
     patient: 'scArds', start: { mode: 'VC', vt: 100, rr: 20, peep: 5, ti: 0.7, fio2: 100, pinsp: 20 },
-    brief: 'Any mode. Set a tidal volume of 6–8 mL/kg, a rate that keeps the CO₂ moving, a starting PEEP of 6–8 and FiO₂ 1.0. Check the plateau and the flow–time scalar: expiration must reach zero before the next breath. Send a gas when you are happy, then check the targets.',
+    brief: 'Any mode. Set a tidal volume of 6–8 mL/kg, a rate that keeps the CO₂ moving and FiO₂ 1.0. Check the plateau and the flow–time scalar: expiration must reach zero before the next breath. Send a gas when you are happy, then check the targets.',
     gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c) }),
     goals: (m, a, s) => [
       ['Tidal volume 6–8 mL/kg (60–80 mL)', m.vte >= 58 && m.vte <= 82],
