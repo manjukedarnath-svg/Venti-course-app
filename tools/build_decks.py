@@ -9,7 +9,7 @@ from the existing talks; writes talks/cp-part1.html, talks/cp-part2.html, talks/
 import json, re, html, sys, hashlib, os, subprocess, tempfile
 import segno  # pip install segno
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from deckdata import MAYA, LEO, CHD, BOY, SURESH, LTV
+from deckdata import MAYA, LEO, CHD, BOY, SURESH, LTV, R2, SU2_SHORT, SURESH_DEBRIEF, LTV_R2, LTV2_IDS
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOST = 'https://venti-course-app-production.up.railway.app'
@@ -20,7 +20,29 @@ ST = D['stages']
 FALLBACK_ILLUS = {'so1': 'rapid1_aarav_osa', 'so2': 'rapid1_aarav_osa', 'sd1': 'rapid2_rohan_duchenne', 'sd2': 'rapid2_rohan_duchenne',
                   'sm1': 'rapid3_meera_sma', 'sm2': 'rapid3_meera_sma', 'sg1': 'rapid4_diya_gbs', 'sg2': 'rapid4_diya_gbs',
                   'sp1': 'rapid5_kabir_bpd', 'sp2': 'rapid5_kabir_bpd', 'bo3': None, 'bo4': None}
-SRC = {name: open(os.path.join(APP, 'talks', name)).read() for name in ['cp-interactions.html', 'rapid-cases.html']}
+SRC = {name: open(os.path.join(APP, 'talks', name)).read() for name in ['cp-interactions.html', 'rapid-cases.html', 'long-term-ventilation.html']}
+FALLBACK_ILLUS.update({'sg3': 'rapid4_diya_gbs'})
+# revision 2: history-only wording, the support set by the candidates, the LTV cases rebuilt around PMV and the tracheostomy
+_BY = {d['id']: d for d in MAYA + LEO + CHD + BOY + SURESH + LTV}
+for _k, _v in R2.items():
+    _BY[_k].update({k: v for k, v in _v.items() if v is not None})
+_BY['su2']['short'] = SU2_SHORT
+LTV2 = []
+for _k in LTV2_IDS:
+    _d = dict(_BY.get(_k, {'id': _k, 'theory': []}))
+    _d.update(LTV_R2[_k]); _d['id'] = _k; _d.setdefault('theory', [])
+    LTV2.append(_d)
+Q_OVR = {'bo1': 'Wet lungs, cold, SpO₂ 92% on the mask, RR 65. Which support first?',
+         'su1': 'BP still 68/40 after 10 mL/kg. Cold, JVP raised, liver enlarged. What now?'}
+for _k, _q in Q_OVR.items():
+    ST[_k]['live']['q'] = _q
+# theory woven in for the objectives (PPV on preload/afterload/CO, auto-PEEP, POCUS, RV failure, art line + CVP, post-intubation, fluid responsiveness)
+_BY['mm5']['theory'] = ['PPV', 'PPV caveats', 'In children']
+_BY['lv2']['theory'] = ['Pair the changes', 'POCUS']
+_BY['lv5']['theory'] = ['Modalities']
+_BY['su1']['theory'] = ['Vasoactive matrix']
+_BY['su3']['theory'] = ['Danger of intubation']
+_BY['su4']['theory'] = ['LV afterload', 'Afterload at the bedside']
 
 e = lambda t: html.escape(str(t), quote=True)
 MONO = "font-family:var(--font-mono); letter-spacing:.14em; text-transform:uppercase;"
@@ -30,6 +52,11 @@ LOGO = ('<div data-logo-plate="1" style="position:absolute; right:28px; bottom:1
 
 
 def illus_of(sid):
+    if sid in _BY and _BY[sid].get('illus'):
+        return _BY[sid]['illus']
+    for d in LTV2:
+        if d['id'] == sid and d.get('illus'):
+            return d['illus']
     s = ST.get(sid, {})
     n = s.get('illus') or FALLBACK_ILLUS.get(sid)
     return n
@@ -57,9 +84,10 @@ def orders(sid, short):
 
 
 # ------------------------------------------------------------------ slide parts --------------------------------------
-def section(label, body, notes='', live=None, mode=None, results=None, chord=None, pad='56px 72px 64px', extra_style='', justify=''):
+def section(label, body, notes='', live=None, mode=None, results=None, chord=None, pad='56px 72px 64px', extra_style='', justify='', setq=None, skip=False):
     a = [f'data-label="{e(label)}"']
-    if live: a.insert(0, f'data-live="{e(live)}" data-live-mode="{mode or "info"}"' + (f' data-live-results="{e(results)}"' if results else ''))
+    if live: a.insert(0, f'data-live="{e(live)}" data-live-mode="{mode or "info"}"' + (f' data-live-results="{e(results)}"' if results else '') + (f' data-live-setq="{e(setq)}"' if setq else ''))
+    if skip: a.append('data-deck-skip')
     if chord: a.append(f'data-chord="{chord}"')
     a.append(f'data-speaker-notes="{e(notes)}"')
     st = f'background:var(--surface-page); color:var(--text-primary); padding:{pad}; box-sizing:border-box; display:flex; flex-direction:column; gap:28px;{justify}{extra_style}'
@@ -101,7 +129,7 @@ def knob(i):
     return KNOB.format(x=round(30 + 17 * math.cos(a), 1), y=round(30 - 17 * math.sin(a), 1))
 
 
-def device(scr, dim=False):
+def device(scr, dim=False, foot=''):
     """The app's ICU-1 ventilator: screen with waves and measured values, mode bar, knobs with set values."""
     wave = scr.get('wave')
     meas = scr.get('meas') or []
@@ -116,7 +144,7 @@ def device(scr, dim=False):
                        'style="position:absolute; inset:4px 0;" hint-size="100%,100%"></x-import></div>')
     else:
         screen_left = (f'<div style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:#8A9096;">'
-                       f'<span style="font:500 15px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase;">Standby · not on the ventilator</span>'
+                       f'<span style="font:500 15px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase;">{e(scr.get("msg") or "Standby · not on the ventilator")}</span>'
                        f'<span style="font:400 26px/1.25 var(--font-sans); color:#D8D4CC; text-align:center; max-width:320px;">{e(scr.get("modeLong", ""))}</span></div>')
     knobs = ''.join(f'<div style="display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0;"><span style="font:500 13px/1 var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:#3B3A36;">{e(k)}</span>'
                     f'{knob(i)}<span style="min-width:74px; text-align:center; background:#0E1012; color:#E9B54A; font:500 22px/1 var(--font-mono); padding:7px 8px; border-radius:3px; white-space:nowrap;">{e(v)}</span></div>'
@@ -137,7 +165,7 @@ def device(scr, dim=False):
             f'<span style="flex:1; background:#0E1012; color:#F2EFE8; border-radius:6px; padding:9px 16px; font:500 18px/1.1 var(--font-mono); letter-spacing:.04em;">{e(scr.get("modeLong", scr.get("mode", "")))}</span></div>'
             f'<div style="flex:none; display:flex; justify-content:space-around; gap:8px;">{knobs}</div>'
             '</div>'
-            + (f'<span style="flex:none; font-size:24px; line-height:1.3; color:var(--text-secondary);">{e(note)}</span>' if note else '') +
+            + (f'<span style="flex:none; font-size:24px; line-height:1.3; color:var(--text-secondary);">{e(note)}</span>' if note else '') + foot +
             '</div>')
 
 
@@ -170,6 +198,14 @@ def live_vent(scr):
     return v
 
 
+def set_task(d, sid):
+    q = d.get('setq')
+    if not q:
+        return None
+    st = q['start']
+    return {'q': sid + '~s', 'ifaces': q['ifaces'], 'start': {'iface': st['iface'], 'mode': st['mode'], 'v': st['v']}, 'ask': q.get('ask') or 'Set the support'}
+
+
 def stage_slides(d, code):
     sid = d['id']
     st = ST[sid]
@@ -177,39 +213,81 @@ def stage_slides(d, code):
     n_before = illus_of(sid)
     scr, aft = d['scr'], d['after']
     title_plain = plain(d['head'])
-    # phone
+    T = set_task(d, sid)
+    story = d.get('hist') or st['story']
+    # phone: the bedside, the support to set, the orders
     LIVE_OUT[sid] = {'t': d['eyebrow'] + ' · ' + title_plain, 'illus': ipath(n_before, ''), 'mon': scr['mon'], 'vent': live_vent(scr),
-                     'lines': [st['story']], 'q': st['live']['q'], 'opts': [[L, label] for L, label, *_ in ords]}
+                     'lines': [story], 'q': st['live']['q'], 'opts': [[L, label] for L, label, *_ in ords]}
+    if T: LIVE_OUT[sid]['set'] = {k: T[k] for k in ('q', 'ifaces', 'start')}
     if not n_before: LIVE_OUT[sid].pop('illus')
     n_after = aft.get('illus') or n_before
-    aft_scr = {**scr, **{k: v for k, v in aft.items() if k in ('mode', 'set', 'meas', 'wave', 'mon')}}
+    aft_scr = {**scr, **{k: v for k, v in aft.items() if k in ('mode', 'modeLong', 'set', 'meas', 'wave', 'mon')}}
     if 'set' in aft and 'modeLong' not in aft:
-        aft_scr['modeLong'] = {'PC': 'AC · Pressure control', 'PRVC': 'AC · PRVC', 'VC': 'AC · Volume control', 'NIV': 'Bilevel by mask', 'ST': 'Bilevel ST', 'CPAP': 'CPAP by mask', 'PS': 'Pressure support + PEEP'}.get(aft.get('mode', ''), scr.get('modeLong'))
+        aft_scr['modeLong'] = {'PC': 'AC · Pressure control', 'PRVC': 'AC · PRVC', 'VC': 'AC · Volume control', 'NIV': 'Bilevel by mask', 'ST': 'Bilevel ST', 'CPAP': 'CPAP by mask', 'PS': 'Pressure support + PEEP', 'HFNC': 'High-flow nasal cannula'}.get(aft.get('mode', ''), scr.get('modeLong'))
     aft_scr['note'] = ''
     aft_scr['gas'] = ''
+    aft_scr['msg'] = aft.get('msg', '')
     LIVE_OUT[sid + '_r'] = {'t': d['eyebrow'] + ' · the response', 'illus': ipath(n_after, ''), 'mon': aft['mon'], 'of': sid,
-                            'reveal': [[L, label, ok, resp] for L, label, ok, resp, *_ in ords], 'lines': [aft['happen']]}
+                            'reveal': [[L, label, ok, resp] for L, label, ok, resp, *_ in ords], 'lines': [aft['happen']] + ([aft['why']] if aft.get('why') else [])}
     if 'set' in aft: LIVE_OUT[sid + '_r']['vent'] = live_vent(aft_scr)
     if not n_after: LIVE_OUT[sid + '_r'].pop('illus')
     right = next(o for o in ords if o[2])
-    # slide 1: the screen and the orders
-    notes1 = st['story'] + ' Ask: ' + st['live']['q'] + ' Orders on the phones; the bars stay hidden until the response slide.'
+    # slide 1: the bedside, the support as handed over, the orders; the candidates set the support on their phones
+    setfoot = ''
+    if T:
+        setfoot = (f'<div style="flex:none; display:flex; justify-content:space-between; align-items:baseline; gap:16px; border:1px dashed var(--text-accent); border-radius:6px; padding:12px 18px;">'
+                   f'<span style="font-size:26px; line-height:1.25;"><span style="{MONO} font-size:17px; color:var(--text-accent);">On your phone · </span>{e(T["ask"])}</span>'
+                   f'<span data-set-count style="{MONO} font-size:17px; color:var(--text-secondary); flex:none;">Waiting for settings</span></div>')
+    notes1 = story + (' Set the support on your phones: ' + T['ask'].lower() + '.' if T else '') + ' Then the order: ' + st['live']['q'] + ' The bars and the settings stay hidden until the response slide.'
     col1 = f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0; min-height:0;">{picture(n_before, sid=sid)}{monitor(scr["mon"])}</div>'
     col3 = (f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Your order</span>{order_cards(ords)}'
             '</div>')
-    body = header(d['eyebrow'], d['head'], 'Live · what do you do?') + \
-        f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:540px minmax(0,1fr) 470px; gap:30px;">{col1}{device(scr)}{col3}</div>'
-    s1 = section(f'{title_plain}', body, notes1, live=sid, mode='ask')
-    # slide 2: the response
-    notes2 = 'The response. ' + right[3] + ' ' + (st.get('event') or '')
+    body = header(d['eyebrow'], d['head'], 'Live · set it, then order') + \
+        f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:540px minmax(0,1fr) 470px; gap:30px;">{col1}{device(scr, foot=setfoot)}{col3}</div>'
+    s1 = section(f'{title_plain}', body, notes1, live=sid, mode='ask', setq=T and T['q'])
+    # slide 2: the settings revealed, what the room set, each order and the response
+    notes2 = 'The settings and the response. ' + right[3] + ' ' + (st.get('event') or '')
+    sumfoot = ''
+    if T:
+        sumfoot = (f'<div style="flex:none; border-top:1px solid var(--border-subtle); padding-top:10px; display:flex; gap:16px; align-items:baseline;">'
+                   f'<span style="{MONO} font-size:17px; color:var(--text-accent); flex:none;">The room set</span>'
+                   f'<span data-set-summary style="font-size:22px; line-height:1.35; color:var(--text-secondary);">No settings sent</span></div>')
     col1 = f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0; min-height:0;">{picture(n_after, sid=sid)}{monitor(aft["mon"])}</div>'
     col3 = f'<div style="display:flex; flex-direction:column; gap:14px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Each order · the response</span>{order_cards(ords, reveal=True)}</div>'
-    foot = (f'<div style="flex:none; display:flex; gap:22px; align-items:baseline; border-top:1px solid var(--border-subtle); padding-top:18px;">'
-            f'<span style="{MONO} font-size:20px; color:var(--text-accent); flex:none;">What happened</span><span style="font-size:32px; line-height:1.25;">{e(aft["happen"])}</span></div>')
-    body = header(d['eyebrow'], d['head'], 'The response') + \
-        f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:540px minmax(0,1fr) 470px; gap:30px;">{col1}{device(aft_scr, dim=("set" not in aft))}{col3}</div>' + foot
-    s2 = section(f'{title_plain} · response', body, notes2, live=sid + '_r', mode='show', results=sid)
-    return s1 + s2
+    foot = (f'<div style="flex:none; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border-subtle); padding-top:14px;">'
+            f'<div style="display:flex; gap:22px; align-items:baseline;"><span style="{MONO} font-size:20px; color:var(--text-accent); flex:none;">What happened</span><span style="font-size:30px; line-height:1.25;">{e(aft["happen"])}</span></div>'
+            + (f'<div style="display:flex; gap:22px; align-items:baseline;"><span style="{MONO} font-size:20px; color:var(--text-secondary); flex:none; min-width:205px;">Why</span><span style="font-size:26px; line-height:1.3; color:var(--text-secondary);">{e(aft["why"])}</span></div>' if aft.get('why') else '') +
+            '</div>')
+    tag = 'The settings · the response' if T else 'The response'
+    body = header(d['eyebrow'], d['head'], tag) + \
+        f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:540px minmax(0,1fr) 470px; gap:30px;">{col1}{device(aft_scr, dim=("set" not in aft), foot=sumfoot)}{col3}</div>' + foot
+    s2 = section(f'{title_plain} · response', body, notes2, live=sid + '_r', mode='show', results=sid, setq=T and T['q'])
+    out = s1 + s2
+    for name, cap in d.get('pocus') or []:
+        out += pocus_slide(d, name, cap)
+    return out
+
+
+def video_slot(name, cap, h=560):
+    return (f'<div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:12px;"><div style="position:relative; height:{h}px; border-radius:6px; border:2px dashed var(--border-default); background:#0E1012; overflow:hidden;">'
+            f'<div data-slot-note style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:#8A9096; text-align:center; padding:20px;">'
+            f'<span style="font:500 16px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase;">Video · {e(cap)}</span>'
+            f'<span style="font:400 20px/1.4 var(--font-mono);">assets/pocus/{e(name)}.mp4</span></div>'
+            f'<video data-slot src="../assets/pocus/{e(name)}.mp4" muted loop playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:transparent;"></video></div>'
+            f'<span style="{MONO} font-size:18px; color:var(--text-secondary);">{e(cap)}</span></div>')
+
+
+_POCUS_DONE = set()
+
+
+def pocus_slide(d, name, cap):
+    """One slide per case holds every clip (IVC and heart side by side)."""
+    if d['id'] in _POCUS_DONE:
+        return ''
+    _POCUS_DONE.add(d['id'])
+    slots = ''.join(video_slot(n, c) for n, c in d['pocus'])
+    body = header(d['eyebrow'], 'POCUS: the IVC and the <em>heart</em>', 'Video') + f'<div style="flex:1; min-height:0; display:flex; gap:30px; align-items:center;">{slots}</div>'
+    return section(plain(d['head']) + ' · POCUS', body, 'Show the clips. Ask: empty, pump, obstructed or compressed? IVC: size and respiratory variation. Heart: LV size and squeeze, RV size, septum, effusion.')
 
 
 def opener(key, eyebrow, name, lines, n, notes, code):
@@ -223,7 +301,7 @@ def opener(key, eyebrow, name, lines, n, notes, code):
     return section('Case · ' + plain(name), body, notes, live=key, mode='info', pad='80px 96px 80px')
 
 
-def reuse(src, label, new_label=None, strip_live=True):
+def reuse(src, label, new_label=None, strip_live=True, skip=False):
     s = SRC[src]
     i = s.index(f'data-label="{label}"')
     a = s.rfind('<section', 0, i)
@@ -234,7 +312,36 @@ def reuse(src, label, new_label=None, strip_live=True):
     sec = re.sub(r' data-screen-label="[^"]*"', '', sec)
     if new_label:
         sec = sec.replace(f'data-label="{label}"', f'data-label="{new_label}"', 1)
+    if skip:
+        sec = sec.replace('<section ', '<section data-deck-skip ', 1)
+    USED.add((src, label))
     return sec + '\n'
+
+
+USED = set()
+
+
+def appendix(src, start, stop, drop=('Title', 'Join', 'Close', 'Try it', 'Thank you')):
+    """Every theory slide of the full talk not already woven in, hidden (skipped) at the end: pull one in from the rail if a question needs it."""
+    labs = re.findall(r'<section [^>]*data-label="([^"]*)"', SRC[src])
+    labs = labs[labs.index(start):labs.index(stop)]
+    out = ''
+    for l in labs:
+        if (src, l) in USED or l in drop or l.startswith('Case ·'):
+            continue
+        out += reuse(src, l, skip=True)
+    return out
+
+
+def table_slide(label, eyebrow, head, rows, notes):
+    th = f'{MONO} font-size:18px; color:var(--text-secondary); text-align:left; padding:0 18px 12px 0; border-bottom:1px solid var(--border-default);'
+    body = header(eyebrow, head, 'Debrief') + ('<table style="width:100%; border-collapse:collapse; table-layout:fixed;"><colgroup><col style="width:250px"><col style="width:560px"><col></colgroup>'
+            f'<thead><tr><th style="{th}">Domain</th><th style="{th}">Question</th><th style="{th}">Expected answer</th></tr></thead><tbody>'
+            + ''.join(f'<tr><td style="vertical-align:top; padding:20px 18px 20px 0; border-bottom:1px solid var(--border-subtle); font-size:28px; color:var(--text-accent);">{e(d)}</td>'
+                      f'<td style="vertical-align:top; padding:20px 24px 20px 0; border-bottom:1px solid var(--border-subtle); font-size:27px; line-height:1.3;">{e(q)}</td>'
+                      f'<td style="vertical-align:top; padding:20px 0; border-bottom:1px solid var(--border-subtle); font-size:25px; line-height:1.32; color:var(--text-secondary);">{e(a)}</td></tr>' for d, q, a in rows)
+            + '</tbody></table>')
+    return section(label, body, notes, pad='64px 96px')
 
 
 def title_slide(kicker, head, sub, notes):
@@ -313,6 +420,27 @@ def shell(title, sections, code, thumb_from='cp-interactions.html'):
                         "const ROOM = ((document.querySelector('meta[name=vc-live-room]') || {}).content || '').toUpperCase() || undefined;\n    let room = null, key = null, lastQ, timer = null;")
     tail = tail.replace("const tick = async () => { try { const r = await post('results', { room, q });",
                         "const rq = s.getAttribute('data-live-results') || q;\n      const tick = async () => { try { const r = await post('results', { room, q: rq });")
+    # the support the room set on their phones: count on the order slide, summary on the reveal
+    tail = tail.replace("      tick(); timer = setInterval(tick, 2000);\n    };",
+        """      const sq = s.getAttribute('data-live-setq');
+      const NM = { l: 'O₂', f: 'Flow', o: 'FiO₂', cp: 'CPAP', ip: 'IPAP', ep: 'EPAP', br: 'Backup', ti: 'Ti', pi: 'Pinsp', pe: 'PEEP', rr: 'Rate', vt: 'VT', ps: 'PS' };
+      const MD = { Mask: 'O₂ mask', HFNC: 'High-flow', CPAP: 'CPAP', ST: 'Bilevel ST', PC: 'PC', VC: 'VC', PRVC: 'PRVC', PS: 'PS + PEEP' };
+      const med = a => { a = a.slice().sort((x, y) => x - y); return a[Math.floor(a.length / 2)]; };
+      const setTick = async () => { try { const r = await post('results', { room, q: sq }); if (!r.ok) return; const j = r.j;
+        s.querySelectorAll('[data-set-count]').forEach(el => { el.textContent = j.n ? j.n + (j.n === 1 ? ' setting sent' : ' settings sent') : 'Waiting for settings'; });
+        const all = []; j.texts.forEach(t => { for (let i = 0; i < t.n; i++) all.push(t.t); });
+        const by = {}; all.forEach(t => { const [i, m, kv] = t.split(':'); if (!kv) return; (by[m] = by[m] || []).push(kv); });
+        const modes = Object.entries(by).sort((a, b) => b[1].length - a[1].length);
+        const txt = modes.slice(0, 3).map(([m, kvs]) => { const vals = {}; kvs.forEach(kv => kv.split(',').forEach(p => { const [k, v] = p.split('='); (vals[k] = vals[k] || []).push(+v); }));
+          return (MD[m] || m) + ' ×' + kvs.length + ': ' + Object.entries(vals).map(([k, v]) => (NM[k] || k) + ' ' + (k === 'o' ? (med(v) / 100).toFixed(2) : med(v))).join(' · '); }).join('   |   ');
+        s.querySelectorAll('[data-set-summary]').forEach(el => { el.textContent = txt ? 'median of ' + all.length + ' · ' + txt : 'No settings sent'; }); } catch (x) {} };
+      const both = () => { tick(); if (sq) setTick(); };
+      both(); timer = setInterval(both, 2000);
+    };""")
+    # an empty video slot shows its note; a loaded clip hides it
+    tail = tail.replace("    const syncVideos = () => document.querySelectorAll('deck-stage video').forEach(v => {",
+        "    document.querySelectorAll('video[data-slot]').forEach(v => { const show = () => { const n = v.parentNode.querySelector('[data-slot-note]'); if (n) n.style.display = 'none'; }; v.addEventListener('loadeddata', show); v.addEventListener('error', () => { v.style.display = 'none'; }); if (v.readyState >= 2) show(); });\n    const syncVideos = () => document.querySelectorAll('deck-stage video').forEach(v => {")
+    assert 'data-set-summary' in tail and 'data-slot-note' in tail, 'set patch failed'
     assert 'code: ROOM' in tail and 'data-live-results' in tail and 'sv.room === ROOM' in tail, 'tail patch failed'
     return head + '\n\n' + sections + tail
 
@@ -320,25 +448,25 @@ def shell(title, sections, code, thumb_from='cp-interactions.html'):
 def build_part1():
     code = 'CP1'
     out = title_slide('VentCourse · Module 08 · Cardiopulmonary interactions · Part 1', 'Heart and lung, <em>at the bedside</em>',
-                      'Three cases on the ventilator: the difficult airway, the failing right ventricle, the congenital heart.',
+                      'Three cases at the bedside. You set the support on your phone; then we see what the child does.',
                       'Thirty minutes, three cases, and you run them. Every case starts at the bedside: the child, the monitor and the ventilator. You choose the order on your phone, and the screen shows what the child does next. The physiology comes in as the cases need it.')
     out += join_slide(code, 'Scan the code with your phone camera. It opens the VentCourse app straight into this session; no account needed. If the camera will not scan, open the app, tap Live session and type CP1.')
-    out += opener('maya_case', 'Case 1 · the physiologically difficult airway', 'Maya: the haemodynamic <em>cliff</em>',
-                  ['3 years · 15 kg · refractory septic shock', 'Needs a tube, no reserve to survive one'], 'maya1_arrival',
-                  'Maya, three years, fifteen kilos. Three days of fever, now obtunded and mottled to the thighs on one cannula. She needs a tube, and she has no reserve to survive one. VT 6 to 8 mL/kg is 90 to 120 mL.', code)
+    out += opener('maya_case', 'Case 1 of 3', 'Maya, <em>3 years</em>',
+                  ['15 kg · three days of fever, vomiting, lethargy', 'One bolus in the ED; obtunded, mottled, one 22G cannula'], 'maya1_arrival',
+                  'Maya, three years, fifteen kilos. Three days of fever, vomiting and lethargy, one bolus in the ED, now obtunded and mottled to the thighs on one cannula. History only: the room works out the rest. VT 6 to 8 mL/kg is 90 to 120 mL.', code)
     for d in MAYA:
         out += stage_slides(d, code)
         for t in d['theory']: out += reuse('cp-interactions.html', t)
     out += reuse('cp-interactions.html', 'Maya · debrief')
-    out += opener('leo_case', 'Case 2 · the failing right ventricle', 'Leo: crashing on the <em>ventilator</em>',
-                  ['6 years · 20 kg · influenza PARDS', 'Intubated 24 hours, deeply sedated'], 'leo1_desat_on_turning',
-                  'Leo, six years, twenty kilos, influenza A pneumonia, intubated twenty-four hours ago. He desaturates, the PEEP goes up, and the right ventricle fails. VT 6 mL/kg is 120 mL; he is running 110.', code)
+    out += opener('leo_case', 'Case 2 of 3', 'Leo, <em>6 years</em>',
+                  ['20 kg · admitted 48 hours ago with a chest infection', 'Intubated 24 hours ago; desaturates on turning'], 'leo1_desat_on_turning',
+                  'Leo, six years, twenty kilos, admitted with influenza A pneumonia and intubated twenty-four hours ago. He desaturates on turning. VT 6 mL/kg is 120 mL; he is running 110.', code)
     for d in LEO:
         out += stage_slides(d, code)
         for t in d['theory']: out += reuse('cp-interactions.html', t)
     out += reuse('cp-interactions.html', 'Leo · debrief')
-    out += opener('chd_case', 'Case 3 · the congenital heart', 'Five lesions, five <em>screens</em>',
-                  ['PVR and SVR are the levers', 'Each lesion needs the opposite of the last'], 'chd0_anatomy_normal',
+    out += opener('chd_case', 'Case 3 of 3', 'Five hearts, five <em>ventilators</em>',
+                  ['Five children with known congenital heart disease', 'Set each ventilator from the bedside numbers'], 'chd0_anatomy_normal',
                   'Five bedside vignettes, one ventilator screen each. FiO2, CO2, pH and mean airway pressure move PVR. The normal heart first, so each lesion can be compared against it.', code)
     out += reuse('cp-interactions.html', 'Two spigots')
     for d in CHD:
@@ -346,18 +474,19 @@ def build_part1():
     out += reuse('cp-interactions.html', 'The congenital heart · debrief')
     out += close_slide('Every breath is a <em>haemodynamic</em> intervention', 'All three cases are in the app: Cases · Sim scenarios 08, 09 and 10.',
                        'Every breath the ventilator gives is a haemodynamic intervention. Maya, Leo and the five congenital hearts are simulator scenarios 08 to 10 in the app: run them on your own, with the monitor and the gas answering every change. Thank you.', 'Part 1')
+    out += appendix('cp-interactions.html', 'Intubation cycle', 'Close')
     return shell('Cardiopulmonary interactions · Part 1', out, code)
 
 
 def build_part2():
     code = 'CP2'
-    out = title_slide('VentCourse · Module 08 · Cardiopulmonary interactions · Part 2', 'The failing heart, <em>ventilated</em>',
-                      'Myocarditis and cardiogenic shock: positive pressure as a treatment.',
+    out = title_slide('VentCourse · Module 08 · Cardiopulmonary interactions · Part 2', 'Two children, <em>cold</em> and breathless',
+                      'You set the support on your phone; then we see what the child does.',
                       'Thirty minutes, two children with failing left ventricles. Positive pressure is a treatment for this heart; the induction drugs are the danger. You run both cases on your phones.')
     out += join_slide(code, 'Scan the code with your phone camera to join; no account needed. Or open the app, tap Live session and type CP2.')
     # the 4-year-old: bedside, investigations, then the ventilator
     LIVE_OUT['boy_case'] = {'t': 'A 4-year-old boy', 'illus': ipath('live1_arrival', ''), 'lines': ['Five days of fever, runny nose and cough', 'Fast breathing since yesterday', 'Lethargic since this morning, increased work of breathing', 'Received in the ER']}
-    out += opener('boy_case', 'Case 1 · the failing left ventricle', 'A 4-year-old <em>boy</em>',
+    out += opener('boy_case', 'Case 1 of 2', 'A 4-year-old <em>boy</em>',
                   ['Five days of fever, runny nose, cough', 'Fast breathing, lethargic since morning'], 'live1_arrival',
                   'Five days of fever, runny nose and cough. Fast breathing since yesterday, lethargic since this morning, more work of breathing. Received in the ER. What do you see?', code)
     LIVE_OUT['boy_case']['lines'] = ['Five days of fever, runny nose and cough', 'Fast breathing since yesterday', 'Lethargic since this morning, increased work of breathing', 'Received in the ER']
@@ -386,35 +515,39 @@ def build_part2():
                        [('Start', ['EPAP 8 is the treatment', 'Inotrope, no bolus']), ('The tube', ['The drugs are the danger', 'Pre-set, push-dose, ketamine']),
                         ('After', ['PEEP 8–10 while the BP holds', 'Closed suction only']), ('Weaning', ['A cardiac stress test', 'Extubate onto NIV'])],
                        'Positive pressure is a treatment for the failing LV: start it through a mask, EPAP 8. If the tube is needed, the danger is the induction drugs. After the tube keep the PEEP that unloads the LV. And wean onto NIV, not off it.')
-    out += opener('suresh_case', 'Case 2 · KarPediCon Station D', 'Suresh: the heart <em>first</em>',
-                  ['8 years · 24 kg · acute myocarditis', 'EF 15%, moderate MR, BP 68/40'], 'suresh1_bedside',
-                  'Suresh, eight, twenty-four kilos, acute myocarditis, ejection fraction 15 per cent with moderate mitral regurgitation, in cardiogenic shock after one fluid bolus. Support the heart before the tube; set the ventilator before the drugs; protect preload after the tube; then PEEP for the LV.', code)
+    out += opener('suresh_case', 'Case 2 of 2', 'Suresh, <em>8 years</em>',
+                  ['24 kg · five days of a viral illness', 'One bolus at the referring hospital: "BP is still 68"'], 'suresh1_bedside',
+                  'Suresh, eight, twenty-four kilos. Five days of a viral illness; one 10 mL/kg bolus at the referring hospital and the pressure is still 68. Give the history only; let the room find the diagnosis from the bedside and the scan.', code)
     for d in SURESH:
         out += stage_slides(d, code)
         for t in d['theory']: out += reuse('cp-interactions.html', t)
-    out += cards_slide('Suresh · debrief', 'Suresh · debrief', 'The order <em>matters</em>',
-                       [('Recognise', ['JVP, liver, cold, low EF', 'No more fluid']), ('Support', ['Adrenaline or milrinone', 'No pure constrictor alone']),
-                        ('Intubate', ['Ventilator set first', 'Ketamine reduced, pads on']), ('After', ['Preload, then the rate', 'Then PEEP for the LV'])],
-                       'Cardiogenic shock: raised JVP, hepatomegaly, cool peripheries, fluid-unresponsive, low EF. Adrenaline or milrinone, not a pure vasoconstrictor. Set the ventilator before induction, ketamine at a reduced dose, push-dose adrenaline and pads on. After the tube: preload first, then match his minute ventilation, then PEEP for the LV. Escalate to ECMO or VAD early: I need you here now.')
+    out += table_slide('Suresh · debrief 1', 'Suresh · Station D debrief · 1 of 2', 'Recognise, support, <em>intubate</em>', SURESH_DEBRIEF[:3],
+                       'Shock recognition, inotrope choice, safe intubation. Ask each question to the room before showing the answer.')
+    out += table_slide('Suresh · debrief 2', 'Suresh · Station D debrief · 2 of 2', 'After the tube, and <em>escalation</em>', SURESH_DEBRIEF[3:],
+                       'Post-intubation management, escalation to ECMO or VAD, and communication: SBAR and I need you here now.')
     out += close_slide('Preload first, then <em>PEEP</em>', 'Both cases are in the app: Cases · Sim scenarios 11 and 12.',
                        'For the failing left ventricle, positive pressure is a drug and the induction is the danger. Both children are simulator scenarios 11 and 12 in the app. Thank you.', 'Part 2')
+    out += appendix('cp-interactions.html', 'Intubation cycle', 'Close')
     return shell('Cardiopulmonary interactions · Part 2', out, code)
 
 
 def build_ltv():
     code = 'LTV'
-    out = title_slide('VentCourse · Module 09 · Long-term ventilation · 15 min', 'Five children, five <em>pumps</em>',
-                      'How to ventilate them, stage by stage.',
-                      'Fifteen minutes, five children who need ventilation for a long time. Each one starts at the bedside: commit to an order on your phone and see what the child does. Every child is a simulator scenario in the app, 03 to 07.')
+    out = title_slide('VentCourse · Module 09 · Long-term ventilation · 15 min', 'Five children, <em>long</em> on the ventilator',
+                      'You set the support; the child answers.',
+                      'Fifteen minutes, five children who need ventilation for a long time. Each one starts at the bedside: commit to an order on your phone and see what the child does. Prolonged ventilation, the tracheostomy decision, its emergencies and the road home all come through the cases.')
     out += join_slide(code, 'Scan the code to join; no account needed. Or open the app, tap Live session and type LTV.')
-    for d in LTV:
+    for d in LTV2:
+        if d['id'] == 'ry0':
+            out += opener('riya_case', 'Case 5 of 5', 'Riya: two failed <em>extubations</em>',
+                          ['Born at 28 weeks · 9 months, 6 kg', 'Ventilated 22 days; stridor after each extubation'], 'riya1_ward_round',
+                          'Riya, nine months, born at 28 weeks. Ventilated since admission with a respiratory infection; two extubations, both failed with stridor and a rising CO2. She will carry us through the tracheostomy: the decision, the emergencies, and home.', code)
         out += stage_slides(d, code)
-        for t in d['theory']: out += reuse('rapid-cases.html', t)
-    out += reuse('rapid-cases.html', 'Map')
-    out += reuse('rapid-cases.html', 'Summary')
-    out += reuse('rapid-cases.html', 'Takeaways')
-    out += close_slide('Oxygen is not <em>ventilation</em>', 'All five children are in the app: Cases · Sim scenarios 03 to 07.',
-                       'Oxygen is not ventilation. All five children are simulator scenarios 03 to 07 in the app. Thank you.', 'Long-term ventilation')
+        for t in d['theory']: out += reuse('long-term-ventilation.html', t)
+    out += reuse('long-term-ventilation.html', 'Takeaways')
+    out += close_slide('Oxygen is not <em>ventilation</em>', 'The children are in the app: Cases · Sim scenarios 03 to 07 and the tracheostomy case discussion.',
+                       'Oxygen is not ventilation. Name prolonged ventilation early, decide on the trachea with the team, drill the emergencies, and plan the road home. Thank you.', 'Long-term ventilation')
+    out += appendix('long-term-ventilation.html', 'Plan', 'Riya')
     return shell('Long-term ventilation · five cases', out, code)
 
 
@@ -433,7 +566,9 @@ def write_live():
 
 
 if __name__ == '__main__':
-    files = {'cp-part1.html': build_part1(), 'cp-part2.html': build_part2(), 'ltv-cases.html': build_ltv()}
+    files = {}
+    for f, fn in [('cp-part1.html', build_part1), ('cp-part2.html', build_part2), ('ltv-cases.html', build_ltv)]:
+        USED.clear(); files[f] = fn()
     for f, t in files.items():
         open(os.path.join(APP, 'talks', f), 'w').write(t)
         print(f, len(t), t.count('<section '), 'slides')

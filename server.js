@@ -54,7 +54,7 @@ function live(route, b) {
     case 'answer': {
       if (!r) return [404, { error: 'no room' }];
       const q = String(b.q || ''), id = who(b);
-      if (!r.opened[q] || id.length < 3) return [400, { error: 'closed' }];
+      if (!(r.opened[q] || r.opened[q.split('~')[0]]) || id.length < 3) return [400, { error: 'closed' }];
       const a = String(b.a || '').replace(/\s+/g, ' ').trim().slice(0, 80);
       if (!a) return [400, { error: 'empty' }];
       (r.ans[q] = r.ans[q] || {})[id] = a;
