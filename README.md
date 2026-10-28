@@ -9,7 +9,7 @@ This folder **is the live app**. There's no build step: what's here is what Rail
 npm start          # http://localhost:3000
 ```
 - App → `/`
-- Talks → `/talks/graphics.html`, `/talks/know-your-machine.html`, `/talks/complete.html`, `/talks/basics.html` (30-min basics), `/talks/disease-specific.html`, `/talks/difficult-scenarios.html` (the two Cases scenarios as a 75-slide case discussion), `/talks/cp-interactions.html` (Module 08, 131 slides, native SVG diagrams; case X-ray and echo in `assets/cp/`), `/talks/long-term-ventilation.html` (Module 09, 62 slides, native SVG diagrams), `/talks/rapid-cases.html` (Module 09 rapid cases, 15 min: OSA, Duchenne, SMA, GBS, BPD), and the three case-first live decks: `/talks/cp-part1.html` (CP interactions part 1, 30 min: Maya, Leo, the congenital heart · room CP1), `/talks/cp-part2.html` (part 2, 30 min: the 4-year-old, Suresh · room CP2), `/talks/ltv-cases.html` (long-term ventilation, five cases, 15 min · room LTV) (← → to move, F for full screen, N for notes, P for presenter window)
+- Talks → `/talks/graphics.html`, `/talks/know-your-machine.html`, `/talks/complete.html`, `/talks/basics.html` (30-min basics), `/talks/disease-specific.html`, `/talks/difficult-scenarios.html` (the two Cases scenarios as a 75-slide case discussion), `/talks/cp-interactions.html` (Module 08, 131 slides, native SVG diagrams; case X-ray and echo in `assets/cp/`), `/talks/long-term-ventilation.html` (Module 09, 62 slides, native SVG diagrams), `/talks/rapid-cases.html` (Module 09 rapid cases, 15 min: OSA, Duchenne, SMA, GBS, BPD), and the three case-first live decks: `/talks/cp-part1.html` (CP interactions part 1, 30 min: Maya, Leo, the congenital heart · room CP1), `/talks/cp-part2.html` (part 2, 30 min: the 4-year-old, Suresh · room CP2), `/talks/ltv-cases.html` (long-term ventilation, five cases, 15 min · room LTV) (← → to move, F for full screen, N for notes, P for presenter window), `/talks/niv.html` (Module 04 NIV talk, 58 slides), `/talks/niv-cases.html` (three NIV cases, live room NIV), `/talks/niv-ltv.html` (NIV + long-term ventilation, eight cases, live room NLV)
 - Admin → sign in as `admin`
 
 ## Deploy
@@ -35,6 +35,7 @@ The three case-first decks are built from the app, so the phone and the screen a
 ```
 pip install segno                      # once, for the QR code on the Join slide
 python3 tools/build_decks.py           # writes talks/cp-part1.html, cp-part2.html, ltv-cases.html and the LIVE block in index.html
+python3 tools/build_niv.py             # writes talks/niv.html (Module 04 talk), niv-cases.html (room NIV), niv-ltv.html (room NLV) and their LIVE entries
 python3 tools/bundle.py BASE.html talks/cp-part1.html "OUT.html"   # self-contained Present copy (BASE = any existing Present bundle)
 ```
 Screen data for each stage (ventilator, monitor, short slide wording) is in `tools/deckdata.py`; the orders and the patient's
