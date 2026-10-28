@@ -359,25 +359,67 @@ def shell(title, sections, code, thumb_from='cp-interactions.html'):
     return head + '\n\n' + sections + tail
 
 
-def build_part1():
+POCUS = {
+  'maya': ('Maya · POCUS', 'Maya · before the next bolus', 'The IVC with each <em>breath</em>',
+           [('ivc-variable', 'Subcostal IVC, M-mode: the diameter swings with each ventilator breath'), ('ivc-flat-vs-full', 'Flat and swinging (A) against full and fixed (B)')],
+           'On controlled ventilation, in sinus rhythm and deeply sedated, an IVC whose diameter swings with each positive-pressure breath predicts a rise in output with fluid. A full, fixed IVC does not. Fluid responsiveness is not fluid need: pair it with the pressure, the lactate and the lung.'),
+  'leo': ('Leo · POCUS', 'Leo · the probe on the heart', 'Full IVC, big right <em>heart</em>',
+          [('ivc-plethoric', 'Subcostal IVC: wide, no change with the breath'), ('rv-dilated', 'Right ventricle: dilated, the septum pushed towards the LV')],
+          'The IVC is plethoric and does not move with the breath; the right ventricle is dilated and pushes the septum into the left. This is a right heart failing against its load, not a tank running dry. No bolus.'),
+  'suresh': ('Suresh · POCUS', 'Suresh · the echo on the tablet', 'How well does the LV <em>squeeze</em>?',
+             [('lv-poor-psax', 'Short axis: a large LV, the walls barely move'), ('lv-poor-apical', 'Apical view: dilated chambers, poor contraction')],
+             'Eyeball the function: how close do the walls come in systole, how close does the mitral leaflet come to the septum. Here they barely move. Fluid will not help this heart; an inotrope will.'),
+  'views': ('POCUS · the views', 'POCUS · the views you need', 'Four views, one <em>question</em>',
+            [('subcostal-normal', 'Subcostal four-chamber'), ('a4c-normal', 'Apical four-chamber'), ('ivc-normal', 'IVC entering the right atrium')],
+            'The basic views: subcostal four-chamber, apical four-chamber and the IVC as it enters the right atrium. One question at a time: is the heart empty, is it squeezing, is the right side obstructed, is it compressed.'),
+}
+
+
+def pocus_slide(key):
+    label, eyebrow, head, clips, notes = POCUS[key]
+    tiles = ''.join(f'<div style="display:flex; flex-direction:column; gap:12px; min-width:0; min-height:0;"><div style="flex:1; min-height:0; position:relative; background:#000; border-radius:6px; overflow:hidden;">'
+                    f'<video src="../assets/pocus/{f}.mp4" autoplay loop muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;"></video></div>'
+                    f'<span style="font-size:26px; line-height:1.3; color:var(--text-secondary);">{e(c)}</span></div>' for f, c in clips)
+    body = header(eyebrow, head, 'POCUS') + f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:repeat({len(clips)},1fr); gap:28px;">{tiles}</div>'
+    return section(label, body, notes, chord='night')
+
+
+FULL = False
+EXTRA = {'mm2': ['Golden rule', 'Neutral intubation'], 'mm3': ['Vasoactive matrix', 'Cuffed tube', 'Cognitive minefield'], 'mm5': ['Pair the changes', 'SVV and PPV', 'PPV caveats', 'Modalities'],
+         'lv3': ['The spiral', 'Four pillars'], 'lv5': ['ARDS sweet spot', 'Side by side', 'Measuring coupling', 'Predicting failure'],
+         'ch1': ['Left-to-right shunts'], 'ch2': ['Tet spell'], 'ch3': ['Single ventricle', 'Norwood trap'], 'ch4': ['Glenn'], 'ch5': ['Fontan', 'Post-op diagnostics', 'CHD weaning', 'PICU matrix'],
+         'bo1': ['Laplace', 'Afterload and stroke volume', 'Master levers', 'Coupling', 'Quiz afterload', 'Quiz afterload · answer'], 'bo2': ['Golden rule MV'], 'bo4': ['Aryan', 'Quiz 3', 'Quiz 3 · answer'],
+         'su3': ['Same drug, opposite ventricles']}
+PRE = {'mm5': ['pocus:maya'], 'lv2': ['pocus:leo'], 'su1': ['pocus:suresh'], 'bo1': ['pocus:views']}
+
+
+def theory_of(d, src='cp-interactions.html'):
+    out = ''
+    items = PRE.get(d['id'], []) + d['theory'] + (EXTRA.get(d['id'], []) if FULL else [])
+    for t in dict.fromkeys(items):
+        out += pocus_slide(t[6:]) if t.startswith('pocus:') else reuse(src, t)
+    return out
+
+
+def build_part1(body_only=False):
     code = 'CP1'
-    out = title_slide('VentCourse · Module 08 · Cardiopulmonary interactions · Part 1', 'Heart and lung, <em>at the bedside</em>',
+    out = '' if body_only else title_slide('VentCourse · Module 08 · Cardiopulmonary interactions · Part 1', 'Heart and lung, <em>at the bedside</em>',
                       'Three cases on the ventilator: the difficult airway, the failing right ventricle, the congenital heart.',
                       'Thirty minutes, three cases, and you run them. Every case starts at the bedside: the child, the monitor and the ventilator. You choose the order on your phone, and the screen shows what the child does next. The physiology comes in as the cases need it.')
-    out += join_slide(code, 'Scan the code with your phone camera. It opens the VentCourse app straight into this session; no account needed. If the camera will not scan, open the app, tap Live session and type CP1.')
+    out += '' if body_only else join_slide(code, 'Scan the code with your phone camera. It opens the VentCourse app straight into this session; no account needed. If the camera will not scan, open the app, tap Live session and type CP1.')
     out += opener('maya_case', 'Case 1 · Maya', 'A 3-year-old <em>girl</em>',
                   ['15 kg · three days of fever, vomiting, lethargy', 'One 20 mL/kg bolus in the ED; arrives obtunded, mottled'], 'maya1_arrival',
                   'Maya, three years, fifteen kilos. Three days of fever, now obtunded and mottled to the thighs on one cannula. She needs a tube, and she has no reserve to survive one. VT 6 to 8 mL/kg is 90 to 120 mL.', code)
     for d in MAYA:
         out += stage_slides(d, code)
-        for t in d['theory']: out += reuse('cp-interactions.html', t)
+        out += theory_of(d)
     out += reuse('cp-interactions.html', 'Maya · debrief')
     out += opener('leo_case', 'Case 2 · Leo', 'A 6-year-old <em>boy</em>',
                   ['20 kg · flu-like illness, worsening breathing', 'Intubated 24 hours ago; desaturated when turned'], 'leo1_desat_on_turning',
                   'Leo, six years, twenty kilos, influenza A pneumonia, intubated twenty-four hours ago. He desaturates, the PEEP goes up, and the right ventricle fails. VT 6 mL/kg is 120 mL; he is running 110.', code)
     for d in LEO:
         out += stage_slides(d, code)
-        for t in d['theory']: out += reuse('cp-interactions.html', t)
+        out += theory_of(d)
     out += reuse('cp-interactions.html', 'Leo · debrief')
     out += opener('chd_case', 'Case 3 · five children', 'Five children, five <em>hearts</em>',
                   ['Infants and children with heart disease', 'Each one on a ventilator, each one different'], 'chd0_anatomy_normal',
@@ -385,18 +427,20 @@ def build_part1():
     out += reuse('cp-interactions.html', 'Two spigots')
     for d in CHD:
         out += stage_slides(d, code)
+        out += theory_of(d)
     out += reuse('cp-interactions.html', 'The congenital heart · debrief')
+    if body_only: return out
     out += close_slide('Every breath is a <em>haemodynamic</em> intervention', 'All three cases are in the app: Cases · Sim scenarios 08, 09 and 10.',
                        'Every breath the ventilator gives is a haemodynamic intervention. Maya, Leo and the five congenital hearts are simulator scenarios 08 to 10 in the app: run them on your own, with the monitor and the gas answering every change. Thank you.', 'Part 1')
     return shell('Cardiopulmonary interactions · Part 1', out, code)
 
 
-def build_part2():
+def build_part2(body_only=False):
     code = 'CP2'
-    out = title_slide('VentCourse · Module 08 · Cardiopulmonary interactions · Part 2', 'The failing heart, <em>ventilated</em>',
+    out = '' if body_only else title_slide('VentCourse · Module 08 · Cardiopulmonary interactions · Part 2', 'The failing heart, <em>ventilated</em>',
                       'Myocarditis and cardiogenic shock: positive pressure as a treatment.',
                       'Thirty minutes, two children with failing left ventricles. Positive pressure is a treatment for this heart; the induction drugs are the danger. You run both cases on your phones.')
-    out += join_slide(code, 'Scan the code with your phone camera to join; no account needed. Or open the app, tap Live session and type CP2.')
+    out += '' if body_only else join_slide(code, 'Scan the code with your phone camera to join; no account needed. Or open the app, tap Live session and type CP2.')
     # the 4-year-old: bedside, investigations, then the ventilator
     LIVE_OUT['boy_case'] = {'t': 'A 4-year-old boy', 'illus': ipath('live1_arrival', ''), 'lines': ['Five days of fever, runny nose and cough', 'Fast breathing since yesterday', 'Lethargic since this morning, increased work of breathing', 'Received in the ER']}
     out += opener('boy_case', 'Case 1 · in the ER', 'A 4-year-old <em>boy</em>',
@@ -423,7 +467,7 @@ def build_part2():
         out += reuse('cp-interactions.html', lab, strip_live=False)
     for d in BOY:
         out += stage_slides(d, code)
-        for t in d['theory']: out += reuse('cp-interactions.html', t)
+        out += theory_of(d)
     out += cards_slide('Boy · debrief', 'The 4-year-old · debrief', 'Positive pressure as <em>treatment</em>',
                        [('Start', ['EPAP 8 is the treatment', 'Inotrope, no bolus']), ('The tube', ['The drugs are the danger', 'Pre-set, push-dose, ketamine']),
                         ('After', ['PEEP 8–10 while the BP holds', 'Closed suction only']), ('Weaning', ['A cardiac stress test', 'Extubate onto NIV'])],
@@ -433,7 +477,7 @@ def build_part2():
                   'Suresh, eight, twenty-four kilos, acute myocarditis, ejection fraction 15 per cent with moderate mitral regurgitation, in cardiogenic shock after one fluid bolus. Support the heart before the tube; set the ventilator before the drugs; protect preload after the tube; then PEEP for the LV.', code)
     for d in SURESH:
         out += stage_slides(d, code)
-        for t in d['theory']: out += reuse('cp-interactions.html', t)
+        out += theory_of(d)
     DEB = [('Shock Recognition', 'What distinguishes cardiogenic from distributive (septic) shock in this child?', 'Cardiogenic: raised JVP, hepatomegaly, cool peripheries, fluid-unresponsive, elevated BNP/troponin, low EF on ECHO; septic: warm peripheries, low SVR, flat JVP, fluid-responsive (early)'),
            ('Inotrope Choice', 'Why is fluid administration potentially harmful in cardiogenic shock and what is your first inotrope choice?', 'Fluid overloads a failing ventricle → worsens pulmonary oedema and MR; first choice: low-dose adrenaline (0.05–0.1 mcg/kg/min) or milrinone (reduces afterload, inotrope); avoid pure vasoconstrictors'),
            ('Safe Intubation', 'Why did you avoid ketamine for induction in cardiogenic shock?', 'Ketamine is a sympathomimetic — causes tachycardia and hypertension; in a failing myocardium with HR 168, this is dangerous; use etomidate (haemodynamically neutral) or low-dose fentanyl + midazolam'),
@@ -444,9 +488,29 @@ def build_part2():
         trs = ''.join(f'<tr><td style="padding:16px; font-family:var(--font-display); font-size:32px; vertical-align:top; border-bottom:1px solid var(--border-subtle);">{e(a)}</td><td style="padding:16px; font-size:24px; line-height:1.3; vertical-align:top; border-bottom:1px solid var(--border-subtle);">{e(b)}</td><td style="padding:16px; font-size:24px; line-height:1.3; vertical-align:top; border-bottom:1px solid var(--border-subtle);">{e(c)}</td></tr>' for a, b, c in rows)
         body = header('Suresh · debrief · ' + part, 'Debrief <em>domains</em>', 'Station D') + f'<div style="flex:1; display:flex; align-items:center;"><table style="border-collapse:collapse; width:100%;"><tr><th style="text-align:left; padding:12px 16px; {MONO} font-size:18px;">Domain</th><th style="text-align:left; padding:12px 16px; {MONO} font-size:18px;">Question</th><th style="text-align:left; padding:12px 16px; {MONO} font-size:18px;">Key points</th></tr>{trs}</table></div>'
         out += section('Suresh · debrief ' + part, body, 'Debrief, station sheet.', pad='70px 100px')
+    if body_only: return out
     out += close_slide('Preload first, then <em>PEEP</em>', 'Both cases are in the app: Cases · Sim scenarios 11 and 12.',
                        'For the failing left ventricle, positive pressure is a drug and the induction is the danger. Both children are simulator scenarios 11 and 12 in the app. Thank you.', 'Part 2')
     return shell('Cardiopulmonary interactions · Part 2', out, code)
+
+
+def build_full():
+    global FULL
+    FULL = True
+    code = 'CPF'
+    out = title_slide('VentCourse · Module 08 · Cardiopulmonary interactions · complete', 'Heart and lung, <em>together</em>',
+                      'Five children on the ventilator, and the physiology each one needs.',
+                      'The complete talk: the same children as parts 1 and 2, with the physiology woven in where each case needs it. You run every case on your phones.')
+    out += join_slide(code, 'Scan the code to join; no account needed. Or open the app, tap Live session and type CPF.')
+    for t in ['Five interactions', 'Sealed chamber', 'Transmural pressure', 'Transmural example', 'Master key', 'Quiz 1', 'Quiz 1 · answer']:
+        out += reuse('cp-interactions.html', t)
+    out += build_part1(body_only=True) + build_part2(body_only=True)
+    for t in ['Core principles', 'Summary', 'Takeaways']:
+        out += reuse('cp-interactions.html', t)
+    out += close_slide('Observe the physics. Predict the <em>crash</em>.', 'All five children are in the app: Cases · Sim scenarios 08 to 12.',
+                       'Every breath is a haemodynamic intervention. All five children are simulator scenarios 08 to 12 in the app. Thank you.', 'Module 08')
+    FULL = False
+    return shell('Cardiopulmonary interactions · complete', out, code)
 
 
 def build_ltv():
@@ -481,7 +545,7 @@ def write_live():
 
 
 if __name__ == '__main__':
-    files = {'cp-part1.html': build_part1(), 'cp-part2.html': build_part2(), 'ltv-cases.html': build_ltv()}
+    files = {'cp-part1.html': build_part1(), 'cp-part2.html': build_part2(), 'ltv-cases.html': build_ltv(), 'cp-complete.html': build_full()}
     for f, t in files.items():
         open(os.path.join(APP, 'talks', f), 'w').write(t)
         print(f, len(t), t.count('<section '), 'slides')
