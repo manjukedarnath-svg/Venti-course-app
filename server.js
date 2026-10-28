@@ -121,8 +121,26 @@ http.createServer((req, res) => {
   if (!file.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) file = path.join(ROOT, 'index.html');
+    // videos and audio: answer byte ranges (iPhone Safari will not play an mp4 without them)
+    const ext = path.extname(file).toLowerCase();
+    if (st && st.isFile() && /^\.(mp4|webm|mp3|m4a|mov)$/.test(ext)) {
+      const size = st.size, m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
+      const head = { 'Content-Type': TYPES[ext] || 'application/octet-stream', 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=3600' };
+      if (m) {
+        let a = m[1] === '' ? Math.max(0, size - +m[2]) : +m[1], b = m[1] !== '' && m[2] !== '' ? Math.min(+m[2], size - 1) : size - 1;
+        if (a >= size || a > b) { res.writeHead(416, { 'Content-Range': 'bytes */' + size }); return res.end(); }
+        res.writeHead(206, { ...head, 'Content-Range': `bytes ${a}-${b}/${size}`, 'Content-Length': b - a + 1 });
+        return fs.createReadStream(file, { start: a, end: b }).pipe(res);
+      }
+      res.writeHead(200, { ...head, 'Content-Length': size });
+      return fs.createReadStream(file).pipe(res);
+    }
     fs.readFile(file, (e, data) => {
       if (e) { res.writeHead(404); return res.end('Not found'); }
+      // phones: drop the hidden (skipped) theory slides from a talk so Safari does not run out of memory
+      if (/[\\/]talks[\\/][^\\/]+\.html$/.test(file) && /iPhone|iPad|iPod|Android|Mobile/i.test(req.headers['user-agent'] || '')) {
+        data = Buffer.from(data.toString('utf8').replace(/<section data-deck-skip[\s\S]*?<\/section>\n?/g, '').replace(/<section ([^>]*?)data-deck-skip([^>]*)>[\s\S]*?<\/section>\n?/g, ''));
+      }
       res.writeHead(200, {
         'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
         'Content-Security-Policy': CSP,
