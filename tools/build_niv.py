@@ -204,6 +204,16 @@ def fig_pes():
     return out
 
 
+def video_slide(label, h, tag, src, cap, lines, notes):
+    """A portrait clip from our PICU with the key points beside it."""
+    vid = (f'<div style="flex:none; width:420px; height:100%; border-radius:8px; overflow:hidden; background:#0E1012; position:relative;">'
+           f'<video data-slot src="../{src}" controls playsinline preload="metadata" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;"></video></div>')
+    col = (f'<div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:30px;"><span style="{MONO} font-size:22px; color:var(--text-accent);">{e(cap)}</span>'
+           + ''.join(f'<span style="font-size:40px; line-height:1.3; text-wrap:balance;">{x}</span>' for x in lines) + '</div>')
+    from talkkit import _sec
+    return _sec(label, head(h, tag) + f'<div style="flex:1; min-height:0; display:flex; gap:72px; align-items:stretch;">{vid}{col}</div>', notes)
+
+
 # ------------------------------------------------------------------ the full talk -----------------------------------------
 def full_talk():
     T = ''
@@ -252,6 +262,9 @@ def full_talk():
                 'Why high flow. A breathless child pulls in far more than four litres a minute at the peak of inspiration. On low-flow oxygen the rest is room air, so the FiO2 falls and varies breath to breath. When the flow meets or exceeds her peak inspiratory flow, no room air is drawn in: the FiO2 you set is the FiO2 she gets, and the dead space of the nose and pharynx is flushed. High-flow also creates some positive end-expiratory pressure, but how much depends on the flow, the leak and whether the mouth is open; it is not measured or set.')
     T += figure('Prong fit', 'The prongs must not <em>seal</em>', 'BPICC pp. 29–31', fig_prongs(),
                 'The cannula must not be occlusive. BPICC asks for a visible gap around the prongs in the nostrils, about two millimetres between the base of the prongs and the septum, and never to cut the cannula to fit. The gap is the way out for exhaled gas. Check the nares for pressure areas and give nasal care at least every four hours, and oral care every three.')
+    T += video_slide('High-flow video', 'Connecting <em>high-flow</em>', 'Video · our PICU', 'assets/niv/hfnc-setup.mp4', 'AIRVO 2 · 3 min',
+                     ['Chamber in, water line connected', 'Circuit warms before the child', 'Set flow, then FiO₂', 'Cannula with a gap, fixed to the cheeks'],
+                     'Our own nurses setting up high-flow on the AIRVO 2: the chamber and water, the heated circuit, the flow and FiO2, and the cannula on the infant. Point out the gap around the prongs and how the tubing is fixed.')
     T += bullets('Reassess at two hours', 'Reassess at <em>two</em> hours', 'BPICC · Tobin ch. 18',
                  ['Rate and work: falling?', 'Pauses: gone?', 'SpO₂ on what FiO₂?', 'Gas: CO₂ falling?', 'No better: step up'],
                  'High-flow has one to two hours to show it is working. Look at the rate and the work of breathing, any pauses, the saturation and the FiO2 needed for it, and a gas. Improvement in heart rate, rate and gas exchange in the first one to two hours is the strongest predictor of success on any non-invasive support. If she is no better, step up to CPAP: do not leave a child to tire on a step that has not worked.')
@@ -323,6 +336,9 @@ def full_talk():
                  'BPICC nursing care. Continuous monitoring with observations at least hourly and alarms set. An NG or OG tube for gastric decompression, or the gastrostomy if there is one, with feeds as the condition allows. Suction the nose and mouth as needed for comfort, saturation and effort. Check pressure areas every four hours and document the skin every shift; comfort dressings on any red area. Check the water in the humidifier and the CPAP generator.', size=46)
     T += figure('Nebulising', 'Where the nebuliser <em>goes</em>', 'Li et al, Ann Intensive Care 2023', NF.nebs(NF.DECK),
                 'Give the aerosol through the support the child is on; taking the cannula or the mask off interrupts the support and gives no better dose. On high-flow, a vibrating mesh nebuliser at the inlet of the humidifier, with the flow and the humidifier left running; a spacer close to the cannula. Do not put a nebuliser mask over the cannula: the inhaled dose can fall to about a tenth. On single-limb NIV, the mesh nebuliser between the leak port and the mask, not back at the machine, preferably with a non-vented mask; a spacer in the same place, fired at the start of inspiration. A jet nebuliser adds gas and changes the tidal volume, the FiO2 and the triggering. These recommendations come from an adult international consensus and bench work.')
+    T += video_slide('Nebulisation video', 'Nebulising on <em>high-flow</em>', 'Video · our PICU', 'assets/niv/hfnc-nebulisation.mp4', 'Aerogen at the chamber · 30 s',
+                     ['Mesh nebuliser at the humidifier chamber', 'High-flow keeps running', 'No Aerogen: standard nebuliser, T-piece'],
+                     'Our nurses fitting the Aerogen mesh nebuliser at the humidifier chamber of the AIRVO 2, with the high-flow left running. If an Aerogen is not available, a standard nebuliser with a T-piece.')
     T += cards('Mouth, nose and eyes', 'Mouth, nose and <em>eyes</em>', 'BPICC · Tobin ch. 18 · Oto 2014',
                [('Why', ['Leak and an open mouth dry it', 'Dryness 5.5/10 despite humidifier']), ('How often', ['Oral hygiene every 3 h', 'Nasal care, skin every 4 h']), ('The care', ['Support on while it is off', 'Brush or swab, moisten, lip emollient']), ('Eyes', ['A leak into the eyes', 'Means refit the mask'])],
                'Gas blowing past the lips and a mouth that hangs open dry the mouth. In adults on oronasal NIV with a heated humidifier, dryness still scored a median five and a half out of ten; humidity fell as the leak rose, and mouth breathing made it worse. BPICC: oral hygiene every three hours, nasal care every four, the skin checked every four hours and documented each shift. Cluster the care with the child supported on high-flow or a mask while the interface is off: clean the teeth and gums with a soft brush or a moistened swab, clear secretions, moisten the mucosa and put emollient on the lips, clean the nostrils, check the bridge and the columella. A leak blowing into the eyes irritates them, in ten to twenty per cent, and means the mask needs refitting.', size=32)
