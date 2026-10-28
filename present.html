@@ -22,7 +22,7 @@
 </main>
 <script>
 const T = [['ards-asthma', 'Difficult ventilatory scenarios · ARDS and asthma (branching)', 'ARDS'], ['cp-part1', 'CP interactions · Part 1', 'CP1'], ['cp-part2', 'CP interactions · Part 2', 'CP2'], ['cp-complete', 'CP interactions · complete talk', 'CPF'],
-  ['ltv-cases', 'Long-term ventilation · five cases', 'LTV'], ['niv', 'Non-invasive ventilation', 'NIV'], ['niv-cases', 'NIV · three cases', 'NIVC'], ['niv-ltv', 'NIV and long-term ventilation', 'NIVL']];
+  ['ltv-cases', 'Long-term ventilation · five cases', 'LTV'], ['hfnc-niv-ltv', 'Module 09 · High-flow, NIV and long-term ventilation · full talk', 'HNL'], ['niv-ltv', 'Module 09 · eight cases (high-flow, NIV, long term)', 'NLV'], ['niv', 'Module 09 · high-flow and NIV only', 'NIVT'], ['niv-cases', 'Module 09 · three NIV cases', 'NIV']];
 const list = document.getElementById('list');
 Promise.all(T.map(([f]) => fetch('talks/' + f + '.html', { method: 'GET' }).then(r => r.ok ? r.text() : '').catch(() => ''))).then(txts => {
   T.forEach(([f, name], i) => { const m = (txts[i] || '').match(/<meta name="vc-live-room" content="([^"]+)">/); if (!txts[i]) return;

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build the NIV talks (Module 04) and the joint NIV + long-term ventilation case talk.
+"""Build the Module 09 talks (high-flow, NIV and long-term ventilation): the NIV theory talk, the NIV case talk, the eight-case
+NIV + long-term ventilation live talk, and the merged full talk (talks/hfnc-niv-ltv.html, room HNL).
 
     python3 tools/build_niv.py      (then bundle for Present with tools/bundle.py)
 
@@ -205,7 +206,7 @@ def fig_pes():
 # ------------------------------------------------------------------ the full talk -----------------------------------------
 def full_talk():
     T = ''
-    T += title('VentCourse · Module 04 · Non-invasive ventilation · 50 min', 'Pressure without a <em>tube</em>',
+    T += title('VentCourse · Module 09 · High-flow and NIV · 50 min', 'Pressure without a <em>tube</em>',
                'High-flow, CPAP and bilevel in the PICU',
                'This talk is about the children we try hard not to intubate: the infant with bronchiolitis, the child with pneumonia, the child just extubated. High-flow, CPAP and bilevel: what each does, how to set them, how to make the mask fit the child, who should and should not have them, and how to know within the hour whether it is working. Sources: Chang chapter 7, Tobin chapters 16 to 18 by Hill, the BPICC manual from Pedicriticon 2026, PEMVECC 2017, and three papers on modes, comfort and effort.')
     T += bullets('Plan', 'Five <em>parts</em>', 'Today', ['What NIV does', 'The tools: high-flow, CPAP, bilevel', 'The mask and the child', 'Who to start, who not to', 'Is it working?'],
@@ -238,6 +239,12 @@ def full_talk():
                  'Part two. The tools, in the order we reach for them.')
     T += figure('The ladder', 'One step at a <em>time</em>', 'BPICC · PEMVECC', fig_ladder(),
                 'The ladder. BPICC names three PICU modes of non-invasive support: high-flow nasal cannula, mask CPAP or BiPAP, and bubble CPAP. High-flow is usually first-line for children with a high oxygen need or a raised work of breathing; mask CPAP or bilevel is for children who need more than high-flow when we would rather avoid a tube. PEMVECC draws the same ladder by severity and puts a question mark over NIV in severe disease. At each step, reassess within one to two hours.')
+    T += table('Oxygen devices', 'Low-flow to <em>high</em>-flow', 'BPICC ch. 7, pp. 43–45',
+               ['Device', 'Flow', 'FiO₂'],
+               [['Blow-by', '10 L/min', '0.3–0.4'], ['Head box', '7–10 L/min', '0.22–0.8'], ['Nasal cannula', '0.5–2 L/min', '0.22–0.6'], ['Simple face mask', '6–10 L/min, never below 6', '0.35–0.6'],
+                ['Non-rebreather', '10–15 L/min', 'Up to 0.95'], ['High-flow', '2 L/kg/min', 'As set']],
+               'The oxygen ladder from BPICC. Low-flow devices give less than the child\'s inspiratory flow, so room air is drawn in and the FiO2 varies. Blow-by gives 0.3 to 0.4 at ten litres; a head box 0.22 to 0.8 at seven to ten litres; nasal cannula 0.22 to 0.6 at half a litre to two, with prongs about half the width of the nostril; a simple face mask 0.35 to 0.6 at six to ten litres, never below six or the child rebreathes; a non-rebreather up to 0.95 at ten to fifteen litres. High-flow meets the whole demand, so the FiO2 is the one you set. Unhumidified nasal oxygen: no more than one litre a minute in a neonate, two under two years and four above.',
+               widths=['460px', '560px', None], size=34)
     T += numbers('High-flow', 'High-flow: the <em>numbers</em>', 'BPICC ch. 6, p. 29', [('2 L/kg/min', 'Start', 'Maximum 40 L/min'), ('3 L/kg/min', 'If worsening', 'Maximum 50 L/min, intensivist'), ('92–95%', 'SpO₂ target', 'Flow first, then FiO₂')],
                  'The BPICC protocol. Start at two litres per kilogram per minute, to a maximum of forty litres per minute. In a worsening child the duty intensivist may go to three litres per kilogram, to a maximum of fifty. Fix the flow first, then titrate the FiO2 to a saturation of 92 to 95 per cent. Note that the oxygen chapter of the same manual quotes two to eight litres for neonates and four to ten for children; use the weight-based PICU protocol.')
     T += figure('Flow meets demand', 'Why the <em>flow</em> matters', 'BPICC ch. 7', fig_flow_demand(),
@@ -366,9 +373,9 @@ def full_talk():
               'Last check. The one-hour review.', 'C. Intubate now, planned.')
     T += bullets('Takeaways', 'Take <em>home</em>', 'Five lines',
                  ['High-flow 2 L/kg/min; review at 1–2 h', 'EPAP opens, IPAP − EPAP ventilates', 'Fit the mask before the pressure', 'Start early, in mild to moderate disease', 'At one hour, decide: fail early, not late'], 'Five lines to take home. High-flow at two litres per kilogram, reviewed at one to two hours. EPAP opens the lung and the airway; the difference between IPAP and EPAP ventilates. Fix the mask, the leak, the stomach and the child before you touch the pressures. Start early, in mild to moderate disease, in a child who can protect the airway. And at the one-hour review, decide: failing early is safer than failing late.', size=46)
-    T += bullets('Try it', 'Replay it in the <em>app</em>', 'VentCourse', ['Learn · Module 04 · 11 lessons', 'Cases · Sim scenarios 13–15', 'Home NIV: Sim scenarios 03–07'],
-                 'Everything in this talk is in VentCourse. Module 04 now has eleven lessons, six of them on NIV. Sim scenarios thirteen to fifteen put you on the machine: the infant with bronchiolitis, the boy with pneumonia, and the girl just extubated. Scenarios three to seven take NIV home.')
-    T += ending('Thank you', 'VentCourse · Module 04', 'Make the mask fit the <em>child</em>.', 'Then the pressures. Then the hour. · Thank you',
+    T += bullets('Try it', 'Replay it in the <em>app</em>', 'VentCourse', ['Learn · Module 09 · 22 lessons', 'Cases · Sim scenarios 13–15', 'Home NIV: Sim scenarios 03–07'],
+                 'Everything in this talk is in VentCourse. Module 09, High-flow, NIV and long-term ventilation, has twenty-two lessons: oxygen and high-flow, CPAP and bilevel, then the long term. Sim scenarios thirteen to fifteen put you on the machine: the infant with bronchiolitis, the boy with pneumonia, and the girl just extubated. Scenarios three to seven take NIV home.')
+    T += ending('Thank you', 'VentCourse · Module 09', 'Make the mask fit the <em>child</em>.', 'Then the pressures. Then the hour. · Thank you',
                 'Fit the mask to the child, then set the pressures, then watch the hour. Thank you.')
     return T
 
@@ -443,7 +450,7 @@ def niv_cases_body(code, skip_used=True):
 
 def build_cases():
     code = 'NIV'
-    out = bd.title_slide('VentCourse · Module 04 · Non-invasive ventilation · 25 min', 'Three children, <em>no</em> tube',
+    out = bd.title_slide('VentCourse · Module 09 · High-flow and NIV · 25 min', 'Three children, <em>no</em> tube',
                          'You set the support on your phone; the child answers.',
                          'Twenty-five minutes, three children we are trying not to intubate: an infant with bronchiolitis, a boy with pneumonia, a girl just extubated. Each starts at the bedside: set the support on your phone, commit to an order, and see what the child does. The physiology comes in as the cases need it.')
     out += bd.join_slide(code, 'Scan the code with your phone camera to join; no account needed. Or open the app, tap Live session and type NIV.')
@@ -472,10 +479,11 @@ def ltv_body(code):
 
 def build_joint():
     code = 'NLV'
-    out = bd.title_slide('VentCourse · Modules 04 and 09 · NIV and long-term ventilation · 45 min', 'From the mask in the PICU to the <em>home</em>',
+    out = bd.title_slide('VentCourse · Module 09 · High-flow, NIV and long-term ventilation · 50 min', 'From the mask in the PICU to the <em>home</em>',
                          'Eight children at the bedside. You set the support; the child answers.',
                          'Forty-five minutes, eight children. The first three are acute: the infant with bronchiolitis, the boy with pneumonia, the girl just extubated. Then five who need ventilation for weeks, months or for life: the baby with BPD, the boy with Duchenne, the baby with SMA, the girl with Guillain–Barré and Riya with her tracheostomy. The same masks and machines, a different question each time: will this child need it tomorrow?')
     out += bd.join_slide(code, 'Scan the code to join; no account needed. Or open the app, tap Live session and type NLV.')
+    out += bd.reuse('niv.html', 'The ladder')
     body = niv_cases_body(code)
     body = body.replace('Case 1 of 3', 'Case 1 of 8').replace('Case 2 of 3', 'Case 2 of 8').replace('Case 3 of 3', 'Case 3 of 8')
     out += body
@@ -506,6 +514,51 @@ def write_live(entries):
     open(p, 'w').write(s[:a] + new + s[b:])
 
 
+def build_merged():
+    """The whole of Module 09 as one talk: oxygen and high-flow, NIV, then long-term ventilation (theory sections in order)."""
+    code = 'HNL'
+    N = bd.SRC['niv.html']; L = bd.SRC[SRC_LTV]
+
+    def secs(src, start, stop, drop=()):
+        labs = re.findall(r'<section [^>]*data-label="([^"]*)"', src)
+        out = []
+        for l in labs[labs.index(start):labs.index(stop) + 1]:
+            if l in drop:
+                continue
+            i = src.index(f'data-label="{l}"'); a = src.rfind('<section', 0, i); b = src.index('</section>', i) + len('</section>')
+            sec = re.sub(r' data-live="[^"]*" data-live-mode="[^"]*"', '', src[a:b])
+            out.append((l, re.sub(r' data-screen-label="[^"]*"', '', sec)))
+        return out
+
+    T = title('VentCourse · Module 09 · High-flow, NIV and long-term ventilation · 100 min', 'From the mask to the <em>home</em>',
+              'Oxygen, high-flow, CPAP and bilevel, and the child who needs them for years',
+              'The whole of Module 09 in one talk. The first half is the acute PICU: oxygen devices, high-flow, CPAP and bilevel, the interface, who to start and how to know within the hour. The second half is the child who does not come off: prolonged ventilation, the tracheostomy, home ventilation and the emergencies. The same masks and machines run through both halves.')
+    T += bullets('Plan', 'Ten <em>parts</em>', 'Today',
+                 ['1–5 · Acute: physiology, tools, the mask, selection, the first hour', '6 · When ventilation becomes long term', '7 · Tube or tracheostomy', '8 · Living with a tracheostomy',
+                  '9 · From PICU to home, and off the tube', '10 · When it goes wrong'],
+                 'Ten parts in two halves. Parts one to five are acute non-invasive support: what it does, the tools from oxygen to bilevel, fitting the mask to the child, who to start, and the one-hour review. Parts six to ten are long-term ventilation: recognising it, the tracheostomy decision, living with a tracheostomy, the road home and off the tube, and the emergencies.', size=42)
+    T += ''.join(x for _, x in secs(N, 'Part 1', 'Quiz 5 · answer'))
+    T += divider('Bridge', 'Halfway', 'When the mask goes <em>home</em>', 'Same machine, a different question',
+                 'Halfway. In the PICU we ask whether non-invasive support will carry the child for hours or days until the cause turns. For the children in the second half the cause will not turn quickly: the pump is weak, the airway floppy, the lungs scarred. Then the questions are how long, through which airway, and how to get home.')
+    for l, x in secs(L, 'Part 1', 'Quiz 6 · answer', drop=('S, ST, T',)):
+        m = re.match(r'Part (\d)$', l)
+        if m:
+            n = int(m.group(1)) + 5
+            x = x.replace(f'data-label="{l}"', f'data-label="Part {n}"', 1).replace(f'Part {m.group(1)} ·', f'Part {n} ·', 1)
+        m = re.match(r'Quiz (\d)( · answer)?$', l)
+        if m:
+            x = x.replace(f'data-label="{l}"', f'data-label="Quiz {int(m.group(1)) + 5}{m.group(2) or ""}"', 1)
+        T += x
+    T += bullets('Takeaways', 'Take <em>home</em>', 'Six lines',
+                 ['High-flow 2 L/kg/min; review at 1–2 h', 'EPAP opens, IPAP − EPAP ventilates', 'Fit the mask before the pressure', 'At one hour, decide: fail early', 'PMV: 21 days, 6 hours, NIV counts', 'Trach distress: blocked or out'],
+                 'Six lines. High-flow at two litres per kilogram, reviewed at one to two hours. EPAP opens the lung and the airway; the difference between IPAP and EPAP ventilates. Fix the mask, the leak, the stomach and the child before the pressures. At the one-hour review, decide: failing early is safer than failing late. Prolonged ventilation is twenty-one days at six hours a day, and NIV counts. And a child with a tracheostomy in distress has a blocked or displaced tube until proven otherwise.', size=44)
+    T += bullets('Try it', 'Replay it in the <em>app</em>', 'VentCourse', ['Learn · Module 09 · 22 lessons', 'Cases · Sim scenarios 13–15: acute NIV', 'Cases · Sim scenarios 03–07: home NIV', 'Riya: the tracheostomy case discussion'],
+                 'Everything in this talk is in VentCourse. Module 09 has twenty-two lessons, from oxygen devices to decannulation. Sim scenarios thirteen to fifteen are the acute NIV children, three to seven the home ventilation children, and Riya walks through the tracheostomy decisions.')
+    T += ending('Thank you', 'VentCourse · Module 09', 'Fit the mask, then plan the road <em>home</em>.', 'Train the family. Know the drill. · Thank you',
+                'Fit the mask to the child, watch the first hour, and when the child will not come off, plan the road home and the road off. Thank you.')
+    return bd.shell('High-flow, NIV and long-term ventilation', T, code)
+
+
 if __name__ == '__main__':
     talks = os.path.join(APP, 'talks')
     full = bd.shell('Non-invasive ventilation', full_talk(), 'NIVT', thumb_from='cp-interactions.html')
@@ -518,6 +571,9 @@ if __name__ == '__main__':
     bd.USED.clear(); joint = build_joint()
     open(os.path.join(talks, 'niv-ltv.html'), 'w').write(joint)
     print('niv-ltv.html', len(joint), joint.count('<section '), 'slides')
-    keep = {k: v for k, v in bd.LIVE_OUT.items() if k[:3] in ('nb1', 'nb2', 'np1', 'np2', 'nx1', 'nx2') or k in ('anaya_case', 'ishaan_case', 'zara_case') or re.match(r'x(nivt|niv|nlv)\d+$', k)}
+    bd.USED.clear(); merged = build_merged()
+    open(os.path.join(talks, 'hfnc-niv-ltv.html'), 'w').write(merged)
+    print('hfnc-niv-ltv.html', len(merged), merged.count('<section '), 'slides')
+    keep = {k: v for k, v in bd.LIVE_OUT.items() if k[:3] in ('nb1', 'nb2', 'np1', 'np2', 'nx1', 'nx2') or k in ('anaya_case', 'ishaan_case', 'zara_case') or re.match(r'x(nivt|niv|nlv|hnl)\d+$', k)}
     write_live(keep)
     print('LIVE entries added', len(keep))

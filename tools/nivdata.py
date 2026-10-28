@@ -12,7 +12,7 @@ NIV_CASES = [
     after=S(mode='CPAP', modeLong='CPAP by nasal mask', set=[['CPAP', '7'], ['FiO₂', '0.4']], meas=[['VTe', '24 mL'], ['RR', '58'], ['Leak', 'Low']], wave='niv-b1f',
             mon=[['HR', '164'], ['SpO₂', '94'], ['RR', '58'], ['PaCO₂', '52']], happen='Nose cleared, nasal CPAP 7, FiO₂ weaned to 0.4',
             why='High-flow gives an unmeasured pressure; CPAP gives a set one.'),
-    theory=['Reassess at two hours', 'High-flow or CPAP']),
+    theory=['High-flow', 'Flow meets demand', 'Prong fit', 'Reassess at two hours', 'High-flow or CPAP']),
   S(id='nb2', head='3 am: <em>desaturating</em> on CPAP', eyebrow='Case 1 · night one', fig='infant', sup='niv',
     scr=S(mode='CPAP', modeLong='CPAP by nasal mask', set=[['CPAP', '7'], ['FiO₂', '0.4']], meas=[['VTe', '10 mL'], ['Leak', 'Large'], ['RR', '66']], wave='niv-b2p',
           mon=[['HR', '176'], ['SpO₂', '86'], ['RR', '66']], note='Crying, mouth open, abdomen tense, crusted nostrils'),
