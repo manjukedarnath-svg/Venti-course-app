@@ -239,7 +239,7 @@
             <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.IconButton" icon="search" label="Search" hint-size="40px,40px"></x-import>
           </div>
           <div style="display:flex; flex-direction:column; gap:10px;">
-            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Course · 9 modules · 66 lessons</span>
+            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Course · 9 modules · 68 lessons</span>
             <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:46px; line-height:.98; letter-spacing:-.02em;">Every breath, <em>explained</em></h1>
             <p style="margin:0; font-weight:300; font-size:16px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">Physiology first, then the machine. Each lesson ends at the bedside of a simulated patient.</p>
           </div>
@@ -931,7 +931,7 @@
               <sc-if value="{{ setupMode }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border-subtle); padding-top:12px;">
                   <span style="font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-accent);">Task 1 · prepare the ventilator</span>
-                  <span style="font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">The patient is being ventilated by hand. On the ventilator below, choose a mode, set the patient type and weight, run the self test, then Save &amp; close to begin ventilating.</span>
+                  <span style="font-size:13px; line-height:1.5; color:var(--text-secondary); text-wrap:pretty;">{{ task1Lead }} On the ventilator below, choose a mode, set the patient type and weight, run the self test, then Save &amp; close to begin ventilating.</span>
                 </div>
               </sc-if>
               <sc-if value="{{ caseOpen }}" hint-placeholder-val="{{ false }}">
@@ -1006,7 +1006,7 @@
                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="secondary" size="sm" onClick="{{ retryCase }}" hint-size="110px,32px">Keep adjusting</x-import>
                     <sc-if value="{{ hasNextCase }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" size="sm" icon-right="arrow-right" onClick="{{ nextCase }}" hint-size="100px,32px">{{ nextLabel }}</x-import></sc-if>
-                    <sc-if value="{{ hasDebrief }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="ghost" size="sm" icon-right="arrow-right" onClick="{{ reviewScen }}" hint-size="150px,32px">Review the decisions</x-import></sc-if>
+                    <sc-if value="{{ hasReview }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SolsticeDesignSystem_a0f434.Button" variant="ghost" size="sm" icon-right="arrow-right" onClick="{{ reviewScen }}" hint-size="150px,32px">Review the decisions</x-import></sc-if>
                   </div>
                 </div>
               </sc-if>
@@ -1371,7 +1371,7 @@ const PATIENTS = {
   bronch: { label: 'Bronchiolitis', C: 3.3, R: 40, ibw: 6, infant: true },
   bronchObs: { label: 'Bronchiolitis · obstructive', C: 2.85, R: 370, ibw: 5, infant: true, hidden: true }
 };
-const INFANT_DEFS = { vt: { min: 20, max: 120, step: 2 }, rr: { max: 60 } };
+const INFANT_DEFS = { vt: { min: 20, max: 120, step: 2 }, rr: { max: 60 }, vtt: { min: 20, max: 150, step: 2 } };
 const INFANT_START = { mode: 'VC', vt: 44, rr: 30, peep: 6, ti: 0.6, pinsp: 18, fio2: 40 };
 const ADULT_START = { vt: 450, rr: 15, peep: 5, ti: 1.0, pinsp: 15, fio2: 100 };
 const defsFor = (k, pat) => ({ ...DEFS[k], ...((pat && pat.infant && INFANT_DEFS[k]) || {}), ...((pat && pat.defs && pat.defs[k]) || {}) });
@@ -1386,7 +1386,10 @@ const DEFS = {
   ti: { label: 'TI', unit: 's', min: 0.5, max: 2, step: 0.1 },
   fio2: { label: 'FIO₂', unit: '%', min: 21, max: 100, step: 1 },
   phigh: { label: 'P HIGH', unit: 'cmH₂O', min: 10, max: 35, step: 1 }, plow: { label: 'P LOW', unit: 'cmH₂O', min: 0, max: 10, step: 1 },
-  thigh: { label: 'T HIGH', unit: 's', min: 2, max: 6, step: 0.5 }, tlow: { label: 'T LOW', unit: 's', min: 0.3, max: 1.2, step: 0.1 }
+  thigh: { label: 'T HIGH', unit: 's', min: 2, max: 6, step: 0.5 }, tlow: { label: 'T LOW', unit: 's', min: 0.3, max: 1.2, step: 0.1 },
+  ipap: { label: 'IPAP', unit: 'cmH₂O', min: 4, max: 30, step: 1 }, epap: { label: 'EPAP', unit: 'cmH₂O', min: 3, max: 15, step: 1 },
+  cpap: { label: 'CPAP', unit: 'cmH₂O', min: 3, max: 15, step: 1 }, vtt: { label: 'VT TARGET', unit: 'mL', min: 100, max: 800, step: 10 },
+  ipmax: { label: 'IPAP MAX', unit: 'cmH₂O', min: 8, max: 30, step: 1 }
 };
 const WAVES = [{"t":"11-year-old · 35 kg","story":"Acute severe asthma, intubated at an outside hospital and transferred. Ventilated for 6 hours. Blood pressure falling over the last 30 minutes.","assess":{"vit":[["HR","150"],["BP","84/46"],["SpO₂","92% on FiO₂ 0.5"],["Temp","37.3 °C"]],"exam":["Hyperexpanded, quiet chest","Equal air entry, distended neck veins"],"cxrAns":"airway","ettAns":"ok","cxr":"Hyperinflated lungs, flat diaphragms, more than 9 posterior ribs visible. No pneumothorax.","img":"assets/cxr/cxr-drill01-asthma-autopeep.png","abg":[["pH","7.16"],["PaCO₂","82"],["PaO₂","76"],["HCO₃","28"]],"vent":"VC · RR 24 · Ti 0.9 s · PEEP 5"},"sc":"autopeep","fixed":"autopeep-fixed","lanes":"pfv","names":[["Gas trapping between breaths",1],["Tension pneumothorax",0],["Leak around the tube",0],["Stiff lungs",0]],"fixes":[["Lower the rate, shorten Ti",1,"Expiratory flow now reaches zero before the next breath. The BP should recover as the trapped gas leaves."],["Raise PEEP to 10",0,"Without a measured auto-PEEP this may add to trapping."],["Raise the rate to clear CO₂",0,"Less expiratory time: more trapping, lower BP."],["Needle the chest",0,"The X-ray shows no pneumothorax."]]},{"t":"3-year-old · 14 kg","story":"Pneumonia, intubated in the ER, day 3 of ventilation, 4.5 cuffed tube. SpO₂ has drifted from 96% to 89% over the last hour.","assess":{"vit":[["HR","140"],["BP","96/58"],["SpO₂","89% on FiO₂ 0.45"],["Temp","38.2 °C"]],"exam":["Coarse rattle over the trachea, palpable on the chest","Equal chest rise"],"cxrAns":"lung","ettAns":"ok","cxr":"Right lower lobe consolidation, unchanged from yesterday.","img":"","abg":[["pH","7.32"],["PaCO₂","52"],["PaO₂","62"],["HCO₃","26"]],"vent":"VC · VT 100 mL · RR 24 · PEEP 6"},"sc":"secretions","fixed":"exp-normal","lanes":"pf","names":[["Secretions in the tube or airway",1],["Ineffective efforts",0],["Cardiac oscillation",0],["Auto-triggering",0]],"fixes":[["Suction, drain the circuit",1,"The sawtooth has gone from the expiratory flow."],["Raise PEEP",0,"Does not remove secretions."],["Make the trigger less sensitive",0,"This is not a trigger problem."],["Paralyse",0,"The secretions are still there."]]},{"t":"5-year-old · 18 kg","story":"Pulled from a pond, intubated in the ER with a 5.0 uncuffed tube. The low minute-volume alarm keeps sounding.","assess":{"vit":[["HR","132"],["BP","92/60"],["SpO₂","91% on FiO₂ 0.6"],["Temp","35.8 °C"]],"exam":["Gurgling at the mouth with each breath","Reduced but equal chest rise"],"cxrAns":"lung","ettAns":"unseen","cxr":"Shadowing around both hila and behind the heart. No pneumothorax.","img":"assets/cxr/cxr-drill03-perihilar.png","abg":[["pH","7.28"],["PaCO₂","56"],["PaO₂","68"],["HCO₃","24"]],"vent":"VC · VT set 140 mL · VTi 140 · VTe 75 mL · PEEP 6"},"sc":"leak","fixed":"normal-vc","lanes":"pfv","names":[["Gas lost around the tube",1],["Gas trapping",0],["Double triggering",0],["Bronchospasm",0]],"fixes":[["Check connections, change to a larger or cuffed tube",1,"Inspired and expired volume now match, and the volume trace returns to zero."],["Raise the set VT",0,"More gas, most of it lost."],["Raise the rate",0,"Does not stop the loss."],["Raise PEEP",0,"A higher baseline usually increases the loss."]]},{"t":"14-year-old · 45 kg","story":"Septic shock, intubated in the ER, day 2. Sedation is being weaned. Now agitated and breathing much faster than the set rate.","assess":{"vit":[["HR","145"],["BP","100/58 on noradrenaline"],["RR","38 (set 20)"],["SpO₂","95% on FiO₂ 0.4"]],"exam":["Sternal recession, sweating, accessory muscle use","Equal air entry, no wheeze"],"cxrAns":"lung","ettAns":"ok","cxr":"Mild haziness in both lungs. Lines in place.","img":"assets/cxr/cxr-drill04-mild-haziness.png","abg":[["pH","7.30"],["PaCO₂","34"],["PaO₂","88"],["HCO₃","16"],["Lactate","4.5"]],"vent":"VC · VT 360 mL · Ti 1.2 s · square flow · PEEP 6"},"sc":"starvation","fixed":"starvation-fixed","lanes":"pf","names":[["The child wants more flow than set",1],["The breath ends too early",0],["High airway resistance",0],["Overdistension",0]],"fixes":[["Switch to a pressure mode so flow follows demand",1,"Pressure is square again: flow now rises to meet the child."],["Lower the flow",0,"Even hungrier."],["Longer Ti at the same VT",0,"Slower flow. Worse."],["Deepen sedation first",0,"Fix the mismatch before reaching for sedation."]]},{"t":"13-year-old · 40 kg","story":"Head injury after a fall, intubated at an outside hospital and referred. Ventilated for 3 days. The high-pressure alarm started an hour ago and is getting more frequent.","assess":{"vit":[["HR","104"],["BP","110/68"],["SpO₂","95% on FiO₂ 0.35"],["Temp","37.0 °C"]],"exam":["Biting on the tube when stimulated","Bilateral expiratory wheeze, equal air entry"],"cxrAns":"normal","ettAns":"unseen","cxr":"Clear lungs, unchanged. Nasogastric tube in place. No pneumothorax.","img":"assets/cxr/cxr-drill05-clear.png","abg":[["pH","7.36"],["PaCO₂","46"],["PaO₂","90"],["HCO₃","25"]],"vent":"VC · VT 280 mL · RR 20 · PEEP 5 · PIP 48 · plateau 25"},"sc":"vc-highR","fixed":"vc-ref","lanes":"pf","names":[["The airway or tube",1],["The lung",0],["A leak",0],["Auto-triggering",0]],"fixes":[["Bite block, suction, check the tube, bronchodilator",1,"The gap between peak and plateau has closed."],["Raise PEEP",0,"The lung is not the problem."],["Lower VT to 4 mL/kg",0,"Treats the number, not the cause."],["Chest drain",0,"A pneumothorax would raise the plateau too."]]}];
 const CASES = [
@@ -1831,7 +1834,7 @@ const SCENARIOS = [
           ['Push the tube back firmly without the obturator, then bag hard', 0, 'Without the obturator the tip catches the tissue and finds a false passage. Then bagging fills the neck with air.'],
           ['Pass a bougie into the stoma to hold it open', 0, 'A bougie in a fresh stoma is the classic way to make a false passage.']],
         teach: 'A fresh stoma closes and misleads. Stay sutures up and out open it. Same size, then smaller. If both fail, oxygenate from above.',
-        lesson: ['09', 8] },
+        lesson: ['09', 10] },
       { t: 'Day 30 · after the first change', story: 'ENT did the first tube change at the bedside this morning and the stay sutures were removed. Twenty minutes later the ventilator alarms.',
         vit: [['HR', '182'], ['SpO₂', '81%'], ['EtCO₂', 'No trace']],
         exam: ['Poor chest rise', 'Crackling under the skin of the neck and upper chest', 'Suction catheter stops at 2 cm'],
@@ -1842,7 +1845,7 @@ const SCENARIOS = [
           ['Raise the PIP to 35 and the FiO₂ to 1.0', 0, 'Settings cannot fix a tube that is outside the airway.'],
           ['Needle decompression on both sides', 0, 'There is no evidence of a tension pneumothorax yet, and the primary problem is the tube.']],
         teach: 'No EtCO₂ after a tube change means the tube is not in the trachea until proven otherwise. Do not ventilate through a tube a suction catheter cannot pass.',
-        lesson: ['09', 9] },
+        lesson: ['09', 11] },
       { t: 'Week 7 · ready for home?', story: 'On the home ventilator for 12 days, settings unchanged: PC, PIP 26, PEEP 10 for the malacia, rate 16, Ti 0.7 s, FiO₂ 0.30 by day and 0.35 at night; SpO₂ target 92–95% because her echo shows pulmonary hypertension. The mother has completed training and two nights of rooming-in. The father has attended two sessions. At home: one ventilator, a mains-only suction machine, a pulse oximeter and a 600 VA inverter. Their village has power cuts of 4–6 hours.',
         vit: [['HR', '132'], ['SpO₂', '95%'], ['Weight', '6.8 kg, gaining']],
         q: 'What must be in place before she goes home?',
@@ -1860,7 +1863,7 @@ const SCENARIOS = [
           ['Put saline down the tube and wait for it to loosen', 0, 'Repeated saline and waiting wastes the minutes she does not have. If the catheter will not pass, change the tube.'],
           ['Put her in the car and drive to hospital first', 0, 'A blocked tube must be cleared or changed where she is. Drive after the airway is fixed, or wait for the ambulance.']],
         teach: 'At home the drill is the same: off the vent, suction test, change the tube, bag, call. Then fix the cause; here it is humidity, so the replacement humidifier is part of the treatment.',
-        lesson: ['09', 8] },
+        lesson: ['09', 10] },
       { t: 'Debrief', debrief: ['PMV in children: at least 6 hours a day on 21 or more consecutive days, invasive and non-invasive together. Ask the long-term questions by the second week.', 'Severe BPD needs a chronic strategy: slow rate, larger VT, longer Ti, higher PEEP for malacia, SpO₂ 92–95% with pulmonary hypertension.', 'Sort the child by route (drive, pump, load) and course (improving, static, progressive). That decides the airway and the goal.', 'Tracheostomy timing is about trajectory, not a day count. Fixed airway lesions, progressive weakness and repeated failure point to early.', 'A fresh stoma is the most dangerous: use the stay sutures, same size then smaller, and the mouth is still an airway.', 'No EtCO₂ after a change is a false passage until proven otherwise. Do not ventilate through a tube a catheter cannot pass.', 'Discharge needs two trained carers, an awake carer at all times, the full equipment list with a backup ventilator, battery suction and power that outlasts the cuts.', 'Humidity prevents most blocked tubes. A broken humidifier is an emergency in slow motion.', 'One named coordinator and one written plan keep a large team working for one child and one family.'] }
     ] }
 ];
@@ -2127,9 +2130,335 @@ const SIM_STAGES = [
       ['FiO₂ ≤ 0.4', m.fio2 <= 40]],
     debrief: ['Intubation in asthma is a clinical decision: exhaustion and altered mental state, not a gas.', 'Low rate, small VT, I:E 1:4, expiratory time 4–5 s, plateau < 30, pH > 7.2.', 'Peak − plateau is resistance; plateau − PEEP is stretch. Watch the plateau.', 'External PEEP at or just below the intrinsic PEEP once he triggers; never above it.', 'Sudden collapse: disconnect first, then DOPE. Ultrasound before the X-ray.', 'Prevent auto-PEEP: long expiration, bronchodilators, sedation, low VT. Blockade shortest and lowest.'] }
 ];
+// ---------- Five children, five pumps: home NIV and long-term ventilation simulator scenarios ----------
+// NIV stages carry niv: true (the setup wizard then offers only the mask modes). The child's own effort and rate are
+// pat.eff / pat.rrOwn; pat.Rfn(peep) lets EPAP or CPAP open a floppy upper airway; pat.leak trims the delivered VT.
+const OSA_R = p => interp(p, [[0, 70], [4, 55], [6, 30], [8, 14], [10, 10], [15, 9]]);
+const NPPE_O2 = p => interp(p, [[0, 1], [4, 1.35], [6, 1.7], [8, 2.1], [10, 2.35], [14, 2.45]]);
+const BPD_R = p => interp(p, [[3, 260], [5, 200], [7, 130], [9, 95], [11, 85], [14, 82]]);
+const GBS_C = p => interp(p, [[3, 20], [5, 24], [7, 31], [8, 35], [10, 40], [12, 41], [14, 36]]);
+const isNiv = (s, ...ids) => ids.includes(vmodeOf(s));
+const supp = s => vmodeOf(s) === 'NIV-CPAP' ? 0 : (s.ipap ?? 0) - (s.epap ?? 0);
+const bpdCo2 = (m, m0) => Math.pow(m.mv / m0.mv, 0.9) * Math.pow(m0.rr * Math.max(1, m0.vte - 12.5) / (m.rr * Math.max(1, m.vte - 12.5)), 0.9);
+const softCo2 = (m, m0, k) => Math.pow(Math.max(0.25, m.mv) / Math.max(0.25, m0.mv), 0.9 * (k ?? 0.65));
+const LIVE_VIT = (hr, bp, extra) => (m, a, s) => [['HR', String(hr)], ['RR', String(Math.round(m.rr))], ['SpO₂', 'live'], ...(bp ? [['BP', bp]] : []), ...(extra || [])];
+Object.assign(PATIENTS, {
+  scOsa: { label: 'OSA · obstructed, wet lungs', C: 15, R: 60, Rfn: OSA_R, eff: 6, rrOwn: 34, ibw: 14, infant: true, hidden: true },
+  scOsaRem: { label: 'OSA · REM sleep', C: 18, R: 30, Rfn: OSA_R, eff: 2.5, rrOwn: 14, ibw: 14, infant: true, hidden: true },
+  scDmd: { label: 'Duchenne · weak pump', C: 30, R: 6, eff: 3.2, rrOwn: 30, ibw: 45, hidden: true },
+  scDmdRem: { label: 'Duchenne · REM, mouth open', C: 30, R: 6, eff: 1.2, rrOwn: 9, leak: 0.35, ibw: 45, hidden: true },
+  scDmdSealed: { label: 'Duchenne · REM, sealed', C: 30, R: 6, eff: 1.2, rrOwn: 9, leak: 0.08, ibw: 45, hidden: true },
+  scDmdHome: { label: 'Duchenne · going home', C: 32, R: 6, eff: 2.6, rrOwn: 18, leak: 0.1, ibw: 45, hidden: true },
+  scSma: { label: 'SMA 1 · RSV', C: 4.5, R: 45, eff: 4, trig: false, rrOwn: 64, ibw: 6, infant: true, hidden: true },
+  scSmaClear: { label: 'SMA 1 · secretions cleared', C: 6, R: 38, eff: 4, trig: false, rrOwn: 60, ibw: 6, infant: true, hidden: true },
+  scSmaPlug: { label: 'SMA 1 · mucus plug', C: 2.8, R: 70, eff: 3.5, trig: false, rrOwn: 70, ibw: 6, infant: true, hidden: true },
+  scGbs: { label: 'GBS · normal lungs, no pump', C: 40, R: 14, ibw: 30, hidden: true },
+  scGbsAtel: { label: 'GBS · basal collapse', C: 24, Cfn: GBS_C, R: 16, ibw: 30, hidden: true },
+  scGbsWean: { label: 'GBS · week 3', C: 40, R: 12, eff: 3, rrOwn: 28, ibw: 30, hidden: true },
+  scBpd: { label: 'Severe BPD · malacia', C: 4, R: 200, Rfn: BPD_R, ibw: 5, infant: true, hidden: true },
+  scBpdSpell: { label: 'Severe BPD · PH crisis', C: 3.6, R: 200, Rfn: BPD_R, ibw: 5, infant: true, hidden: true, fight: 0.6 }
+});
+SIM_SCEN.push(
+  { id: 'osa', eyebrow: 'Sim scenario 03', title: '3-year-old boy · 14 kg', chord: 'ochre', setting: 'OSA after adenotonsillectomy · CPAP, then bilevel',
+    blurb: 'Snoring and pauses for a year, tonsils and adenoids out this morning. In recovery he is obstructing and frothing pink. Open the airway with pressure, then find out what his sleep needs that CPAP cannot give.',
+    review: '', stages: ['so1', 'so2'] },
+  { id: 'dmd', eyebrow: 'Sim scenario 04', title: '15-year-old boy · 45 kg', chord: 'dusk', setting: 'Duchenne on oxygen · bilevel ST, REM, iVAPS for home',
+    blurb: 'Morning headaches for months, now drowsy on 2 L of oxygen. Ventilate a weak pump through a mask, deal with REM sleep and a mouth leak, then set him up to go home.',
+    review: '', stages: ['sd1', 'sd2', 'sd3'] },
+  { id: 'sma', eyebrow: 'Sim scenario 05', title: '5-month-old girl · 6 kg', chord: 'plum', setting: 'SMA type 1 with RSV · bilevel ST and cough assist',
+    blurb: 'Weak since birth, on nusinersen, now RSV. A bell-shaped chest, a weak cough and a breathing pattern that will not trigger a machine reliably. Set bilevel for a child who cannot help, then clear a plug.',
+    review: '', stages: ['sm1', 'sm2'] },
+  { id: 'gbs', eyebrow: 'Sim scenario 06', title: '10-year-old girl · 30 kg', chord: 'grove', setting: 'Guillain–Barré · normal lungs, failing pump',
+    blurb: 'Ascending weakness for five days, vital capacity falling. Intubated tonight. Ventilate normal lungs well, stop the bases collapsing, and decide at week three about the tube.',
+    review: '', stages: ['sg1', 'sg2', 'sg3'] },
+  { id: 'bpd', eyebrow: 'Sim scenario 07', title: '7-month-old boy · 5 kg', chord: 'plum', setting: 'Severe BPD · from acute to chronic settings',
+    blurb: 'Born at 26 weeks, never off the ventilator. Still on the settings of an acute lung, with trapping, CO₂ in the 70s and spells. Change the strategy, then survive a pulmonary hypertensive crisis.',
+    review: 'sc-ltv', stages: ['sp1', 'sp2'] }
+);
+SIM_STAGES.push(
+  // ---------- OSA ----------
+  { id: 'so1', scen: 'osa', stage: 1, niv: true, fig: 'niv', t: 'Recovery · obstructing, pink froth', eyebrow: 'Sim scenario 03 · stage 1 of 2', title: '3-year-old boy · 14 kg', chord: 'ochre', ibw: 14, setting: 'Recovery room after adenotonsillectomy',
+    story: 'Loud snoring with pauses for a year; polysomnography showed severe OSA. Tonsils and adenoids out this morning. In recovery he is snoring, then silent with chest and belly moving in opposite directions; pink frothy fluid is coming from his mouth. On a face mask at FiO₂ 0.6.',
+    event: 'Two problems at once. The upper airway collapses every breath (soft tissue, residual anaesthetic, opioid), and the huge negative pressure he generates against it has pulled fluid into the alveoli: negative-pressure pulmonary oedema. One pressure treats both: CPAP splints the pharynx open and holds the wet alveoli open. Oxygen alone does neither.',
+    dx: 'Obstruction with negative-pressure pulmonary oedema. CPAP 8–10 splints the airway and the alveoli.', learn: [7, 'Home ventilator modes', '09'],
+    assess: { vit: [['HR', '168'], ['RR', '34, obstructed'], ['SpO₂', 'live'], ['BP', '104/62']], exam: ['Snoring, then silent obstructed breaths with paradox', 'Suprasternal and subcostal recession', 'Fine crackles both bases, pink frothy secretions'], cxrAns: 'lung', ettAns: 'unseen', cxr: 'Bilateral perihilar alveolar shadowing, normal heart size. No tube.', abg: [['pH', '7.27'], ['PaCO₂', '58'], ['PaO₂', '56'], ['HCO₃', '24']], vent: 'Face mask, FiO₂ 0.6. Morphine in theatre. Not yet on any pressure.' },
+    patient: 'scOsa', start: { mode: 'PS', ps: 0, peep: 0, eff: 6, rr: 34, ti: 0.6, fio2: 60 },
+    brief: 'Choose non-invasive. CPAP is the mode: one pressure, he does the breathing. Start around 6 and go up in steps of 2 until the snoring stops and the volume trace looks smooth; 8–10 usually. Then wean the FiO₂.',
+    actions: [
+      { id: 'jaw', label: 'Jaw thrust and shoulder roll', fb: 'The snore softens while your hands are on him; let go and it is back. Position helps; it does not hold the airway for hours.' },
+      { id: 'suction', label: 'Suction mouth and nose', fb: 'Pink, frothy, a little blood from the tonsil beds, no clot. The froth keeps coming: it is from the lungs.' },
+      { id: 'o2only', label: 'Turn the face mask up to 15 L', fb: 'The SpO₂ creeps up and the obstruction carries on. Oxygen hides the problem and does not treat it.', bad: true },
+      { id: 'tube', label: 'Reintubate now', fb: 'He is breathing, protecting his airway and has not had CPAP yet. Not done; CPAP first, tube if it fails.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: softCo2(m, m0), o2: NPPE_O2(m.totalPeep) / NPPE_O2(m0.totalPeep) }),
+    vitals: LIVE_VIT(150, '102/60'),
+    goals: (m, a, s) => [
+      ['CPAP mode', isNiv(s, 'NIV-CPAP')],
+      ['CPAP 8–10 cmH₂O', s.cpap >= 8 && s.cpap <= 10],
+      ['Airway open: VT ≥ 5 mL/kg (≥ 70 mL)', m.vte >= 68],
+      ['FiO₂ ≤ 0.5', m.fio2 <= 50],
+      ['SpO₂ ≥ 92%', m.spo2 >= 92]] },
+  { id: 'so2', scen: 'osa', stage: 2, keep: true, niv: true, fig: 'niv', t: 'Night 1 · REM on CPAP', eyebrow: 'Sim scenario 03 · stage 2 of 2', title: '3-year-old boy · 14 kg', chord: 'ochre', ibw: 14, setting: 'PICU · 2 am',
+    story: 'Night 1 in PICU on CPAP 8. Settled most of the night; now in REM sleep the SpO₂ dips into the 80s, the transcutaneous CO₂ reads 62 and his breaths are slow and shallow.',
+    event: 'The airway is open; the problem now is the pump. In REM sleep, with morphine on board and a long history of sleep-disordered breathing, he breathes slowly and shallowly. CPAP adds no breath. He needs bilevel: EPAP still holds the pharynx (keep it at the CPAP that worked), IPAP above it ventilates, and a backup rate covers the slow spells. That is ST.',
+    dx: 'OSA with hypoventilation in REM. Bilevel ST: EPAP at the CPAP that opened the airway, IPAP above it, backup rate.', learn: [7, 'Home ventilator modes', '09'],
+    assess: { vit: [['HR', '110'], ['RR', '14'], ['SpO₂', 'live'], ['TcCO₂', '62']], exam: ['Quiet, no snore, small breaths', 'Crackles almost gone', 'Rousable, pupils small'], cxrAns: 'normal', ettAns: 'unseen', cxr: 'Oedema clearing. Lungs nearly clear.', abg: [['pH', '7.30'], ['PaCO₂', '62'], ['PaO₂', '68'], ['HCO₃', '29']], vent: 'CPAP 8, FiO₂ 0.3. Morphine given at 10 pm.' },
+    patient: 'scOsaRem', start: { mode: 'PS', ps: 0, peep: 8, eff: 2.5, rr: 14, ti: 0.6, fio2: 30 },
+    brief: 'Switch to bilevel ST. EPAP stays at the pressure that held his airway (8). IPAP 6 or more above it. Backup rate close to a normal sleeping rate for 3 (18–22), Ti about 0.7–0.9 s. Do not just add oxygen.',
+    actions: [
+      { id: 'o2', label: 'FiO₂ up to 0.6', fb: 'SpO₂ 97%, TcCO₂ climbs to 70. Oxygen without ventilation in a hypoventilating child. Turned back down.', bad: true },
+      { id: 'opioid', label: 'Review the opioid', fb: 'Morphine stopped; paracetamol and ibuprofen for the tonsil beds. Opioids deepen REM hypoventilation after adenotonsillectomy.' },
+      { id: 'cpap12', label: 'Push CPAP to 14', fb: 'More splint, no more breaths. The CO₂ does not move.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: softCo2(m, m0), o2: NPPE_O2(Math.max(8, m.totalPeep)) / NPPE_O2(8) }),
+    vitals: LIVE_VIT(108, '98/58'),
+    goals: (m, a, s) => [
+      ['Bilevel ST (or T)', isNiv(s, 'NIV-ST', 'NIV-T')],
+      ['EPAP 8–10: airway held', s.epap >= 8 && s.epap <= 10],
+      ['IPAP − EPAP ≥ 6', supp(s) >= 6],
+      ['Backup rate 18–22', s.rr >= 18 && s.rr <= 22],
+      ['VT 6–9 mL/kg (84–126 mL)', m.vte >= 84 && m.vte <= 126],
+      ['Opioid reviewed', !!a.opioid],
+      ['FiO₂ ≤ 0.4 with SpO₂ ≥ 92%', m.fio2 <= 40 && m.spo2 >= 92]],
+    debrief: ['CPAP is one pressure: it splints the airway and the alveoli, it adds no breath. OSA alone needs CPAP.', 'Negative-pressure pulmonary oedema after relief of obstruction: CPAP treats the airway and the lung at once.', 'OSA with hypoventilation (REM, opioids, obesity, neuromuscular disease) needs bilevel.', 'On bilevel, EPAP is the airway and IPAP − EPAP is the ventilation. Raise EPAP without IPAP and support falls.', 'Oxygen hides hypoventilation. Watch the CO₂, not just the SpO₂.'] },
+
+  // ---------- Duchenne ----------
+  { id: 'sd1', scen: 'dmd', stage: 1, niv: true, fig: 'niv', t: 'Ward · drowsy on oxygen', eyebrow: 'Sim scenario 04 · stage 1 of 3', title: '15-year-old boy · 45 kg', chord: 'dusk', ibw: 45, setting: 'Admitted from the ward to PICU',
+    story: 'Duchenne, wheelchair since 11, on steroids. Six months of morning headaches and poor sleep. A cold for three days; on the ward he was given 2 L of oxygen for SpO₂ 88% and is now hard to rouse. Weak cough, quiet chest.',
+    event: 'A weak pump made weaker by a cold, sleep and oxygen. Morning headaches were nocturnal hypoventilation for months (bicarbonate 34). Oxygen raised the SpO₂ and took away his drive. He needs ventilation through a mask: bilevel with a big enough IPAP − EPAP to move CO₂, EPAP low (his airway and lungs are fine), a backup rate, and his cough helped with a machine. Check his heart: Duchenne cardiomyopathy changes how much positive pressure he tolerates.',
+    dx: 'Acute-on-chronic hypoventilation in Duchenne, worsened by oxygen. Bilevel ST, IPAP − EPAP ≥ 10, cough assist.', learn: [7, 'Home ventilator modes', '09'],
+    assess: { vit: [['HR', '118'], ['RR', '30, shallow'], ['SpO₂', 'live'], ['BP', '112/70']], exam: ['Drowsy, GCS 12, rousable', 'Shallow breaths, quiet bases, weak cough', 'Scoliosis, no oedema'], cxrAns: 'normal', ettAns: 'unseen', cxr: 'Small-volume lungs, mild basal atelectasis. Heart borderline large. No tube.', abg: [['pH', '7.24'], ['PaCO₂', '82'], ['PaO₂', '72'], ['HCO₃', '34']], vent: '2 L/min nasal oxygen. No pressure support yet.' },
+    patient: 'scDmd', start: { mode: 'PS', ps: 0, peep: 0, eff: 3.2, rr: 30, ti: 1, fio2: 40 },
+    brief: 'Choose non-invasive, bilevel ST. Start low (IPAP 8–10, EPAP 4) and climb IPAP in steps of 2 to VT 6–8 mL/kg. EPAP 4–6. Backup rate 12–16, Ti about 1.0–1.2 s. FiO₂ only enough for SpO₂ 92–95%. Use the bedside actions.',
+    actions: [
+      { id: 'mie', label: 'Cough assist (MI-E)', fb: 'Insufflation to +40, exsufflation to −40, five cycles with a pause. Thick secretions come up; air entry at the bases improves.', patient: 'scDmd' },
+      { id: 'echo', label: 'ECG and echo', fb: 'Ejection fraction 45%, no pericardial effusion. Moderate cardiomyopathy: positive pressure will help the left ventricle; avoid big fluid boluses.' },
+      { id: 'o2up', label: 'Oxygen to 6 L for SpO₂ 98%', fb: 'He becomes harder to rouse. Oxygen in a hypoventilating Duchenne boy without ventilation is how the CO₂ reaches 120. Not done.', bad: true },
+      { id: 'tube', label: 'Intubate now', fb: 'He has a cough, a chest that is clear on the film and a trial of NIV still to come. Intubating a Duchenne boy risks never extubating him. NIV first, with a clear plan if it fails.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: softCo2(m, m0), o2: (a.mie ? 1.15 : 1) * Math.pow(m.fio2 / m0.fio2, -0.3) }),
+    vitals: LIVE_VIT(108, '110/68'),
+    goals: (m, a, s) => [
+      ['Bilevel ST, T or iVAPS', isNiv(s, 'NIV-ST', 'NIV-T', 'iVAPS')],
+      ['EPAP 4–6', s.epap >= 4 && s.epap <= 6],
+      ['VT 6–8 mL/kg (270–360 mL)', m.vte >= 270 && m.vte <= 365],
+      ['Backup rate 12–16', s.rr >= 12 && s.rr <= 16],
+      ['Cough assist given', !!a.mie],
+      ['Heart checked', !!a.echo],
+      ['FiO₂ ≤ 0.4, SpO₂ 92–96%', m.fio2 <= 40 && m.spo2 >= 92 && m.spo2 <= 96]] },
+  { id: 'sd2', scen: 'dmd', stage: 2, keep: true, niv: true, fig: 'niv', t: 'Night 2 · REM, alarms', eyebrow: 'Sim scenario 04 · stage 2 of 3', title: '15-year-old boy · 45 kg', chord: 'dusk', ibw: 45, setting: 'PICU · 3 am',
+    story: 'Day 2, much brighter, PaCO₂ 58 this evening. At 3 am the leak alarm sounds, his mouth has fallen open, and the SpO₂ dips to 84% with pauses on the flow trace.',
+    event: 'REM sleep: his weak muscles barely trigger, so the machine must give the breaths at the backup rate. And with his mouth open on a nasal mask the leak steals the volume and confuses the trigger. In S mode he gets nothing during a pause; in ST the backup rate covers it, but a low backup rate leaves long gaps. Seal the leak first (chin strap or an oronasal mask with an anti-asphyxia valve), then bring the backup rate closer to his own rate.',
+    dx: 'REM hypoventilation with mouth leak. Seal the leak, backup rate near his own, Ti long enough.', learn: [8, 'Interfaces: the part the child feels', '09'],
+    assess: { vit: [['HR', '96'], ['RR', 'pauses'], ['SpO₂', 'live'], ['Leak', 'high']], exam: ['Asleep, mouth open, air hissing from the mouth', 'Small chest movement, pauses of 10–15 s', 'Nasal bridge pink, skin intact'], cxrAns: 'normal', ettAns: 'unseen', cxr: 'Small-volume lungs, bases better.', abg: [['pH', '7.31'], ['PaCO₂', '64'], ['PaO₂', '62'], ['HCO₃', '32']], vent: 'Your settings carry over. Nasal mask.' },
+    patient: 'scDmdRem', start: { mode: 'PC', pinsp: 9, peep: 5, rr: 12, ti: 1.1, fio2: 30 },
+    brief: 'Fix the leak before the pressures. Then in ST bring the backup rate up close to his sleeping rate (14–18) with a Ti of 1.0–1.4 s, and recheck VT. Leave FiO₂ alone unless the SpO₂ stays low after ventilation is fixed.',
+    actions: [
+      { id: 'seal', label: 'Chin strap or oronasal mask', fb: 'Oronasal mask with an anti-asphyxia valve, fitted and checked. The leak falls, the trigger works when he does breathe and the volumes are back.', patient: 'scDmdSealed' },
+      { id: 'silence', label: 'Silence the leak alarm', fb: 'The alarm was right. Not done.', bad: true },
+      { id: 'o2', label: 'Oxygen up to 0.6', fb: 'SpO₂ rises, CO₂ rises with it. Ventilation is the problem. Turned back down.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: softCo2(m, m0), o2: Math.pow(m.fio2 / m0.fio2, -0.3) }),
+    vitals: (m, a, s) => [['HR', '96'], ['RR', String(Math.round(m.rr))], ['SpO₂', 'live'], ['Leak', a.seal ? 'acceptable' : 'high']],
+    goals: (m, a, s) => [
+      ['Leak sealed first', !!a.seal],
+      ['A backup rate is set (ST, T or iVAPS)', isNiv(s, 'NIV-ST', 'NIV-T', 'iVAPS')],
+      ['Backup rate 14–18', s.rr >= 14 && s.rr <= 18],
+      ['Ti 1.0–1.4 s', s.ti >= 1 && s.ti <= 1.4],
+      ['VT ≥ 6 mL/kg (≥ 270 mL)', m.vte >= 270],
+      ['FiO₂ ≤ 0.4', m.fio2 <= 40]] },
+  { id: 'sd3', scen: 'dmd', stage: 3, keep: true, niv: true, fig: 'niv', t: 'Day 7 · setting up for home', eyebrow: 'Sim scenario 04 · stage 3 of 3', title: '15-year-old boy · 45 kg', chord: 'dusk', ibw: 45, setting: 'PICU · going home',
+    story: 'Day 7. Awake on room air by day, PaCO₂ 48. He will need NIV every night for life. The home ventilator has volume-targeted pressure (iVAPS).',
+    event: 'At home his effort and mechanics change through the night (REM, position, a cold), and nobody is at the bedside to turn the IPAP up. Volume-targeted pressure moves IPAP between a minimum and a maximum to hold a target volume. Set a target of 8 mL/kg, IPAP max high enough to reach it, EPAP 4–6 and the backup rate you proved overnight. The rest of home ventilation is not the machine: two interfaces to rotate, humidification, a cough-assist routine and a family trained to use it all.',
+    dx: 'Lifelong nocturnal NIV. iVAPS with a target VT, IPAP max, EPAP, backup rate; interfaces, humidity, cough assist and training.', learn: [6, 'From PICU to home', '09'],
+    assess: { vit: [['HR', '88'], ['RR', '18'], ['SpO₂', 'live'], ['BP', '108/66']], exam: ['Awake, talking, eating', 'Clear chest, cough peak flow 180 L/min with assist', 'Mild redness over the nasal bridge'], cxrAns: 'normal', ettAns: 'unseen', cxr: 'Clear.', abg: [['pH', '7.39'], ['PaCO₂', '48'], ['PaO₂', '80'], ['HCO₃', '29']], vent: 'Your settings carry over. Oronasal mask.' },
+    patient: 'scDmdHome', start: { mode: 'PS', ps: 8, peep: 5, eff: 2.6, rr: 18, ti: 1.2, fio2: 21 },
+    brief: 'Switch to iVAPS. Target 8 mL/kg (about 360 mL), IPAP max 20 or more, EPAP 4–6, backup rate 14–16, room air. Then use the bedside actions to make home safe.',
+    actions: [
+      { id: 'two', label: 'Fit two interfaces to rotate', fb: 'An oronasal mask for nights and a nasal mask with a chin strap as the alternative. Different contact points protect the nasal bridge.' },
+      { id: 'humid', label: 'Heated humidifier', fb: 'Added. Dry mouth and nose are the commonest reason teenagers stop using NIV.' },
+      { id: 'mie', label: 'Home cough assist, twice a day and with colds', fb: 'Prescribed; parents trained to deliver it and to escalate it with every cold.' },
+      { id: 'train', label: 'Train the family and write the plan', fb: 'Two carers trained: mask fitting, alarms, cleaning, what to do if he is drowsy or the CO₂ monitor alarms, who to call.' },
+      { id: 'o2home', label: 'Home oxygen for night-time dips', fb: 'Oxygen without the ventilator is the mistake that brought him in. Not prescribed.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: softCo2(m, m0), o2: 1 }),
+    vitals: LIVE_VIT(88, '108/66'),
+    goals: (m, a, s) => [
+      ['iVAPS mode', isNiv(s, 'iVAPS')],
+      ['Target VT 300–420 mL (7–9 mL/kg)', s.vtt >= 300 && s.vtt <= 420],
+      ['IPAP max ≥ 20', s.ipmax >= 20],
+      ['EPAP 4–6', s.epap >= 4 && s.epap <= 6],
+      ['Backup rate 12–16', s.rr >= 12 && s.rr <= 16],
+      ['Room air', m.fio2 <= 21],
+      ['Two interfaces, humidifier, cough assist, trained family', !!(a.two && a.humid && a.mie && a.train)]],
+    debrief: ['A Duchenne boy with morning headaches has nocturnal hypoventilation until proven otherwise; a high bicarbonate says it has been going on for months.', 'Oxygen alone raises the SpO₂ and the CO₂. Ventilate first.', 'Bilevel ST: EPAP low (4–6) when the airway is normal, IPAP − EPAP is what moves CO₂, a backup rate for REM.', 'Fix the leak before the pressures: chin strap or oronasal mask with an anti-asphyxia valve.', 'S mode has no backup; weak children need a backup rate near their own.', 'Volume-targeted pressure suits a child whose effort changes through the night. Home NIV is also interfaces, humidity, cough assist and a trained family.'] },
+
+  // ---------- SMA ----------
+  { id: 'sm1', scen: 'sma', stage: 1, niv: true, fig: 'niv', t: 'PICU · RSV, weak and fast', eyebrow: 'Sim scenario 05 · stage 1 of 2', title: '5-month-old girl · 6 kg', chord: 'plum', ibw: 6, setting: 'Admitted from the ER with RSV',
+    story: 'SMA type 1, diagnosed at 6 weeks, on nusinersen. Feeds by NG. Two days of cold and cough, RSV positive. Breathing at 64 with a see-saw chest and belly, a weak cry and pooling secretions. On 2 L nasal cannula oxygen.',
+    event: 'SMA type 1 spares the diaphragm and takes the intercostals: a bell-shaped chest, paradoxical breathing and almost no cough. She is breathing fast and shallow and cannot generate the effort a machine needs to sense. CPAP gives her no breaths; S mode waits for triggers she cannot reliably make. She needs bilevel with a backup rate that does the work (ST, close to T), a short infant Ti, and her secretions moved by a cough-assist machine and suction. Oxygen alone will hide the CO₂.',
+    dx: 'SMA type 1 with RSV: weak pump, no cough. Bilevel ST with a working backup rate, MI-E and suction.', learn: [7, 'Home ventilator modes', '09'],
+    assess: { vit: [['HR', '172'], ['RR', '64, paradoxical'], ['SpO₂', 'live'], ['CRT', '2 s']], exam: ['Bell-shaped chest, see-saw breathing', 'Coarse crackles, pooled secretions, weak cry', 'Tongue fasciculation, frog-leg posture'], cxrAns: 'lung', ettAns: 'unseen', cxr: 'Bell-shaped chest, right upper lobe atelectasis, patchy changes. No tube.', abg: [['pH', '7.27'], ['PaCO₂', '68'], ['PaO₂', '60'], ['HCO₃', '30']], vent: '2 L/min nasal cannula oxygen. Nothing else yet.' },
+    patient: 'scSma', start: { mode: 'PS', ps: 0, peep: 0, eff: 4, rr: 64, ti: 0.5, fio2: 40 },
+    brief: 'Choose non-invasive. Bilevel ST: EPAP 4–6, IPAP 8–10 above EPAP, backup rate 30–40 so the machine does the breathing, Ti 0.5–0.7 s. Nasal mask. Then clear the chest and wean the oxygen.',
+    actions: [
+      { id: 'mie', label: 'Cough assist (MI-E)', fb: '+30 / −30 through a face mask, cycles of five, with an assistant at the mouth. Thick secretions arrive in the pharynx.', patient: 'scSmaClear' },
+      { id: 'suction', label: 'Oral and nasal suction', fb: 'A large plug of mucus from the pharynx. She cannot swallow it, so the machine brings it up and the catheter takes it away.', needs: 'mie', needsFb: 'Suction reaches the pharynx, not the lobe. Bring it up first with the cough assist.' },
+      { id: 'cpaponly', label: 'High-flow or CPAP only', fb: 'Neither gives her a breath. She tires within the hour. Not done.', bad: true },
+      { id: 'goals', label: 'Talk with the parents about goals', fb: 'They want NIV and cough assist; they want to talk again before any tube. Written in the notes and shared with the team.' }
+    ],
+    gas: (m, a, s, m0) => ({ co2: softCo2(m, m0), o2: (1 + 0.1 * Math.min(6, m.totalPeep)) / (1 + 0.1 * Math.min(6, m0.totalPeep)) * (a.suction ? 1.15 : 1) }),
+    vitals: LIVE_VIT(156, null, [['CRT', '2 s']]),
+    goals: (m, a, s) => [
+      ['Bilevel ST or T', isNiv(s, 'NIV-ST', 'NIV-T')],
+      ['EPAP 4–6', s.epap >= 4 && s.epap <= 6],
+      ['Backup rate 30–40', s.rr >= 30 && s.rr <= 40],
+      ['Ti 0.5–0.7 s', s.ti >= 0.5 && s.ti <= 0.7],
+      ['VT 6–9 mL/kg (36–54 mL)', m.vte >= 36 && m.vte <= 54],
+      ['Cough assist, then suction', !!(a.mie && a.suction)],
+      ['FiO₂ ≤ 0.4, SpO₂ ≥ 92%', m.fio2 <= 40 && m.spo2 >= 92]] },
+  { id: 'sm2', scen: 'sma', stage: 2, keep: true, niv: true, fig: 'niv', t: 'Night 2 · sudden desaturation', eyebrow: 'Sim scenario 05 · stage 2 of 2', title: '5-month-old girl · 6 kg', chord: 'plum', ibw: 6, setting: 'PICU · 4 am',
+    story: 'Night 2 on your settings, comfortable. At 4 am the SpO₂ falls suddenly to the 70s; VT has halved, the right side is quiet and she is working hard.',
+    event: 'A mucus plug, the commonest emergency in a child with no cough. The lung behind it collapses, compliance halves and the same pressure gives half the volume. More IPAP and more oxygen buy minutes; the treatment is to bring the plug up: cough assist, suction, and turn her. Intubation is for the child who fails this, and in SMA it is a conversation already had with the family.',
+    dx: 'Mucus plug with lobar collapse. MI-E and suction first; then support until the lung reopens.', learn: [8, 'Interfaces: the part the child feels', '09'],
+    assess: { vit: [['HR', '188'], ['RR', '70'], ['SpO₂', 'live'], ['CRT', '3 s']], exam: ['Quiet right chest, trachea central', 'Recession, see-saw breathing', 'Secretions pooling in the mouth'], cxrAns: 'lung', ettAns: 'unseen', cxr: 'Right upper and middle lobe collapse. No pneumothorax.', abg: [['pH', '7.22'], ['PaCO₂', '72'], ['PaO₂', '45'], ['HCO₃', '29']], vent: 'Your settings carry over.' },
+    patient: 'scSmaPlug', start: { mode: 'PC', pinsp: 9, peep: 5, rr: 35, ti: 0.6, fio2: 40 },
+    brief: 'Bring the plug up first: cough assist, suction, turn her. You may raise the FiO₂ while you do it, then bring it back down. Keep the backup breaths coming.',
+    actions: [
+      { id: 'mie', label: 'Cough assist, then suction, turn', fb: 'Three rounds. A large grey plug comes up into the pharynx and out with the catheter. The right chest moves again.', patient: 'scSmaClear' },
+      { id: 'ipap25', label: 'IPAP to 25', fb: 'High pressure into the open lung, none into the collapsed one, and the stomach fills. Not done.', bad: true },
+      { id: 'tube', label: 'Intubate now', fb: 'Not yet: the plug is treatable at the bedside, and the parents asked to talk before any tube. Clear it first.', bad: true },
+      { id: 'ng', label: 'Aspirate the NG tube', fb: '30 mL of air. Her belly softens. Mask ventilation fills the stomach; vent it.' }
+    ],
+    gas: (m, a, s, m0) => ({ co2: softCo2(m, m0), o2: (a.mie ? 1.7 : 1) * (a.ng ? 1.05 : 1) }),
+    vitals: (m, a, s) => [['HR', a.mie ? '150' : '188'], ['RR', String(Math.round(m.rr))], ['SpO₂', 'live'], ['CRT', a.mie ? '2 s' : '3 s']],
+    goals: (m, a, s) => [
+      ['Plug cleared with cough assist and suction', !!a.mie],
+      ['Stomach vented', !!a.ng],
+      ['Still bilevel with a backup rate 30–40', isNiv(s, 'NIV-ST', 'NIV-T') && s.rr >= 30 && s.rr <= 40],
+      ['VT ≥ 6 mL/kg (≥ 36 mL)', m.vte >= 36],
+      ['IPAP − EPAP ≤ 14', supp(s) <= 14],
+      ['FiO₂ back to ≤ 0.4, SpO₂ ≥ 92%', m.fio2 <= 40 && m.spo2 >= 92]],
+    debrief: ['SMA type 1: diaphragm spared, intercostals weak. Paradox, a bell chest, no cough.', 'Weak infants cannot trigger reliably: bilevel ST with a backup rate that does the work, Ti 0.5–0.7 s. CPAP and S mode give no breaths.', 'Cough assist and suction are as much the treatment as the ventilator.', 'Sudden desaturation is a plug until proved otherwise: bring it up before you turn up the pressure.', 'Vent the stomach on mask ventilation.', 'Agree the ceiling of care with the family before the night it is needed.'] },
+
+  // ---------- GBS ----------
+  { id: 'sg1', scen: 'gbs', stage: 1, t: 'Intubated · normal lungs', eyebrow: 'Sim scenario 06 · stage 1 of 3', title: '10-year-old girl · 30 kg', chord: 'grove', ibw: 30, setting: 'PICU · intubated tonight',
+    story: 'Five days of ascending weakness after diarrhoea. Areflexic, now unable to lift her head; vital capacity fell from 25 to 14 mL/kg today, she could not count to 10 in one breath and her voice is weak. Intubated electively with ketamine and rocuronium (no suxamethonium). Hand-ventilated on 100%.',
+    event: 'The lungs are normal; the pump has failed. That means normal-lung settings: VT 6–8 mL/kg, PEEP 5–8 to stop the bases collapsing, a rate for a normal CO₂, oxygen down quickly. The other dangers in Guillain–Barré are autonomic: swings in heart rate and blood pressure, and arrhythmias with suction. Suxamethonium is contraindicated (hyperkalaemia). Start the disease treatment the same night.',
+    dx: 'Guillain–Barré: normal lungs, failing pump, autonomic instability. Normal-lung ventilation, IVIG, arterial line.', learn: [5, 'Normal lung, failing pump', '07'],
+    assess: { vit: [['HR', '112'], ['BP', '128/84, swinging'], ['SpO₂', 'live'], ['Temp', '37.1 °C']], exam: ['Clear chest, equal air entry', 'Areflexic, MRC 2/5 proximal, bilateral facial weakness', 'Tube at 18 cm at the lip, EtCO₂ trace'], cxrAns: 'normal', ettAns: 'ok', cxr: 'Clear lungs. Tube tip at T2.', abg: [['pH', '7.31'], ['PaCO₂', '54'], ['PaO₂', '240'], ['HCO₃', '26']], vent: 'Hand-ventilated with 100% oxygen after the tube.' },
+    patient: 'scGbs', start: { mode: 'VC', vt: 200, rr: 14, peep: 4, ti: 1.0, fio2: 100, pinsp: 15 },
+    brief: 'Any invasive mode. VT 6–8 mL/kg (180–240 mL), rate 16–22, PEEP 5–8, Ti about 0.9–1.1 s. Wean FiO₂ to 0.4 or less. Use the bedside actions for the rest.',
+    actions: [
+      { id: 'ivig', label: 'Start IVIG 2 g/kg', fb: 'Over 2–5 days. Plasma exchange is the alternative; there is no benefit in combining them, and steroids do not help.' },
+      { id: 'aline', label: 'Arterial line, pacing pads nearby', fb: 'BP swings 80/40 to 150/95 within the hour; a brief bradycardia during suction. Short-acting drugs only, and pre-oxygenate before suction.' },
+      { id: 'dvt', label: 'DVT prophylaxis and pressure care', fb: 'Started. Immobile children with GBS clot and get sores.' },
+      { id: 'sux', label: 'Suxamethonium for the tube change', fb: 'Denervated muscle releases potassium: cardiac arrest. Never in GBS. Not given.', bad: true },
+      { id: 'hyperv', label: 'Big breaths to "rest her"', fb: 'VT 12 mL/kg into normal lungs is how ventilator lung injury starts. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: 1 }),
+    vitals: (m, a, s) => [['HR', a.aline ? '104' : '112'], ['BP', a.aline ? '118/72 (art line)' : '128/84, swinging'], ['SpO₂', 'live'], ['Temp', '37.1 °C']],
+    goals: (m, a, s) => [
+      ['VT 6–8 mL/kg (180–240 mL)', m.vte >= 178 && m.vte <= 242],
+      ['Rate 16–22', m.rr >= 16 && m.rr <= 22],
+      ['PEEP 5–8', s.peep >= 5 && s.peep <= 8],
+      ['FiO₂ ≤ 0.4 with SpO₂ ≥ 94%', m.fio2 <= 40 && m.spo2 >= 94],
+      ['IVIG started', !!a.ivig],
+      ['Arterial line for autonomic swings', !!a.aline]] },
+  { id: 'sg2', scen: 'gbs', stage: 2, keep: true, t: 'Day 4 · bases collapsing', eyebrow: 'Sim scenario 06 · stage 2 of 3', title: '10-year-old girl · 30 kg', chord: 'grove', ibw: 30, setting: 'PICU · day 4',
+    story: 'Day 4. She has been on PEEP 5 and lying still. SpO₂ 90% on FiO₂ 0.4, the plateau has risen and the bases are quiet.',
+    event: 'Microatelectasis: still, weak children on low PEEP lose their bases. The same VT now needs more pressure (compliance has fallen) and the oxygen requirement rises. Raise the PEEP in steps and watch the plateau and the driving pressure fall as the bases reopen; turn her, physiotherapy and suction. Antibiotics are not the first answer.',
+    dx: 'Basal microatelectasis in a weak, still child. Higher PEEP, turns and physiotherapy.', learn: [5, 'Normal lung, failing pump', '07'],
+    assess: { vit: [['HR', '108'], ['BP', '110/70'], ['SpO₂', 'live'], ['Temp', '37.6 °C']], exam: ['Quiet bases both sides, no bronchial breathing', 'Thin secretions', 'Still areflexic, flicker of finger movement'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Bilateral basal plate atelectasis. Tube at T2.', abg: [['pH', '7.37'], ['PaCO₂', '44'], ['PaO₂', '62'], ['HCO₃', '25']], vent: 'Your settings carry over.' },
+    patient: 'scGbsAtel', start: { mode: 'VC', vt: 210, rr: 18, peep: 5, ti: 1.0, fio2: 40, pinsp: 15 },
+    brief: 'Raise PEEP in steps of 2 and watch the plateau, driving pressure and SpO₂. Use the bedside actions. Keep VT 6–8 mL/kg.',
+    actions: [
+      { id: 'physio', label: 'Turns, physiotherapy, suction', fb: 'Two-hourly turns, chest physiotherapy, suction: thick plugs from the left lower lobe.' },
+      { id: 'abx', label: 'Start broad-spectrum antibiotics', fb: 'No fever spike, no purulent secretions, a film of collapse rather than consolidation. Not started; send a tracheal aspirate if it changes.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: Math.pow(GBS_C(s.peep) / GBS_C(5), 1.4) * (a.physio ? 1.1 : 1) }),
+    vitals: LIVE_VIT(104, '112/70'),
+    goals: (m, a, s) => [
+      ['PEEP 8–10', s.peep >= 8 && s.peep <= 10],
+      ['Rate 16–22', m.rr >= 16 && m.rr <= 22],
+      ['Driving pressure ≤ 8', m.dp <= 8],
+      ['VT 6–8 mL/kg (180–240 mL)', m.vte >= 178 && m.vte <= 242],
+      ['Turns and physiotherapy', !!a.physio],
+      ['FiO₂ ≤ 0.35, SpO₂ ≥ 94%', m.fio2 <= 35 && m.spo2 >= 94]] },
+  { id: 'sg3', scen: 'gbs', stage: 3, keep: true, t: 'Week 3 · tube or trach?', eyebrow: 'Sim scenario 06 · stage 3 of 3', title: '10-year-old girl · 30 kg', chord: 'grove', ibw: 30, setting: 'PICU · day 20',
+    story: 'Day 20. Moving her fingers and toes, shrugging. Triggering the ventilator. NIF −15 cmH₂O, vital capacity 8 mL/kg. Her parents ask when the tube can come out.',
+    event: 'She is recovering, slowly. Put her on pressure support and see what she can do: a small PS and a rapid shallow pattern say the pump is not ready. GBS recovery takes weeks to months; with a vital capacity of 8 mL/kg and NIF −15 at day 20, extubation is likely to fail. This is the point to plan a tracheostomy: safer weaning, less sedation, mouth care, speech, and mobilising.',
+    dx: 'Slow neuromuscular recovery. PS trial, then tracheostomy at 2–3 weeks rather than repeated failed extubations.', learn: [4, 'Tube or trach? Timing', '09'],
+    assess: { vit: [['HR', '96'], ['BP', '108/66'], ['SpO₂', 'live'], ['Temp', '36.9 °C']], exam: ['Clear chest', 'Triggering every breath, shallow', 'Finger and toe movement, shrug, weak cough'], cxrAns: 'normal', ettAns: 'ok', cxr: 'Clear lungs. Tube at T2.', abg: [['pH', '7.39'], ['PaCO₂', '42'], ['PaO₂', '96'], ['HCO₃', '25']], vent: 'Your settings carry over.' },
+    patient: 'scGbsWean', start: { mode: 'PS', ps: 5, peep: 5, eff: 3, rr: 28, ti: 1.0, fio2: 30 },
+    brief: 'Put her on pressure support (PS mode, PEEP 5–6). Find the support that gives VT 5–7 mL/kg. Then decide about the airway with the bedside actions.',
+    actions: [
+      { id: 'trach', label: 'Plan a tracheostomy', fb: 'Discussed with the parents: a tracheostomy this week, weaning on the trach over weeks, decannulation expected when she is strong. They agree.' },
+      { id: 'ext', label: 'Extubate to NIV and see', fb: 'VC 8 mL/kg, NIF −15, a weak cough: she fails within 24 hours and is reintubated in a hurry. Not done.', bad: true },
+      { id: 'rehab', label: 'Physiotherapy and rehab plan', fb: 'Daily mobilisation, splints, speech and swallow review, psychology for her and her parents.' }
+    ],
+    gas: (m, a, s, m0) => ({ o2: 1 }),
+    vitals: LIVE_VIT(96, '108/66'),
+    goals: (m, a, s) => [
+      ['Pressure support mode', vmodeOf(s) === 'PS'],
+      ['PEEP 5–6', s.peep >= 5 && s.peep <= 6],
+      ['VT 5–7 mL/kg (150–210 mL)', m.vte >= 150 && m.vte <= 212],
+      ['Tracheostomy planned, not a failed extubation', !!a.trach && !a.ext],
+      ['Rehab started', !!a.rehab]],
+    debrief: ['GBS: normal lungs, a failing pump. Intubate on the numbers (VC < 15–20 mL/kg, NIF weaker than −20 to −30) and the trend, before the gas fails.', 'Never suxamethonium. Expect autonomic swings: arterial line, short-acting drugs.', 'Normal-lung settings: VT 6–8 mL/kg, PEEP 5–8, oxygen down early.', 'Still, weak children collapse their bases: PEEP, turns, physiotherapy.', 'When recovery will take weeks, plan the tracheostomy at 2–3 weeks.'] },
+
+  // ---------- BPD ----------
+  { id: 'sp1', scen: 'bpd', stage: 1, t: 'Month 7 · acute settings', eyebrow: 'Sim scenario 07 · stage 1 of 2', title: '7-month-old boy · 5 kg', chord: 'plum', ibw: 5, setting: 'PICU · transferred from the NICU',
+    story: 'Born at 26 weeks, ventilated since birth, two failed extubations. On the ventilator he came on: rate 40, VT 30 mL, Ti 0.4 s, PEEP 5. CO₂ in the 70s, frequent spells with SpO₂ in the 70s on handling, and echo shows pulmonary hypertension.',
+    event: 'Severe BPD is a lung of different time constants: stiff fibrotic areas next to slow, obstructed ones, with floppy large airways (tracheobronchomalacia). Fast rates and short inspiratory times suit an acute stiff lung; here they trap gas in the slow units and leave the fast ones overdistended. The chronic strategy is slow and large: rate 15–25, VT 10–12 mL/kg, Ti 0.6–0.8 s so the slow units fill and empty, PEEP 8–12 to splint the malacic airways. SpO₂ 92–95% because of the pulmonary hypertension. Accept a CO₂ in the 50s–60s with a normal pH.',
+    dx: 'Severe BPD with malacia and PH on acute settings. Slow rate, large VT, long Ti, high PEEP.', learn: [2, 'Ventilating the chronic lung', '09'],
+    assess: { vit: [['HR', '170'], ['BP', '78/44'], ['SpO₂', 'live'], ['Temp', '36.8 °C']], exam: ['Hyperinflated, prolonged expiration, wheeze', 'Subcostal recession, triggering above the set rate', 'Liver 3 cm, loud P2'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Hyperinflated, coarse interstitial and cystic change, areas of collapse. Tube at T2.', abg: [['pH', '7.25'], ['PaCO₂', '76'], ['PaO₂', '44'], ['HCO₃', '33']], vent: 'VC, VT 30 mL, rate 40, Ti 0.4 s, PEEP 5, FiO₂ 0.5.' },
+    patient: 'scBpd', start: { mode: 'VC', vt: 30, rr: 40, peep: 5, ti: 0.4, fio2: 50, pinsp: 18 },
+    brief: 'Any invasive mode. Rate 15–25, VT 10–12 mL/kg (50–60 mL), Ti 0.6–0.8 s, PEEP 8–12. Watch the flow trace: expiration must reach zero. FiO₂ for SpO₂ 92–95%.',
+    actions: [
+      { id: 'bronch', label: 'Bronchoscopy booked', fb: 'Booked for when he is stable: tracheobronchomalacia is likely, and the PEEP that holds his airways open can be measured.' },
+      { id: 'diur', label: 'Diuretic', fb: 'Furosemide, then a thiazide. A wet BPD lung is a stiffer lung. Watch the electrolytes.' },
+      { id: 'faster', label: 'Rate up to 50 for the CO₂', fb: 'More trapping, a higher CO₂ and more spells. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.12) * bpdCo2(m, m0), o2: (BPD_R(5) / BPD_R(s.peep)) ** 0.35 * (m.auto < 1.5 ? 1.15 : 1) * Math.pow(m.fio2 / m0.fio2, -0.35) }),
+    vitals: (m, a, s) => [['HR', m.auto > 2 ? '170' : '145'], ['BP', m.auto > 2 ? '78/44' : '84/50'], ['SpO₂', 'live'], ['Temp', '36.8 °C']],
+    goals: (m, a, s) => [
+      ['Rate 15–25', m.rr >= 15 && m.rr <= 25],
+      ['VT 10–12 mL/kg (50–60 mL)', m.vte >= 49 && m.vte <= 61],
+      ['Ti 0.6–0.8 s', s.ti >= 0.6 && s.ti <= 0.8],
+      ['PEEP 8–12', s.peep >= 8 && s.peep <= 12],
+      ['Expiration complete: auto-PEEP ≤ 1', m.auto <= 1],
+      ['SpO₂ 92–96%', m.spo2 >= 92 && m.spo2 <= 96]] },
+  { id: 'sp2', scen: 'bpd', stage: 2, keep: true, t: 'Day 3 · a spell on suction', eyebrow: 'Sim scenario 07 · stage 2 of 2', title: '7-month-old boy · 5 kg', chord: 'plum', ibw: 5, setting: 'PICU · day 3',
+    story: 'Settled for two days on your settings. During a nappy change and suction he cries, arches, fights the ventilator; SpO₂ 65%, HR 190 then 110, BP 55/30.',
+    event: 'A pulmonary hypertensive crisis. Hypoxia, acidosis, agitation and pain all raise pulmonary vascular resistance; the right ventricle fails and the left fills less. Break the cycle: stop the stimulus, oxygen, sedation, inhaled nitric oxide, and support the blood pressure. Do not chase it with high rates (trapping and high intrathoracic pressure load the RV further); keep the lung at its best volume.',
+    dx: 'PH crisis in BPD. Stop the stimulus, FiO₂ 1.0, sedation, iNO, support the BP; keep the chronic settings.', learn: [7, 'Ventilating the failing right ventricle', '08'],
+    assess: { vit: [['HR', '110'], ['BP', '55/30'], ['SpO₂', 'live'], ['Temp', '36.9 °C']], exam: ['Arching, crying, fighting the ventilator', 'Tube at the same mark, equal air entry', 'Mottled, CRT 4 s, liver 4 cm'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Hyperinflated, unchanged. No pneumothorax.', abg: [['pH', '7.18'], ['PaCO₂', '68'], ['PaO₂', '32'], ['HCO₃', '24']], vent: 'Your settings carry over.' },
+    patient: 'scBpdSpell', start: { mode: 'VC', vt: 55, rr: 20, peep: 10, ti: 0.7, fio2: 40, pinsp: 18 },
+    brief: 'Bedside actions first: stop the stimulus, oxygen, sedation, iNO, blood pressure. Keep the chronic ventilator strategy.',
+    actions: [
+      { id: 'stop', label: 'Stop handling, FiO₂ 1.0', fb: 'Handling stops, oxygen up. He keeps fighting.' },
+      { id: 'sedate', label: 'Fentanyl bolus, sedation up', fb: 'He settles. The pressure dips on the trace stop.', patient: 'scBpd', needs: 'stop', needsFb: 'Stop the stimulus and give oxygen first.' },
+      { id: 'ino', label: 'Inhaled nitric oxide 20 ppm', fb: 'Within minutes the SpO₂ climbs, the HR settles and the BP recovers. Pulmonary vasodilator therapy will need a plan with cardiology (sildenafil).' },
+      { id: 'pressor', label: 'Adrenaline or milrinone, hold the BP', fb: 'A low-dose infusion. The RV needs coronary perfusion pressure; hypotension feeds the crisis.' },
+      { id: 'hyperv', label: 'Hand-bag at 60 to blow off CO₂', fb: 'In BPD fast bagging stacks gas and squeezes the RV. The BP falls further. Stopped.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: (a.sedate ? 1.5 : 1) * (a.ino ? 1.7 : 1) * (m.auto < 1.5 ? 1 : 0.85), co2: trapCo2(m, m0, 0.12) * bpdCo2(m, m0) * (a.sedate ? 0.9 : 1) }),
+    vitals: (m, a, s) => [['HR', a.ino && a.sedate ? '150' : '110'], ['BP', a.pressor && a.ino ? '76/44' : a.ino ? '66/38' : '55/30'], ['SpO₂', 'live'], ['CRT', a.pressor ? '2 s' : '4 s']],
+    goals: (m, a, s) => [
+      ['Stimulus stopped, oxygen up', !!a.stop],
+      ['Sedated', !!a.sedate],
+      ['Inhaled nitric oxide', !!a.ino],
+      ['Blood pressure supported', !!a.pressor],
+      ['Chronic settings kept: rate 15–25, VT 10–12 mL/kg, auto-PEEP ≤ 1', m.rr >= 15 && m.rr <= 25 && m.vte >= 49 && m.vte <= 61 && m.auto <= 1],
+      ['SpO₂ ≥ 92%', m.spo2 >= 92]],
+    debrief: ['Severe BPD is a heterogeneous lung with slow units and floppy airways.', 'Chronic settings: rate 15–25, VT 10–12 mL/kg, Ti 0.6–0.8 s, PEEP 8–12 for malacia; let expiration finish.', 'Accept PaCO₂ 55–65 with a normal pH; SpO₂ 92–95% when there is pulmonary hypertension.', 'PH crisis: stop the stimulus, oxygen, sedation, iNO, support the BP. Do not hyperventilate a BPD lung.', 'These children need the long-term questions early: tracheostomy timing, home ventilation, the family.'] }
+);
 SIM_STAGES.forEach(x => CASES.push(x));
 const SU_MODES = [['AC-PC', 'Pressure A/C'], ['AC-VC', 'Volume A/C'], ['SIMV-PC', 'Pressure SIMV+PS'], ['SIMV-VC', 'Volume SIMV+PS'], ['PS', 'Pressure PS/CPAP']];
-const SU_START = { adult: { vt: 300, rr: 20, peep: 5, ti: 1.0, fio2: 100, pinsp: 15, ps: 5 }, infant: { vt: 30, rr: 30, peep: 5, ti: 0.5, fio2: 100, pinsp: 15, ps: 5 } };
+const SU_MODES_NIV = [['NIV-CPAP', 'CPAP'], ['NIV-S', 'Bilevel S'], ['NIV-ST', 'Bilevel ST'], ['NIV-T', 'Bilevel T'], ['iVAPS', 'iVAPS']];
+const SU_NIV = { ipap: 10, epap: 5, cpap: 5, ipmax: 20 };
+const SU_START = { adult: { vt: 300, rr: 20, peep: 5, ti: 1.0, fio2: 100, pinsp: 15, ps: 5, vtt: 300, ...SU_NIV }, infant: { vt: 30, rr: 30, peep: 5, ti: 0.5, fio2: 100, pinsp: 15, ps: 5, vtt: 50, ...SU_NIV } };
 const SU_RESET = { niv: false, mode: null, pt: null, wt: 0, test: 'idle' };
 const CXR_STYLE = { display: 'block', width: '100%', height: '100%', objectFit: 'contain' };
 const CASE_MEDIA = {
@@ -2571,6 +2900,34 @@ LESSON_SETS['09'] = [
     ans: 'B', opts: [['A', 'Yes: one trained parent is enough'], ['B', 'No: a second trained caregiver and a plan for round-the-clock awake care are needed'], ['C', 'Yes, if a pulse oximeter is supplied'], ['D', 'No: she must first be off the ventilator during the day']],
     fb: "One caregiver cannot stay awake and attentive every hour of every day. The ATS recommends at least two trained family caregivers and a trained carer awake at all times." },
 
+  { h: ['Home ventilator ', 'modes', ''],
+    lede: "Home ventilators give familiar breaths unfamiliar names. Translate each one into trigger, target and cycle, and the settings follow.",
+    body: ["CPAP: one pressure through the whole breath; the child does all the breathing. It splints the upper airway and holds the lungs open, so it treats obstructive sleep apnoea and malacia. It does not ventilate: a child who is hypoventilating needs bilevel (Chang ch. 4).",
+      "Bilevel (BiPAP) adds an inspiratory pressure, IPAP, above the expiratory pressure, EPAP. IPAP minus EPAP is the support that moves CO₂; EPAP holds the airway and lungs open. Chang's starting point is IPAP 8 and EPAP 4, then steps of 2 to a tidal volume of 5–7 mL/kg. On a single-limb circuit with a leak port, EPAP must stay at least 4 cmH₂O to wash CO₂ out of the mask (Rabec).",
+      "S (spontaneous) is pressure support: the child triggers every breath and falling flow ends it. There is no backup: if the child stops breathing, so does the machine. ST adds a backup rate: when the child does not trigger in time, a timed breath at the set Ti is given. T (timed, also called PC) sets the rate and Ti of every breath.",
+      "Setting ST: backup rate 2–5 below the child's own rate (Chang), or close to it in weak children who cannot trigger reliably in REM sleep (Fauroux); Ti near the child's normal, or a Ti min and max; a sensitive trigger; a rise time fast enough to meet demand; cycle-off percentage lower in restrictive and higher in obstructive disease (Rabec).",
+      "Volume-targeted pressure modes (AVAPS, iVAPS and similar) keep the pressure breath but move IPAP between a set minimum and maximum, over several breaths, to reach a target tidal volume (AVAPS) or alveolar ventilation (iVAPS). They help when effort and mechanics change through the night. No mode has been shown to be better than another."],
+    nums: [['IPAP − EPAP', 'Ventilation'], ['EPAP ≥ 4', 'CO₂ washout'], ['ST', 'Backup rate']],
+    peds: "Weak children (SMA, Duchenne, high cord injury) often fail to trigger in REM sleep: use ST with a backup rate near their own rate, or T. OSA alone needs CPAP; OSA with hypoventilation needs bilevel. Paediatric AVAPS: target 6–10 mL/kg, minimum IPAP = EPAP + 4. Some home devices cannot deliver volumes below 50–200 mL, which rules them out for small infants.",
+    src: 'Rabec et al., Ventilator modes and settings during NIV, Thorax 2011 · Chang ch. 4 (BiPAP modes and settings) and ch. 7 · Fauroux, Is there an optimal ventilatory mode for neuromuscular patients? · Volume-assured pressure support in children, Front Pediatr 2022 · Finkel et al., SMA standard of care 2018',
+    q: 'A 6-year-old with Duchenne on bilevel S mode at night has desaturations in REM sleep; the flow trace shows pauses with no machine breaths. What change?',
+    ans: 'B', opts: [['A', 'Raise EPAP'], ['B', 'Switch to ST with a backup rate near his own rate'], ['C', 'Raise IPAP only'], ['D', 'Add oxygen']],
+    fb: "In S mode the machine waits for a trigger. In REM sleep his weak muscles do not trigger, so nothing happens. A backup rate breathes for him when he does not." },
+
+  { h: ['Interfaces: the part the child ', 'feels', ''],
+    lede: "The interface decides whether NIV works more often than the settings do.",
+    body: ["Nasal mask: the commonest for CPAP and sleep apnoea; comfortable, lets the child talk and swallow, but leaks through the mouth, worse in sleep. Nasal pillows sit in the nostrils: no pressure on the bridge of the nose, but only for lower pressures, about 3–20 cmH₂O, and they dry the nose (Chang ch. 7).",
+      "Oronasal (full-face) mask: seals better and ventilates better when mouth leak is large or ventilation is the main aim. The costs: claustrophobia, aspiration if the child vomits, and asphyxia if the machine stops, so it needs an anti-asphyxia valve and working alarms (Chang). A total-face mask covers eyes, nose and mouth when nothing else fits; mouthpiece ventilation suits older neuromuscular patients by day.",
+      "Vented masks have a built-in leak port for single-limb bilevel machines; non-vented masks are for circuits with an exhalation valve. Match the mask to the circuit, or the child rebreathes CO₂ (Tobin ch. 23; Rabec).",
+      "A nasal mask pressing on a growing face for years can flatten the midface and cause malocclusion (Tobin ch. 23). Rotate at least two interfaces with different contact points, check the skin over the nose every day, and refit as the child grows (SMA consensus).",
+      "Some leak is expected and compensated in pressure modes. A large leak causes missed triggers, auto-triggering, delayed cycling and arousals from sleep. Fix the fit, add a chin strap or change the interface before you change the pressures."],
+    nums: [['2', 'Interfaces to rotate'], ['3–20', 'Nasal pillows · cmH₂O'], ['Vented', 'Single-limb circuit']],
+    peds: "Infants breathe through the nose, so nasal interfaces come first; the SMA consensus starts with a nasal mask. Humidify: a dry nose and mouth are the commonest complaints and the commonest reason children stop using it. Every interface is fitted by someone experienced, not picked off the shelf by size.",
+    src: 'Chang ch. 7 (interfaces) · Tobin ch. 23 (facial growth, vented and non-vented masks) · Rabec, Thorax 2011 · Cammarota et al., Comfort during NIV, Front Med 2022 · Finkel et al., SMA standard of care 2018',
+    q: 'A 4-year-old with SMA on nasal-mask bilevel opens her mouth in sleep: the leak alarm sounds, the machine misses breaths and the SpO₂ dips. First step?',
+    ans: 'B', opts: [['A', 'Raise IPAP'], ['B', 'Chin strap, or an oronasal mask with an anti-asphyxia valve'], ['C', 'Silence the leak alarm'], ['D', 'Add oxygen']],
+    fb: "The pressures are not the problem; the leak through her mouth is. Close it or cover it, then reassess the settings." },
+
   { h: ['The team around the ', 'child', ''],
     lede: "No single doctor can run long-term ventilation. The child needs a team, and the family needs one person in that team who coordinates the rest.",
     body: ["Intensivist or paediatric pulmonologist: the ventilator prescription, the weaning plan, gas and sleep-study targets, and the choice between invasive and non-invasive support. ENT surgeon: the tracheostomy, airway endoscopy before key decisions and before decannulation, granulation and stenosis.",
@@ -2646,7 +3003,7 @@ const MODULES = [
   { no: '06', title: 'Ventilator graphics', total: 5, lessons: LESSON_SETS['06'].map(l => l.h.join('').trim()) },
   { no: '07', title: 'Disease-specific ventilation', total: 6, lessons: LESSON_SETS['07'].map(l => l.h.join('').trim()) },
   { no: '08', title: 'Cardiopulmonary interactions', total: 13, lessons: LESSON_SETS['08'].map(l => l.h.join('').trim()) },
-  { no: '09', title: 'Long-term ventilation', total: 11, lessons: LESSON_SETS['09'].map(l => l.h.join('').trim()) }
+  { no: '09', title: 'Long-term ventilation', total: 13, lessons: LESSON_SETS['09'].map(l => l.h.join('').trim()) }
 ];
 
 const VMODES = [
@@ -2654,24 +3011,53 @@ const VMODES = [
   ['AC-PRVC', 'AC · PRVC', 'Pressure adjusts to reach target VT'], ['SIMV-VC', 'SIMV · Volume control', 'Set mandatory rate, own breaths between'],
   ['SIMV-PC', 'SIMV · Pressure control', 'Set mandatory rate, own breaths between'], ['SIMV-PRVC', 'SIMV · PRVC', 'Adaptive mandatory breaths, own breaths between'],
   ['PS', 'PS · Pressure support', 'Child triggers every breath'], ['CPAP', 'CPAP', 'Continuous pressure, child breathes alone'],
-  ['APRV', 'APRV', 'High CPAP with brief releases'], ['NAVA', 'NAVA', 'Support follows diaphragm signal']];
+  ['APRV', 'APRV', 'High CPAP with brief releases'], ['NAVA', 'NAVA', 'Support follows diaphragm signal'],
+  ['NIV-CPAP', 'CPAP · mask', 'One pressure, the child does the breathing'], ['NIV-S', 'Bilevel S', 'Child triggers every breath, no backup'],
+  ['NIV-ST', 'Bilevel ST', 'Backup breath if the child does not trigger'], ['NIV-T', 'Bilevel T', 'Every breath timed'],
+  ['iVAPS', 'iVAPS · volume target', 'IPAP moves to reach the target VT']];
+const NIV_MODES = ['NIV-CPAP', 'NIV-S', 'NIV-ST', 'NIV-T', 'iVAPS'];
 const VKEYS = { 'AC-VC': ['vt', 'rr', 'peep', 'ti', 'fio2'], 'SIMV-VC': ['vt', 'rr', 'peep', 'ti', 'fio2'], 'AC-PC': ['pinsp', 'rr', 'peep', 'ti', 'fio2'], 'SIMV-PC': ['pinsp', 'rr', 'peep', 'ti', 'fio2'],
   'AC-PRVC': ['vt', 'rr', 'peep', 'ti', 'fio2'], 'SIMV-PRVC': ['vt', 'rr', 'peep', 'ti', 'fio2'], PS: ['ps', 'eff', 'rr', 'peep', 'fio2'], CPAP: ['peep', 'eff', 'rr', 'fio2'],
-  APRV: ['phigh', 'plow', 'thigh', 'tlow', 'fio2'], NAVA: ['nava', 'eff', 'rr', 'peep', 'fio2'] };
+  APRV: ['phigh', 'plow', 'thigh', 'tlow', 'fio2'], NAVA: ['nava', 'eff', 'rr', 'peep', 'fio2'],
+  'NIV-CPAP': ['cpap', 'fio2'], 'NIV-S': ['ipap', 'epap', 'fio2'], 'NIV-ST': ['ipap', 'epap', 'rr', 'ti', 'fio2'], 'NIV-T': ['ipap', 'epap', 'rr', 'ti', 'fio2'], iVAPS: ['vtt', 'ipmax', 'epap', 'rr', 'fio2'] };
 const vmodeOf = s => s.vmode || ({ VC: 'AC-VC', PC: 'AC-PC', PS: 'PS', NAVA: 'NAVA' })[s.mode] || 'AC-VC';
 function mapMode(s, pat) {
   const v = vmodeOf(s);
+  if ((v === 'PS' || v === 'CPAP') && pat && pat.eff != null) s = { ...s, eff: pat.eff, rr: pat.rrOwn ?? s.rr };
   if (v === 'AC-VC' || v === 'SIMV-VC') return { ...s, mode: 'VC' };
   if (v === 'AC-PC' || v === 'SIMV-PC') return { ...s, mode: 'PC' };
   if (v === 'AC-PRVC' || v === 'SIMV-PRVC') { const Cp = pat.Cfn ? pat.Cfn(s.peep) : pat.C, tau = pat.R * Cp / 1000, T = 60 / s.rr, ti = Math.min(s.ti, T - 0.3);
     return { ...s, mode: 'PC', pinsp: Math.max(5, Math.min(35, s.vt / (Cp * (1 - Math.exp(-ti / tau))))) }; }
   if (v === 'CPAP') return { ...s, mode: 'PS', ps: 0, eff: Math.max(s.eff, 3) };
   if (v === 'APRV') return { ...s, mode: 'PC', peep: s.plow ?? 5, pinsp: Math.max(1, (s.phigh ?? 25) - (s.plow ?? 5)), ti: s.thigh ?? 4, rr: 60 / ((s.thigh ?? 4) + (s.tlow ?? 0.6)) };
+  if (NIV_MODES.includes(v)) return nivMap(v, s, pat);
   return { ...s, mode: v };
 }
-function model(s, pat) { return model0(mapMode(s, pat), pat); }
+// Home NIV modes. The child's own effort (pat.eff) and rate (pat.rrOwn) belong to the patient, not the knobs.
+// S = pressure support, no backup. ST = S while the child triggers at or above the backup rate, otherwise timed breaths.
+// T = timed pressure breaths. iVAPS = ST with the support moved between 4 and IPAP max to reach the target VT.
+function nivMap(v, s, pat) {
+  const E = pat.eff ?? 3, own = pat.rrOwn ?? 20, epap = s.epap ?? 5, ps = Math.max(0, (s.ipap ?? 10) - epap);
+  if (v === 'NIV-CPAP') return { ...s, mode: 'PS', ps: 0, peep: s.cpap ?? 5, eff: Math.max(E, 1), rr: own };
+  const spont = x => ({ ...s, mode: 'PS', ps: x, peep: epap, eff: E, rr: own });
+  const timed = x => ({ ...s, mode: 'PC', pinsp: Math.max(1, x), peep: epap, rr: s.rr, ti: s.ti ?? 1 });
+  if (v === 'NIV-S') return spont(pat.trig === false ? 0 : ps);
+  const trig = (pat.trig ?? E >= 2) && own >= (s.rr ?? 0);
+  if (v === 'NIV-T') return timed(ps);
+  if (v === 'NIV-ST') return trig ? spont(ps) : timed(ps);
+  const mk = trig ? spont : timed, hi = Math.max(4, (s.ipmax ?? 20) - epap), want = s.vtt ?? 300;
+  let lo = 4, up = hi;
+  if (model0(mk(up), pat).vte * (1 - (pat.leak || 0)) <= want) return mk(up);
+  for (let i = 0; i < 9; i++) { const mid = (lo + up) / 2; if (model0(mk(mid), pat).vte * (1 - (pat.leak || 0)) < want) lo = mid; else up = mid; }
+  return mk(Math.round(up));
+}
+function model(s, pat) {
+  const ms = mapMode(s, pat), r = model0(ms, pat);
+  if (NIV_MODES.includes(vmodeOf(s))) { r.ipapNow = ms.peep + (ms.mode === 'PS' ? ms.ps : ms.pinsp); if (pat.leak) { r.vte *= 1 - pat.leak; r.mv = r.vte * r.rr / 1000; } }
+  return r;
+}
 function model0(s, pat) {
-  const C = (pat.Cfn ? pat.Cfn(s.peep) : pat.C) / 1000, R = pat.R, tau = R * C;
+  const C = (pat.Cfn ? pat.Cfn(s.peep) : pat.C) / 1000, R = pat.Rfn ? pat.Rfn(s.peep) : pat.R, tau = R * C;
   const T = 60 / s.rr, ti = Math.min(s.ti, T - 0.3), Te = T - ti, e = Math.exp(-Te / tau);
   const peep = s.peep;
   let r;
@@ -2971,7 +3357,7 @@ class Component extends DCLogic {
       adminStats: [{ v: String(list.length), l: 'Accounts' }, { v: String(admins), l: 'Admins' }, { v: String(list.length - admins), l: 'Students' }],
       adminUsers: list.map(([u, v]) => { const adm = v.role === 'admin', self = u === me, lastAdm = adm && admins <= 1;
         return { u, e: v.e, role: adm ? 'Admin' : 'Student', roleTone: adm ? 'accent' : 'neutral', you: self ? ' · you' : '',
-          meta: 'Joined ' + d(v.joined) + ' · Last sign-in ' + d(v.last) + (v.lessons != null ? ' · ' + v.lessons + ' of 66 lessons' : ''),
+          meta: 'Joined ' + d(v.joined) + ' · Last sign-in ' + d(v.last) + (v.lessons != null ? ' · ' + v.lessons + ' of 68 lessons' : ''),
           roleLabel: adm ? 'Remove admin' : 'Make admin', canRole: !lastAdm, canRemove: !self,
           toggleRole: upd(u, x => { x[u].role = adm ? 'student' : 'admin'; }, 'role', { role: adm ? 'student' : 'admin' }),
           remove: upd(u, x => { delete x[u]; }, 'delete') }; }) };
@@ -3139,24 +3525,24 @@ class Component extends DCLogic {
     const su = s.su || SU_RESET, on = c ? !s.ventOn : !s.fpRun, pat = PATIENTS[s.patient];
     const btn = (sel, enabled = true) => ({ color: sel ? '#0E1012' : enabled ? '#F2EFE8' : '#4A4740', bg: sel ? '#E9B54A' : '#1A1D20', ring: sel ? 'none' : 'inset 0 0 0 1px #2A2D30' });
     const set = patch => this.setState(st => ({ su: { ...(st.su || SU_RESET), ...patch } }));
-    const ready = !!su.mode && !!su.pt && su.wt > 0 && su.test === 'done' && !su.niv;
+    const nivCase = !!(c && c.niv), ready = !!su.mode && !!su.pt && su.wt > 0 && su.test === 'done' && su.niv === nivCase;
     const step = su.wt < 10 ? 0.5 : su.wt < 30 ? 1 : 2;
     const live = c ? this.computeGas(c, s, m) : null;
     const gap = c ? ({ asthma: 14, bronchObs: 14, ards: 9, bronch: 8, scArds: 9, scArdsFight: 9, scAsthma: 14, scAsthmaTrig: 14, scAsthmaCrash: 14, scAsthmaDay2: 14 })[c.patient] || 4 : 0;
     return {
       setupMode: on, ventRunning: !on,
       monSpo2: c && s.ventOn ? String(live.spo2) : '--', monEtco2: c && s.ventOn ? String(Math.max(10, Math.round(parseFloat(live['PaCO₂']) - gap))) : '--',
-      suIf: [['Non-invasive', true], ['Invasive', false]].map(([label, niv]) => ({ label, go: () => set({ niv }), color: su.niv === niv ? '#0E1012' : '#8A9096', bg: su.niv === niv ? '#F2EFE8' : 'transparent' })),
-      suModes: SU_MODES.map(([id, label]) => ({ label, go: () => set({ mode: id }), ...btn(su.mode === id) })),
+      suIf: [['Non-invasive', true], ['Invasive', false]].map(([label, niv]) => ({ label, go: () => set({ niv, mode: su.niv === niv ? su.mode : null }), color: su.niv === niv ? '#0E1012' : '#8A9096', bg: su.niv === niv ? '#F2EFE8' : 'transparent' })),
+      suModes: (su.niv ? SU_MODES_NIV : SU_MODES).map(([id, label]) => ({ label, go: () => set({ mode: id }), ...btn(su.mode === id) })),
       suPts: [['neonatal', 'Neonatal'], ['child', 'Child'], ['adult', 'Adult']].map(([id, label]) => ({ label, go: () => set({ pt: id }), ...btn(su.pt === id) })),
       suWt: su.wt ? (Number.isInteger(su.wt) ? String(su.wt) : su.wt.toFixed(1)) : '0', suWtColor: su.wt ? '#F2EFE8' : '#4A4740',
       suWtInc: () => set({ wt: Math.min(120, +(su.wt + step).toFixed(1)) }), suWtDec: () => set({ wt: Math.max(0, +(su.wt - step).toFixed(1)) }),
       suTest: () => { if (su.test !== 'idle') return; set({ test: 'running' }); setTimeout(() => set({ test: 'done' }), 2200); },
       suTestLabel: su.test === 'idle' ? 'Perform self test' : su.test === 'running' ? 'Testing…' : 'Test complete', suTestIcon: su.test === 'done' ? 'icon-circle-check' : su.test === 'running' ? 'icon-loader' : 'icon-play', suTestColor: su.test === 'done' ? '#93C29A' : '#F2EFE8',
       suCancel: () => set(SU_RESET),
-      suSave: () => { if (!ready) return; this.setState({ ventOn: true, fpRun: true, vmode: su.mode, mode: su.mode.indexOf('PC') >= 0 ? 'PC' : su.mode === 'PS' ? 'PS' : 'VC', caseWt: su.wt, modeMenu: false, sel: su.mode.indexOf('PC') >= 0 ? 'pinsp' : su.mode === 'PS' ? 'ps' : 'vt' }); },
+      suSave: () => { if (!ready) return; const nv = NIV_MODES.includes(su.mode); this.setState({ ventOn: true, fpRun: true, vmode: su.mode, mode: nv ? (su.mode === 'NIV-T' ? 'PC' : 'PS') : su.mode.indexOf('PC') >= 0 ? 'PC' : su.mode === 'PS' ? 'PS' : 'VC', caseWt: su.wt, modeMenu: false, sel: nv ? VKEYS[su.mode][0] : su.mode.indexOf('PC') >= 0 ? 'pinsp' : su.mode === 'PS' ? 'ps' : 'vt' }); },
       suSaveColor: ready ? '#0E1012' : '#4A4740', suSaveBg: ready ? '#93C29A' : '#1A1D20',
-      suNote: su.niv ? 'The patient is intubated. Non-invasive is not available.' : !su.mode ? 'Choose a mode.' : !su.pt ? 'Choose the patient type.' : !su.wt ? 'Set the weight from the chart.' : su.test !== 'done' ? 'Run the self test before ventilating.' : c && Math.abs(su.wt - c.ibw) > c.ibw * 0.15 ? 'Weight does not match the chart. Save anyway, or correct it.' : 'Ready. Save & close to begin ventilating.'
+      suNote: nivCase && !su.niv ? 'The child is on a mask, not intubated. Choose non-invasive.' : su.niv && !nivCase ? 'The patient is intubated. Non-invasive is not available.' : !su.mode ? 'Choose a mode.' : !su.pt ? 'Choose the patient type.' : !su.wt ? 'Set the weight from the chart.' : su.test !== 'done' ? 'Run the self test before ventilating.' : c && Math.abs(su.wt - c.ibw) > c.ibw * 0.15 ? 'Weight does not match the chart. Save anyway, or correct it.' : 'Ready. Save & close to begin ventilating.'
     };
   }
   practiceVals(s, m, alarms) {
@@ -3312,7 +3698,7 @@ class Component extends DCLogic {
     if (c) m.spo2 = this.computeGas(c, s, m).spo2;
     const stageOf = cs => cs && cs.scen ? CASES.find(x => x.scen === cs.scen && x.stage === cs.stage + 1) : null;
     const go = screen => () => this.setState({ screen });
-    const keys = VKEYS[vmodeOf(s)];
+    const keys = VKEYS[vmodeOf(s)].filter(k => !(pat.eff != null && (k === 'eff' || (k === 'rr' && ['PS', 'CPAP'].includes(vmodeOf(s))))));
     const sel = keys.includes(s.sel) ? s.sel : keys[0], sd = defsFor(sel, pat);
 
     const alarms = [];
@@ -3376,7 +3762,7 @@ class Component extends DCLogic {
       startRun: () => this.setState({ fpRun: true }), toggleRun: () => !s.caseId && this.setState(st => ({ fpRun: !st.fpRun })),
       ledColor: (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? '#E9B54A' : '#6FBF73', ledLabel: (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? 'STANDBY' : 'ON',
       simParts: [['Free practice', !s.caseId, () => this.setState({ caseId: null, ventOn: true, fpRun: false, su: { ...SU_RESET } })], ['Cases', !!s.caseId, () => this.setState({ screen: 'cases' })]].map(([label, on, go]) => ({ label, go, bg: on ? 'var(--surface-page)' : 'transparent', color: on ? 'var(--text-primary)' : 'var(--text-secondary)' })),
-      homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `9 modules · ${d} of 66 lessons done` : '9 modules · 66 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum'], ['live', 'Live session', 'Join the talk on the screen', 'icon-presentation', 'dusk']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
+      homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `9 modules · ${d} of 68 lessons done` : '9 modules · 68 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum'], ['live', 'Live session', 'Join the talk on the screen', 'icon-presentation', 'dusk']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
       simRef: this.simRef, lessonRef: this.lessonRef,
       tabs: [['learn', 'Learn', 'icon-book-open'], ['sim', 'Simulator', 'icon-activity'], ['cases', 'Cases', 'icon-clipboard-list']].map(([id, label, icon]) => ({
         label, icon, go: go(id), color: (s.screen === id || (id === 'cases' && (s.screen === 'waves' || s.screen === 'scen')) || (id === 'learn' && (s.screen === 'lesson' || s.screen === 'machines' || s.screen === 'basics'))) ? 'var(--accent)' : 'var(--text-secondary)' })),
@@ -3413,6 +3799,7 @@ class Component extends DCLogic {
       simEyebrow: c ? c.eyebrow : 'Free practice',
       simTitle: c ? c.title : pat.label, patC: pat.C, patR: pat.R, tau: m.tau.toFixed(2), showMech: !c,
       caseActive: !!c, freePlay: !c,
+      task1Lead: c && c.niv ? 'The child is breathing on oxygen through a face mask. Set up non-invasive ventilation.' : 'The patient is being ventilated by hand.',
       caseChart: !!c && s.casePhase === 'chart', caseBedside: !!c && s.casePhase !== 'chart',
       caseStory: c ? c.story : '', caseSetting: c ? c.setting : '', caseDx: c && (!c.scen || (!stageOf(c) && c.goals(m, acts, s).every(g => g[1]))) ? c.dx : '',
       takeOver: () => this.setState({ casePhase: 'bedside' }), showChart: () => this.setState({ casePhase: 'chart' }),
@@ -3424,9 +3811,9 @@ class Component extends DCLogic {
           setTimeout(() => { const st = this.state, cc = CASES.find(x => x.id === st.caseId); if (!cc) return; const mm = model(st, PATIENTS[st.patient]), res = this.computeGas(cc, st, mm); const at = 'drawn ' + Math.round(mm.mv * 10) / 10 + ' L/min MV · PEEP ' + st.peep + ' · FiO₂ ' + (st.fio2 / 100).toFixed(2);
             this.setState(s2 => ({ gas: { ...s2.gas, [cc.id]: { pending: false, res, at } } })); }, 2500); };
         return this.onDemand('cx', this.mapA(c.assess), s.rv, k => this.setState(st => ({ rv: { ...st.rv, [k]: !st.rv[k] } })),
-          { vit, abg, learn: true, key: c.id, perf: c.id, head: gasSt.pending ? 'Blood gas · running…' : gasSt.res ? 'Blood gas · arterial · ' + gasSt.at : 'Blood gas · arterial · on arrival, hand ventilated', btn: gasSt.pending || !s.ventOn ? '' : (gasSt.res ? 'Repeat gas' : 'Send a gas'), send });
+          { vit, abg, learn: true, key: c.id, perf: c.id, head: gasSt.pending ? 'Blood gas · running…' : gasSt.res ? 'Blood gas · arterial · ' + gasSt.at : 'Blood gas · arterial · ' + (c.niv ? 'on oxygen, before NIV' : 'on arrival, hand ventilated'), btn: gasSt.pending || !s.ventOn ? '' : (gasSt.res ? 'Repeat gas' : 'Send a gas'), send });
       })() : { cx: null, cxChips: [], cxRv: {}, cxGasHead: '', cxGasBtn: '', cxSendGas: () => {} }),
-      cxLearnLabel: c ? c.learn[1] : '', cxLearnGo: () => c && this.openBasics(c.learn[0], '01'),
+      cxLearnLabel: c ? c.learn[1] : '', cxLearnGo: () => c && this.openBasics(c.learn[0], c.learn[2] || '01'),
       hasNextCase: !!c && (c.scen ? !!stageOf(c) : CASES.indexOf(c) < CASES.filter(x => !x.scen).length - 1),
       nextLabel: c && c.scen ? 'Next stage' : 'Next case',
       nextCase: () => { const n = c.scen ? stageOf(c) : CASES[CASES.indexOf(c) + 1]; if (n && n.keep) { this.setState(st => ({ patient: n.patient, caseId: n.id, casePhase: 'bedside', ventOn: true, rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, acts: { ...(st.acts || {}), [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); return; } if (n) this.setState(st => ({ ...(PATIENTS[n.patient].infant ? SU_START.infant : SU_START.adult), vmode: null, mode: 'VC', ventOn: false, su: { ...SU_RESET }, patient: n.patient, caseId: n.id, sel: 'vt', casePhase: 'chart', rv: {}, modeMenu: false, perf: { ...(st.perf || {}), [n.id]: { t0: Date.now() } }, finished: { ...st.finished, [n.id]: false }, gas: { ...st.gas, [n.id]: {} }, cxrPick: { ...st.cxrPick, [n.id]: null }, ettPick: { ...st.ettPick, [n.id]: null } })); },
@@ -3453,6 +3840,7 @@ class Component extends DCLogic {
       acts: c && c.actions ? c.actions.map(a => ({ label: a.label, on: !!acts[a.id], go: () => { if (!acts[a.id] && !(a.needs && !acts[a.needs])) this.perfSet(c.id, q => ({ ...q, t0: q.t0 || Date.now(), act: q.act || Date.now(), bad: (q.bad || 0) + (a.bad ? 1 : 0) })); this.setState(st => { const cur = (st.acts || {})[c.id] || {}; if (cur[a.id]) return null; if (a.needs && !cur[a.needs]) return { acts: { ...(st.acts || {}), [c.id]: { ...cur, _fb: a.needsFb } } }; return { ...(a.patient ? { patient: a.patient } : {}), acts: { ...(st.acts || {}), [c.id]: { ...cur, [a.id]: true, _fb: a.fb } } }; }); } })) : [],
       caseDebrief: c && c.debrief && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1]) ? c.debrief.map((t, i) => ({ n: i + 1, t })) : [],
       hasDebrief: !!(c && c.debrief && (s.finished || {})[c.id] && c.goals(m, acts, s).every(g => g[1])),
+      hasReview: !!(c && c.debrief && (s.finished || {})[c.id] && (SIM_SCEN.find(x => x.id === c.scen) || {}).review && c.goals(m, acts, s).every(g => g[1])),
       reviewScen: () => { const sc = c && SIM_SCEN.find(x => x.id === c.scen); const i = sc ? SCENARIOS.findIndex(x => x.id === sc.review) : -1; if (i >= 0) this.setState({ screen: 'scen', scIdx: i, scStage: 0, caseId: null, ventOn: true }); },
       caseOpen: !!c && s.ventOn && !(s.finished || {})[c.id], caseHead: c && (s.finished || {})[c.id] ? 'Goals · ' + c.goals(m, acts, s).filter(g => g[1]).length + ' of ' + c.goals(m, acts, s).length + ' met' : 'At the bedside', caseShown: !!c && !!(s.finished || {})[c.id],
       finishCase: () => { if (!c) return; const ok = c.goals(m, acts, s).every(g => g[1]); this.perfSet(c.id, q => ({ ...q, checks: (q.checks || 0) + 1, done: Date.now() })); this.setState(st => ({ finished: { ...st.finished, [c.id]: true }, solved: ok ? { ...st.solved, [c.id]: true } : st.solved })); },
@@ -3475,9 +3863,12 @@ class Component extends DCLogic {
       modeMenu: !!s.modeMenu, toggleModes: () => this.setState(st => ({ modeMenu: !st.modeMenu })),
       modesLed: s.modeMenu ? '#E8A33D' : '#8A867E', modesBtnBg: s.modeMenu ? 'linear-gradient(180deg,#ECE9E2,#D3CFC7)' : 'linear-gradient(180deg,#E2DED6,#C8C4BC)', modesBtnShadow: s.modeMenu ? 'inset 0 2px 3px rgba(0,0,0,.25)' : '0 2px 0 #9C978E, inset 0 1px 0 rgba(255,255,255,.7)',
       modeFull: (VMODES.find(x => x[0] === vmodeOf(s)) || [0, ''])[1],
-      modeOpts: VMODES.map(([id, label, sub]) => ({ label, sub, bg: vmodeOf(s) === id ? '#1F2326' : 'transparent', ring: vmodeOf(s) === id ? '#E8A33D' : '#5A5E63', dot: vmodeOf(s) === id ? '#E8A33D' : 'transparent', pick: () => this.setState({ vmode: id, mode: mapMode({ ...s, vmode: id }, pat).mode, modeMenu: false }, () => this.checkSolved()) })),
+      modeOpts: VMODES.filter(([id]) => NIV_MODES.includes(id) === !!(c && c.niv)).map(([id, label, sub]) => ({ label, sub, bg: vmodeOf(s) === id ? '#1F2326' : 'transparent', ring: vmodeOf(s) === id ? '#E8A33D' : '#5A5E63', dot: vmodeOf(s) === id ? '#E8A33D' : 'transparent', pick: () => this.setState({ vmode: id, mode: mapMode({ ...s, vmode: id }, pat).mode, modeMenu: false }, () => this.checkSolved()) })),
       modeKeys: [['VC', 'VC'], ['PC', 'PC'], ['PS', 'PS'], ['NAVA', 'NAVA']].map(([id, label]) => ({ label, go: () => this.setMode ? this.setMode(id) : this.setState({ mode: id }), led: s.mode === id ? '#6FBF73' : '#8A867E', bg: s.mode === id ? 'linear-gradient(180deg,#ECE9E2,#D3CFC7)' : 'linear-gradient(180deg,#E2DED6,#C8C4BC)', shadow: s.mode === id ? 'inset 0 2px 3px rgba(0,0,0,.25)' : '0 2px 0 #9C978E, inset 0 1px 0 rgba(255,255,255,.7)' })),
-      ...(() => { const N = { VC: ['Machine-triggered', ', volume-targeted, time-cycled.'], PC: ['Machine-triggered', ', pressure-targeted, time-cycled.'], PS: ['Patient-triggered', ', pressure-targeted, flow-cycled at 25% of peak flow. No effort, no breath.'], NAVA: ['Diaphragm signal (Edi) triggers', ' and shapes the breath; support = NAVA level × Edi, cycling at 70% of peak Edi.'] }[s.mode] || ['', ''];
+      ...(() => { const N = { VC: ['Machine-triggered', ', volume-targeted, time-cycled.'], PC: ['Machine-triggered', ', pressure-targeted, time-cycled.'], PS: ['Patient-triggered', ', pressure-targeted, flow-cycled at 25% of peak flow. No effort, no breath.'], NAVA: ['Diaphragm signal (Edi) triggers', ' and shapes the breath; support = NAVA level × Edi, cycling at 70% of peak Edi.'],
+          'NIV-CPAP': ['Patient-triggered', ': one pressure all through the breath. It splints the airway; the child does the breathing.'], 'NIV-S': ['Patient-triggered', ', pressure-targeted (IPAP over EPAP), flow-cycled. No backup: no effort, no breath.'],
+          'NIV-ST': ['Patient-triggered', ' when the child breathes; a timed backup breath at the set rate and Ti when the child does not.'], 'NIV-T': ['Machine-triggered', ', pressure-targeted (IPAP over EPAP), time-cycled at the set Ti.'],
+          iVAPS: ['Patient-triggered', ' with a backup rate; IPAP moves between EPAP + 4 and IPAP max to reach the target VT.'] }[NIV_MODES.includes(vmodeOf(s)) ? vmodeOf(s) : s.mode] || ['', ''];
         return { modeTrig: N[0], modeRest: N[1], modeTrigColor: s.mode === 'PS' || s.mode === 'NAVA' ? '#C293A2' : '#3CC3CC' }; })(),
       mode: s.mode, setMode: mode => this.setState({ mode }, () => this.checkSolved()),
       tiles: keys.map(k => { const df = defsFor(k, pat), f = Math.max(0, Math.min(1, (s[k] - df.min) / (df.max - df.min))); return { label: df.label, unit: df.unit, value: this.fmt(k, s[k]), select: () => this.setState({ sel: k }),
