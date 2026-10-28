@@ -31,7 +31,7 @@ def fig_ladder():
     out = ''
     for i, (a, b, c) in enumerate(steps):
         x = 80 + i * 310
-        y = 560 - i * 105
+        y = 530 - i * 100
         acc = i in (1, 2, 3)
         out += rc(x, y, 280, 760 - y - 60, fill='var(--surface-raised, transparent)' if not acc else 'color-mix(in oklab, var(--text-accent) 9%, transparent)',
                   c='var(--text-accent)' if acc else 'var(--text-primary)', sw=3 if acc else 2, r=4)
