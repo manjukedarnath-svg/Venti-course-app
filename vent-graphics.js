@@ -71,6 +71,29 @@
     'nmd-weak': { mode: 'PS', ps: 6, C: 60, R: 8, rr: 30, window: 6, efforts: eff(reg(30, 6), 2.5, 0.6), marks: [{ lane: 'v', at: 'endinsp', text: 'Small breath, weak pull' }, { lane: 'p', at: 'dip', text: 'Trigger dip' }] },
     'nmd-supported': { mode: 'PS', ps: 14, C: 60, R: 8, rr: 16, window: 6, efforts: eff(reg(16, 6), 2.5, 0.8), marks: [{ lane: 'v', at: 'endinsp', text: 'Full breath from a weak pull' }] },
     'nmd-vc': { C: 60, R: 8, vt: 480, rr: 14, ti: 1.0, pause: 0.25, peep: 5, window: 8, scale: { p: 30 }, marks: [{ lane: 'p', at: 'plat', text: 'Plateau 13' }] },
+    // CPV-START (CP interactions ventilator screens, generated)
+    'cpv-m1': { mode: "PS", ps: 5, peep: 5, C: 8, R: 25, rr: 40, window: 6, efforts: eff(reg(40, 6), 5, 0.6) },
+    'cpv-m2': { mode: "PC", pinsp: 15, peep: 5, C: 9.5, R: 25, rr: 25, ti: 0.8, window: 6 },
+    'cpv-m3': { mode: "PC", pinsp: 13, peep: 5, C: 7.7, R: 25, rr: 20, ti: 0.8, window: 6 },
+    'cpv-m4': { mode: "PC", pinsp: 13, peep: 6, C: 8, R: 25, rr: 30, ti: 0.7, window: 6 },
+    'cpv-l0': { mode: "VC", vt: 110, peep: 14, C: 6.9, R: 30, rr: 24, ti: 0.8, pause: 0.15, window: 6 },
+    'cpv-l1': { mode: "VC", vt: 110, peep: 18, C: 6.1, R: 30, rr: 24, ti: 0.8, si: 1.5, window: 6 },
+    'cpv-l2': { mode: "VC", vt: 110, peep: 12, C: 6.9, R: 30, rr: 24, ti: 0.8, si: 0.2, window: 6 },
+    'cpv-l3': { mode: "VC", vt: 110, peep: 12, C: 6.9, R: 55, rr: 24, ti: 0.8, window: 6 },
+    'cpv-l4': { mode: "VC", vt: 110, peep: 12, C: 7.9, R: 55, rr: 28, ti: 0.8, window: 6 },
+    'cpv-c1': { mode: "PC", pinsp: 15, peep: 7, C: 3, R: 45, rr: 30, ti: 0.6, window: 5 },
+    'cpv-c2': { mode: "PC", pinsp: 14, peep: 4, C: 4.5, R: 40, rr: 25, ti: 0.6, window: 5 },
+    'cpv-c3': { mode: "VC", vt: 25, peep: 10, C: 2.5, R: 50, rr: 30, ti: 0.6, window: 5 },
+    'cpv-c4': { mode: "VC", vt: 45, peep: 8, C: 4, R: 40, rr: 25, ti: 0.8, window: 5 },
+    'cpv-c5': { mode: "VC", vt: 110, peep: 8, C: 12, R: 25, rr: 22, ti: 0.9, window: 6 },
+    'cpv-b0': { mode: "PS", ps: 6, peep: 8, C: 10, R: 25, rr: 50, window: 5, efforts: eff(reg(50, 5), 6, 0.5) },
+    'cpv-b1': { mode: "PS", ps: 6, peep: 8, C: 6, R: 25, rr: 60, window: 5, efforts: eff(reg(60, 5), 10, 0.45) },
+    'cpv-b2': { mode: "PC", pinsp: 12, peep: 8, C: 10, R: 25, rr: 25, ti: 0.7, window: 6 },
+    'cpv-b3': { mode: "PS", ps: 0.5, peep: 0.5, C: 8, R: 25, rr: 50, window: 5, efforts: eff(reg(50, 5), 9, 0.5) },
+    'cpv-su1': { mode: "VC", vt: 170, peep: 5, C: 13, R: 20, rr: 24, ti: 0.8, pause: 0.15, window: 6 },
+    'cpv-su2': { mode: "VC", vt: 170, peep: 5, C: 13, R: 20, rr: 16, ti: 0.8, pause: 0.15, window: 8 },
+    'cpv-su3': { mode: "VC", vt: 170, peep: 8, C: 13, R: 20, rr: 26, ti: 0.8, pause: 0.15, window: 6 },
+    // CPV-END
     'asthma-pc': { mode: 'PC', C: 50, R: 30, pinsp: 20, peep: 5, ti: 1.0, rr: 22, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'v', at: 'endinsp', text: 'VT shrinks as gas traps' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] }
   };
 
