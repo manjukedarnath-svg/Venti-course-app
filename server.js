@@ -34,10 +34,12 @@ const sweepRooms = () => { const t = Date.now(); for (const k in rooms) if (t - 
 const who = (b) => okUser(b) ? 'u:' + b.u : 'g:' + String(b.d || '').slice(0, 40);
 function live(route, b) {
   sweepRooms();
-  const r = rooms[String(b.room || '')];
+  const r = rooms[String(b.room || '')] || rooms[String(b.room || '').toUpperCase()];
   switch (route) {
     case 'create': {
-      let code; do { code = String(1000 + Math.floor(Math.random() * 9000)); } while (rooms[code]);
+      // A deck may ask for a fixed code (e.g. CP1) so a printed QR code always lands in its room; asking again resets it.
+      const want = String(b.code || '').toUpperCase();
+      let code; if (/^[A-Z][A-Z0-9]{2,5}$/.test(want)) code = want; else do { code = String(1000 + Math.floor(Math.random() * 9000)); } while (rooms[code]);
       const key = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
       rooms[code] = { key, cur: null, at: Date.now(), opened: {}, ans: {} };
       return [200, { room: code, key }];
@@ -48,7 +50,7 @@ function live(route, b) {
       if (r.cur) r.opened[r.cur] = true;
       return [200, { ok: true }];
     }
-    case 'state': return r ? [200, { cur: r.cur }] : [404, { error: 'no room' }];
+    case 'state': { const rr = rooms[String(b.room || '').toUpperCase()] || r; return rr ? [200, { cur: rr.cur }] : [404, { error: 'no room' }]; }
     case 'answer': {
       if (!r) return [404, { error: 'no room' }];
       const q = String(b.q || ''), id = who(b);

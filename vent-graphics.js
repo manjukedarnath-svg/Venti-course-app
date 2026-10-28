@@ -114,6 +114,9 @@
     'ltv-b2p': {"mode": "VC", "vt": 55, "peep": 10, "C": 3.6, "R": 95, "rr": 20, "ti": 0.7, "window": 6, "scale": {"v": 70}, "efforts": [{"t": 0.9, "amp": 9, "dur": 0.4}, {"t": 1.6, "amp": 9, "dur": 0.4}, {"t": 2.4, "amp": 9, "dur": 0.4}, {"t": 3.9, "amp": 9, "dur": 0.4}, {"t": 4.5, "amp": 9, "dur": 0.4}, {"t": 5.4, "amp": 9, "dur": 0.4}]},
     'ltv-b2f': {"mode": "VC", "vt": 55, "peep": 10, "C": 4, "R": 95, "rr": 20, "ti": 0.7, "window": 6, "scale": {"v": 70}},
     // LTV-END
+    // VS-START (case decks: screens not covered above)
+    'vs-bo4f': { mode: 'PS', ps: 8, peep: 6, C: 8, R: 25, rr: 30, window: 5, efforts: eff(reg(30, 5), 6, 0.6) },
+    // VS-END
     'asthma-pc': { mode: 'PC', C: 50, R: 30, pinsp: 20, peep: 5, ti: 1.0, rr: 22, window: 8, scale: { p: 50, f: 90 }, marks: [{ lane: 'v', at: 'endinsp', text: 'VT shrinks as gas traps' }, { lane: 'f', at: 'endexp', text: 'Not back to zero' }] }
   };
 

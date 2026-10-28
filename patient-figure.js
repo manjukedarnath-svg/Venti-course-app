@@ -120,10 +120,12 @@
   }
 
   class PatientFigure extends HTMLElement {
-    static get observedAttributes() { return ['age', 'support']; }
+    static get observedAttributes() { return ['age', 'support', 'img']; }
     connectedCallback() { this.style.display = this.style.display || 'block'; this.render(); }
     attributeChangedCallback() { if (this.isConnected) this.render(); }
-    render() { const k = (this.getAttribute('age') || 'child') + '|' + (this.getAttribute('support') || 'ett'); if (k === this._k) return; this._k = k; this.innerHTML = svg(this.getAttribute('age') || 'child', this.getAttribute('support') || 'ett'); }
+    render() { const img = this.getAttribute('img') || '', k = (this.getAttribute('age') || 'child') + '|' + (this.getAttribute('support') || 'ett') + '|' + img; if (k === this._k) return; this._k = k;
+      // A scene illustration (assets/illus/*.jpg) replaces the drawn figure when the stage has one.
+      this.innerHTML = img ? `<img src="${img.replace(/"/g, '&quot;')}" alt="The patient at the bedside" style="display:block; width:100%; height:100%; object-fit:contain; border-radius:4px; background:#F4EFE6;">` : svg(this.getAttribute('age') || 'child', this.getAttribute('support') || 'ett'); }
   }
   if (!customElements.get('patient-figure')) customElements.define('patient-figure', PatientFigure);
   window.PatientFigure = { svg };
