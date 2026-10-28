@@ -3766,6 +3766,229 @@ SIM_STAGES.push(
       ['Not paralysed again', !a.paralyse]],
     debrief: ['Obstructive bronchiolitis is an expiratory-time problem: lower the rate before you touch the pressure.', 'Trapping squeezes the venous return. Empty the chest first, then a measured bolus.', 'Chasing the CO₂ with rate brings the trapping and the low blood pressure back.', 'Once he triggers, set PEEP just below the measured auto-PEEP, never above it.', 'Accept the CO₂ while the pH is safe and the airways recover.'] }
 );
+// ---------- Sim scenarios 21–25: the five "Read the wave" cases (WAVES), each now a two-stage scenario on the live ventilator ----------
+// Stage 1 keeps the wave case's story, examination, film and gas; the waveform problem is produced by the patient model.
+Object.assign(PATIENTS, {
+  scW1: { label: 'Asthma · trapping', C: 30, R: 40, ibw: 35, hidden: true },
+  scW1b: { label: 'Asthma · airways opening', C: 30, R: 15, ibw: 35, hidden: true },
+  scW2Saw: { label: 'Pneumonia · secretions', C: 8, R: 30, saw: 1, ibw: 14, hidden: true },
+  scW2: { label: 'Pneumonia · clear airway', C: 8, R: 25, ibw: 14, hidden: true },
+  scW2Water: { label: 'Pneumonia · water in the circuit', C: 8, R: 25, saw: 0.7, ibw: 14, hidden: true },
+  scW3Leak: { label: 'Drowning · uncuffed tube leak', C: 12, R: 25, leakInv: 0.45, ibw: 18, hidden: true },
+  scW3: { label: 'Drowning · cuffed tube', C: 12, R: 25, ibw: 18, hidden: true },
+  scW3Lung: { label: 'Drowning · aspiration lung', C: 12, Cfn: p => ARDS_C(p) * 3.6, R: 25, ibw: 18, hidden: true },
+  scW4: { label: 'Sepsis · flow-hungry', C: 35, R: 10, starve: 1, eff: 9, rrOwn: 32, ibw: 45, hidden: true },
+  scW4Calm: { label: 'Sepsis · drive treated', C: 35, R: 10, eff: 6, rrOwn: 24, ibw: 45, hidden: true },
+  scW4Wean: { label: 'Sepsis · day 3', C: 45, R: 8, eff: 7, rrOwn: 20, ibw: 45, hidden: true },
+  scW5: { label: 'Head injury · biting, bronchospasm', C: 14, R: 65, ibw: 40, hidden: true },
+  scW5b: { label: 'Head injury · bite block in', C: 14, R: 40, ibw: 40, hidden: true },
+  scW5c: { label: 'Head injury · airway clear', C: 14, R: 12, ibw: 40, hidden: true }
+});
+const WV = i => { const W = WAVES[i], A = W.assess; return { title: W.t, story: W.story, assess: { ...A, vit: A.vit.map(([l, v]) => [l, /^SpO₂/.test(l) ? 'live' : v]) } }; };
+const notVC = s => !['AC-VC', 'SIMV-VC'].includes(vmodeOf(s));
+SIM_SCEN.push(
+  { id: 'w21', eyebrow: 'Sim scenario 21', title: WAVES[0].t, chord: 'night', setting: 'Read the wave · gas trapping, then a pressure breath that grows', blurb: 'Asthma, ventilated for six hours, blood pressure falling. Find the trapped gas on the flow trace and give it time to leave. Next day, see what a pressure breath does when the airways open.', review: '', stages: ['w21a', 'w21b'] },
+  { id: 'w22', eyebrow: 'Sim scenario 22', title: WAVES[1].t, chord: 'night', setting: 'Read the wave · a sawtooth, twice, for two reasons', blurb: 'Pneumonia, day 3, drifting saturations and a sawtooth on the flow trace. Find where it comes from, then find it again the next morning when suction does not help.', review: '', stages: ['w22a', 'w22b'] },
+  { id: 'w23', eyebrow: 'Sim scenario 23', title: WAVES[2].t, chord: 'night', setting: 'Read the wave · a leak, then the drowned lung', blurb: 'Pulled from a pond, an uncuffed tube and a low minute-volume alarm. Find where the gas is going, stop it, then ventilate the aspiration lung that follows.', review: '', stages: ['w23a', 'w23b'] },
+  { id: 'w24', eyebrow: 'Sim scenario 24', title: WAVES[3].t, chord: 'night', setting: 'Read the wave · flow starvation, then weaning', blurb: 'Septic shock, sedation being weaned, breathing far above the set rate. See the scooped pressure of a child who wants more flow, give it to him, treat what drives him, and later wean him.', review: '', stages: ['w24a', 'w24b'] },
+  { id: 'w25', eyebrow: 'Sim scenario 25', title: WAVES[4].t, chord: 'night', setting: 'Read the wave · peak without plateau, then the CO₂ for the brain', blurb: 'Head injury, day 3, a high-pressure alarm getting more frequent. Split the peak from the plateau to find the airway problem, then set the ventilation a swollen brain needs.', review: '', stages: ['w25a', 'w25b'] }
+);
+SIM_STAGES.push(
+  // ---------- 21 · Asthma, 11-year-old ----------
+  { id: 'w21a', scen: 'w21', stage: 1, ...WV(0), t: 'Six hours in · the BP is falling', eyebrow: 'Sim scenario 21 · stage 1 of 2', chord: 'night', ibw: 35, setting: 'Transferred from an outside hospital',
+    brief: 'Look at the expiratory flow: it should reach zero before the next breath. Lower the rate and keep Ti short so expiration gets longer; keep the tidal volume small. Accept the CO₂.',
+    event: 'The flow trace never came back to zero: each breath started before the last had left, the trapped gas raised the pressure in the chest and squeezed the venous return, so the blood pressure fell. A rate of 24 left 1.6 seconds to empty a lung with a time constant over a second. Halving the rate gave the gas time to leave.',
+    dx: 'Gas trapping (dynamic hyperinflation) in acute severe asthma.', learn: [3, 'Expiration and auto-PEEP', '06'],
+    patient: 'scW1', start: { mode: 'VC', vt: 280, rr: 24, peep: 5, ti: 0.9, fio2: 50, pinsp: 20 },
+    actions: [
+      { id: 'needle', label: 'Needle the chest', fb: 'The X-ray shows no pneumothorax and air entry is equal. Not done.', bad: true },
+      { id: 'salb', label: 'Salbutamol through the circuit', fb: 'Continuous salbutamol in the inspiratory limb, steroids continued. Treats the cause; the rate still has to come down now.' }
+    ],
+    gas: (m, a, s, m0) => ({ co2: trapCo2(m, m0, 0.25), o2: noShunt(m, m0) }),
+    vitals: (m, a, s) => [['HR', m.auto > 3 ? '150' : '124'], ['BP', m.auto > 3 ? '84/46' : '102/60'], ['SpO₂', 'live'], ['Temp', '37.3 °C']],
+    goals: (m, a, s) => [
+      ['Auto-PEEP ≤ 1.5 cmH₂O (flow reaches zero)', m.auto <= 1.5],
+      ['Rate 14–16: the chest empties, pH stays near 7.2', m.rr >= 14 && m.rr <= 16],
+      ['Expiratory time ≥ 2.5 s', teOf(s, m) >= 2.5],
+      ['Tidal volume ≤ 8 mL/kg (≤ 280 mL)', m.vte <= 282],
+      ['Plateau ≤ 30 cmH₂O', m.pplat <= 30],
+      ['No needle', !a.needle]] },
+  { id: 'w21b', scen: 'w21', stage: 2, keep: true, t: 'Day 2 · the night team changed the mode', eyebrow: 'Sim scenario 21 · stage 2 of 2', title: WAVES[0].t, chord: 'night', ibw: 35, setting: 'PICU · day 2 morning',
+    story: 'Overnight the team switched him to pressure control at the pressure his peak had been, 25 above PEEP. The wheeze is quieter. The exhaled volume is now over 600 mL.',
+    event: 'In pressure control the ventilator delivers a pressure, and the volume is whatever the lung takes. As salbutamol and steroids opened the airways, resistance fell, the same pressure filled the lung faster and further, and the tidal volume climbed to almost 20 mL/kg without an alarm about pressure. In a pressure mode, the volume is the number to watch; the pressure has to come down as the patient gets better.',
+    dx: 'Volutrauma risk in pressure control as resistance falls. Turn the pressure down to a 6–8 mL/kg breath.', learn: [1, 'Flow shapes', '06'],
+    assess: { vit: [['HR', '108'], ['BP', '110/66'], ['SpO₂', 'live'], ['Temp', '37.0 °C']], exam: ['Wheeze quieter, expiration shorter', 'Chest rising a lot with each breath', 'Sedated, not triggering'], cxrAns: 'airway', ettAns: 'ok', cxr: 'Less hyperinflated than on arrival. No pneumothorax.', img: 'assets/cxr/cxr-drill01-asthma-autopeep.png', abg: [['pH', '7.48'], ['PaCO₂', '32'], ['PaO₂', '110'], ['HCO₃', '24']], vent: 'PC · Pinsp 25 above PEEP · PEEP 5 · RR 14 · Ti 1.0 s · FiO₂ 0.4' },
+    patient: 'scW1b', set: { vmode: 'AC-PC', mode: 'PC', pinsp: 25, peep: 5, rr: 14, ti: 1.0, fio2: 40 }, start: { mode: 'PC', vt: 280, rr: 14, peep: 5, ti: 1.0, fio2: 40, pinsp: 25 },
+    brief: 'Read the exhaled volume, not the pressure. Bring the inspiratory pressure down until VTe is 6–8 mL/kg (210–280 mL), keep the expiration complete, and let the CO₂ come back towards normal.',
+    gas: (m, a, s, m0) => ({ o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Tidal volume 6–8 mL/kg (210–280 mL)', m.vte >= 208 && m.vte <= 282],
+      ['Auto-PEEP ≤ 1 cmH₂O', m.auto <= 1],
+      ['Rate ≤ 20', m.rr <= 20],
+      ['Minute ventilation ≥ 5 L/min', m.mv >= 5],
+      ['FiO₂ ≤ 0.4', m.fio2 <= 40]],
+    debrief: ['Trapping shows on the flow trace: expiratory flow does not reach zero before the next breath.', 'Trapped gas raises intrathoracic pressure and drops the blood pressure. Time is the treatment: lower the rate, keep Ti short.', 'Accept the CO₂ while the airways are tight.', 'In pressure control the volume follows the lung: as resistance falls, the same pressure gives a much bigger breath.', 'In a pressure mode watch VTe and turn the pressure down as the patient improves.'] },
+  // ---------- 22 · Pneumonia, 3-year-old ----------
+  { id: 'w22a', scen: 'w22', stage: 1, ...WV(1), t: 'Day 3 · SpO₂ drifting', eyebrow: 'Sim scenario 22 · stage 1 of 2', chord: 'night', ibw: 14, setting: 'PICU · day 3 of ventilation',
+    brief: 'A sawtooth on the flow trace is something moving in the airway or the circuit. Feel the chest, listen at the tube, then suction. Check the circuit too.',
+    event: 'The sawtooth on the expiratory flow was secretions in the tube and large airways, rattling with every breath and felt through the chest wall. They narrowed the tube and closed some of the consolidated lung, so the saturation drifted. Suction cleared them and the trace went smooth. Raising PEEP or paralysing would have treated a number, not the cause.',
+    dx: 'Secretions in the tube and airway: a sawtooth on the flow trace.', learn: [4, 'Asynchrony, leaks and secretions', '06'],
+    patient: 'scW2Saw', start: { mode: 'VC', vt: 100, rr: 24, peep: 6, ti: 0.8, fio2: 45, pinsp: 18 },
+    actions: [
+      { id: 'drain', label: 'Drain the circuit', fb: 'A few drops of water from the expiratory limb. The sawtooth is still there and the chest still rattles.' },
+      { id: 'suction', label: 'Suction the tube', fb: 'Thick yellow secretions, twice. The rattle has gone, the flow trace is smooth, the saturation is climbing.', patient: 'scW2' },
+      { id: 'trig', label: 'Make the trigger less sensitive', fb: 'This is not a triggering problem: the oscillation is in the expiratory flow, not extra breaths. Not done.', bad: true },
+      { id: 'paralyse', label: 'Paralyse', fb: 'The secretions would still be there. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: (a.suction ? 1.3 : 1) * noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Tube suctioned', !!a.suction],
+      ['Sawtooth gone', !PATIENTS[s.patient].saw],
+      ['Not paralysed', !a.paralyse],
+      ['Tidal volume 6–8 mL/kg (84–112 mL)', m.vte >= 84 && m.vte <= 112],
+      ['SpO₂ ≥ 92%', m.spo2 >= 92]] },
+  { id: 'w22b', scen: 'w22', stage: 2, keep: true, t: 'Day 4 · the sawtooth is back', eyebrow: 'Sim scenario 22 · stage 2 of 2', title: WAVES[1].t, chord: 'night', ibw: 14, setting: 'PICU · day 4, 6 am',
+    story: 'The same sawtooth on the flow trace, the low tidal volume alarm sounding now and then. The chest is quiet this time. The heater on the humidifier reads 31 °C.',
+    event: 'Same wave, different cause. The chest was quiet and the suction catheter came back clean, so the oscillation was not in the patient: the heater wire had failed, gas cooled in the expiratory limb and water collected and bubbled with every breath. Water in the circuit can also auto-trigger the ventilator. Draining the limb and fixing the humidifier cleared it. Look at the patient and the circuit before reaching for the suction catheter again.',
+    dx: 'Condensate in the circuit: a sawtooth that is not from the patient.', learn: [4, 'Asynchrony, leaks and secretions', '06'],
+    assess: { vit: [['HR', '128'], ['BP', '98/60'], ['SpO₂', 'live'], ['Temp', '37.6 °C']], exam: ['Chest quiet, no rattle, equal air entry', 'Water visible in the expiratory limb, moving with each breath', 'Humidifier heater wire alarm on'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Right lower lobe consolidation, a little better.', img: '', abg: [['pH', '7.36'], ['PaCO₂', '46'], ['PaO₂', '78'], ['HCO₃', '26']], vent: 'Your settings carry over' },
+    patient: 'scW2Water', start: { mode: 'VC', vt: 100, rr: 24, peep: 6, ti: 0.8, fio2: 40, pinsp: 18 },
+    brief: 'Check the patient first: rattle or no rattle. Then the circuit. Drain the water away from the patient, and fix the heater so it does not come back.',
+    actions: [
+      { id: 'suction', label: 'Suction the tube', fb: 'The catheter passes freely and comes back clean. The sawtooth is unchanged.' },
+      { id: 'drain', label: 'Drain the expiratory limb', fb: 'Water drained into the trap, away from the patient. The flow trace is smooth.', patient: 'scW2' },
+      { id: 'heater', label: 'Fix the heater wire', fb: 'Heater wire reconnected, chamber at 37 °C, wire at 40 °C. No more rain-out in the limb.' },
+      { id: 'tip', label: 'Tip the circuit to empty it', fb: 'The water runs towards the tube and into the patient. Never drain a circuit towards the child. Stopped.', bad: true }
+    ],
+    goals: (m, a, s) => [
+      ['Circuit drained away from the patient', !!a.drain && !a.tip],
+      ['Humidifier fixed', !!a.heater],
+      ['Sawtooth gone', !PATIENTS[s.patient].saw],
+      ['PEEP 6–8', s.peep >= 6 && s.peep <= 8],
+      ['FiO₂ ≤ 0.4', m.fio2 <= 40],
+      ['SpO₂ ≥ 92%', m.spo2 >= 92]],
+    debrief: ['A sawtooth on the flow trace means something is moving in the airway or the circuit.', 'Secretions: a rattle at the tube and through the chest. Suction.', 'Condensate: a quiet chest, water in the limb. Drain it away from the patient and fix the humidifier.', 'Water in the circuit can auto-trigger the ventilator too.', 'Treat the cause, not the number: PEEP, trigger changes and paralysis do not remove either.'] },
+  // ---------- 23 · Drowning, 5-year-old ----------
+  { id: 'w23a', scen: 'w23', stage: 1, ...WV(2), t: 'ER · the low minute-volume alarm', eyebrow: 'Sim scenario 23 · stage 1 of 2', chord: 'night', ibw: 18, setting: 'Your ER',
+    brief: 'Compare the inspired and expired volume, and look at whether the volume trace returns to zero. Find the leak: connections first, then the tube. A cuffed tube stops it.',
+    event: 'Almost half of each breath escaped around a small uncuffed tube: the volume trace never came back to zero, the exhaled volume was about half the set one, and the gurgling at the mouth was the gas leaving. A bigger set volume would mostly have leaked too, and more PEEP widens the leak. A cuffed tube of the right size sealed it.',
+    dx: 'Leak around an uncuffed tube: VTe much less than VTi, the volume trace does not return to baseline.', learn: [4, 'Asynchrony, leaks and secretions', '06'],
+    patient: 'scW3Leak', start: { mode: 'VC', vt: 140, rr: 20, peep: 6, ti: 0.8, fio2: 60, pinsp: 18 },
+    actions: [
+      { id: 'conn', label: 'Check every connection', fb: 'Circuit, humidifier and catheter mount are tight. The gurgle is at the mouth: the leak is around the tube.' },
+      { id: 'cuffed', label: 'Change to a cuffed 5.0 tube', fb: 'Re-intubated with a cuffed 5.0, cuff pressure 20 cmH₂O. Inspired and expired volumes now match and the volume trace returns to zero.', patient: 'scW3', needs: 'conn', needsFb: 'Check the circuit first. A loose connection is quicker to fix than a tube.' },
+      { id: 'vtup', label: 'Raise the set VT to 250', fb: 'More gas, most of it lost at the mouth. Not done.', bad: true },
+      { id: 'peepup', label: 'Raise PEEP to 10', fb: 'A higher baseline pushes more gas out around the tube. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: (a.cuffed ? 1.3 : 1) * noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Connections checked', !!a.conn],
+      ['Cuffed tube in', !!a.cuffed],
+      ['Exhaled VT 6–8 mL/kg (108–144 mL)', m.vte >= 108 && m.vte <= 144],
+      ['Set VT not chased upwards (≤ 160 mL)', s.vt <= 160 && !a.vtup],
+      ['SpO₂ ≥ 90%', m.spo2 >= 90]] },
+  { id: 'w23b', scen: 'w23', stage: 2, keep: true, t: 'Hour 6 · the aspiration lung', eyebrow: 'Sim scenario 23 · stage 2 of 2', title: WAVES[2].t, chord: 'night', ibw: 18, setting: 'PICU · hour 6',
+    story: 'Sealed and ventilating, warmed to 36.4 °C. Now the shadowing has spread and the saturation is 89% on FiO₂ 0.6. Pink frothy fluid in the tube.',
+    event: 'Inhaled pond water washed out surfactant and flooded the alveoli: within hours the drowned lung behaves like ARDS, wet and stiff, collapsing at end-expiration. PEEP held it open, the compliance rose and the driving pressure fell at the same tidal volume, and the oxygen followed. Small breaths kept the open lung from overstretching.',
+    dx: 'Aspiration pneumonitis after drowning: an ARDS-like lung that needs PEEP.', learn: [6, 'Plateau and driving pressure'],
+    assess: { vit: [['HR', '138'], ['BP', '96/58'], ['SpO₂', 'live'], ['Temp', '36.4 °C']], exam: ['Bilateral crackles, pink froth in the tube', 'Equal air entry', 'Sedated, not triggering'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Bilateral perihilar and basal alveolar shadowing, more than on arrival. Cuffed tube at T2.', img: 'assets/cxr/cxr-drill03-perihilar.png', abg: [['pH', '7.30'], ['PaCO₂', '50'], ['PaO₂', '58'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'scW3Lung', start: { mode: 'VC', vt: 130, rr: 20, peep: 6, ti: 0.8, fio2: 60, pinsp: 18 },
+    brief: 'Raise PEEP in steps of 2 to 8–12, watching the driving pressure and the blood pressure; keep VT at 6–8 mL/kg; then wean the oxygen.',
+    actions: [
+      { id: 'suction', label: 'Suction the froth', fb: 'Pink frothy fluid, keeps coming. Suction only when it blocks the tube: each pass drops the PEEP and the saturation.' }
+    ],
+    gas: (m, a, s, m0, c) => ({ o2: ardsO2(m, a, s, c) }),
+    goals: (m, a, s) => [
+      ['PEEP 8–12', s.peep >= 8 && s.peep <= 12],
+      ['Driving pressure ≤ 15 cmH₂O', m.dp <= 15],
+      ['Tidal volume ≤ 8 mL/kg (≤ 144 mL)', m.vte <= 145],
+      ['Plateau ≤ 28 cmH₂O', m.pplat <= 28],
+      ['FiO₂ ≤ 0.5', m.fio2 <= 50],
+      ['SpO₂ ≥ 92%', m.spo2 >= 92]],
+    debrief: ['A leak shows as exhaled volume well below the set volume and a volume trace that does not return to zero.', 'Check the connections first, then the tube. A cuffed tube is the fix; more volume or more PEEP mostly leaks.', 'After drowning, expect the lung to get wetter and stiffer over hours.', 'Treat it like ARDS: PEEP to open it, small breaths, watch the driving pressure.'] },
+  // ---------- 24 · Septic shock, 14-year-old ----------
+  { id: 'w24a', scen: 'w24', stage: 1, ...WV(3), t: 'Day 2 · breathing much faster than set', eyebrow: 'Sim scenario 24 · stage 1 of 2', chord: 'night', ibw: 45, setting: 'PICU · day 2',
+    brief: 'Look at the pressure trace during inspiration: a scooped, concave shape means he wants more flow than a set square wave gives. A pressure mode lets the flow follow him. Then treat what is driving his breathing.',
+    event: 'Volume control with a set square flow gave him the same flow whatever he wanted. He was pulling hard (fever, a lactate of 4.5, a metabolic acidosis), so the airway pressure was sucked down during each breath: the scooped pressure of flow starvation. In a pressure mode the ventilator holds the pressure and the flow rises to meet him, and the scoop disappears. Lowering the flow or lengthening Ti would have starved him further; sedation alone would have hidden the drive, not treated it.',
+    dx: 'Flow starvation: patient demand above the set inspiratory flow.', learn: [4, 'Asynchrony, leaks and secretions', '06'],
+    patient: 'scW4', start: { mode: 'VC', vt: 360, rr: 20, peep: 6, ti: 1.2, fio2: 40, pinsp: 15 },
+    actions: [
+      { id: 'drive', label: 'Treat the drive: fever, shock, acidosis', fb: 'Paracetamol, noradrenaline titrated to a MAP of 65, the source reviewed with the surgeons. Over the hour his rate settles towards 24.', patient: 'scW4Calm' },
+      { id: 'sedate', label: 'Deepen sedation first', fb: 'Fix the mismatch before reaching for sedation; deeper sedation alone hides the drive and slows the wean. Not done.', bad: true },
+      { id: 'paralyse', label: 'Paralyse', fb: 'Not for flow starvation in a child who can be matched. Not done.', bad: true }
+    ],
+    vitals: (m, a, s) => a.drive ? [['HR', '118'], ['BP', '108/62 on noradrenaline'], ['RR', notVC(s) ? '24, comfortable' : '24'], ['SpO₂', 'live']] : [['HR', '145'], ['BP', '100/58 on noradrenaline'], ['RR', notVC(s) ? '34, flow now follows him' : '38 (set 20)'], ['SpO₂', 'live']],
+    goals: (m, a, s) => [
+      ['A pressure mode: flow follows demand', notVC(s)],
+      ['Tidal volume ≤ 8 mL/kg (≤ 360 mL)', m.vte <= 362],
+      ['PEEP 5–8', s.peep >= 5 && s.peep <= 8],
+      ['The drive treated', !!a.drive],
+      ['No deeper sedation first', !a.sedate],
+      ['Not paralysed', !a.paralyse]] },
+  { id: 'w24b', scen: 'w24', stage: 2, keep: true, t: 'Day 3 · shock resolved', eyebrow: 'Sim scenario 24 · stage 2 of 2', title: WAVES[3].t, chord: 'night', ibw: 45, setting: 'PICU · day 3',
+    story: 'Off noradrenaline since the morning, lactate 1.2, afebrile. Breathing comfortably on pressure support at a rate of 20.',
+    event: 'With the drive gone his own breathing is calm and the lung is near normal. A sedation hold and a breathing trial on low pressure support answer the only question left, and he is extubated awake.',
+    dx: 'Ready to wean: sedation hold, breathing trial on low support, extubate awake.', learn: [3, 'From intubation to extubation', '05'],
+    assess: { vit: [['HR', '96'], ['BP', '118/70'], ['SpO₂', 'live'], ['Temp', '37.1 °C']], exam: ['Clear chest, equal air entry', 'Breathing calmly, no recession', 'Rousable, following commands'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Mild haziness clearing.', img: 'assets/cxr/cxr-drill04-mild-haziness.png', abg: [['pH', '7.40'], ['PaCO₂', '40'], ['PaO₂', '96'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'scW4Wean', start: { mode: 'PS', ps: 8, peep: 5, rr: 20, ti: 1.0, fio2: 35, eff: 7 },
+    brief: 'Pressure support 5–8 with PEEP 5 and FiO₂ 0.35 or less. Hold the sedation, run a breathing trial, then extubate awake.',
+    actions: [
+      { id: 'sat', label: 'Sedation hold', fb: 'Sedation off. He wakes, nods and coughs on suction.' },
+      { id: 'sbt', label: 'Spontaneous breathing trial', fb: 'Thirty minutes on PS 5, PEEP 5: rate 20, 7 mL/kg, calm. Passed.', needs: 'sat', needsFb: 'Wake him first. A breathing trial in a sedated child tests the drugs, not the child.' },
+      { id: 'extubate', label: 'Extubate', fb: 'Extubated to nasal oxygen, talking within the hour.', needs: 'sbt', needsFb: 'Not yet. A breathing trial first, awake.' }
+    ],
+    gas: (m, a, s, m0) => ({ o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Pressure support mode', ['PS', 'CPAP'].includes(vmodeOf(s))],
+      ['Support 5–8 cmH₂O', s.ps >= 5 && s.ps <= 8],
+      ['PEEP ≤ 5', s.peep <= 5],
+      ['FiO₂ ≤ 0.35', m.fio2 <= 35],
+      ['Breathing trial passed awake', !!a.sbt],
+      ['Extubated', !!a.extubate]],
+    debrief: ['A scooped, concave pressure during a volume breath means the child wants more flow than you set.', 'Give the flow: a pressure mode lets the flow follow demand.', 'Lowering the flow or lengthening Ti starves him further.', 'Treat what drives the breathing: fever, shock, acidosis, pain. Sedation alone only hides it.', 'Once the drive has gone: sedation hold, breathing trial, extubate.'] },
+  // ---------- 25 · Head injury, 13-year-old ----------
+  { id: 'w25a', scen: 'w25', stage: 1, ...WV(4), t: 'Day 3 · the high-pressure alarm', eyebrow: 'Sim scenario 25 · stage 1 of 2', chord: 'night', ibw: 40, setting: 'PICU · day 3',
+    brief: 'Split the peak from the plateau. A high peak with a normal plateau is the tube or the airway; a high plateau is the lung. Work from the mouth inwards: teeth, tube, secretions, bronchospasm.',
+    event: 'The peak was 48 but the plateau only 25: the extra 23 cmH₂O was spent pushing gas through a narrowed path, not stretching the lung. He was biting the tube when stimulated and wheezing. A bite block took the teeth out of it, suction and a bronchodilator opened the rest, and the gap between peak and plateau closed. A pneumothorax or a stiff lung would have lifted the plateau too.',
+    dx: 'High airway resistance: biting the tube and bronchospasm.', learn: [2, 'Airway or lung?', '06'],
+    patient: 'scW5', start: { mode: 'VC', vt: 280, rr: 20, peep: 5, ti: 1.0, fio2: 35, pinsp: 20 },
+    actions: [
+      { id: 'bite', label: 'Bite block', fb: 'Oropharyngeal airway placed as a bite block. The peak drops by about 10 when he is stimulated.', patient: 'scW5b' },
+      { id: 'suction', label: 'Suction, check the tube', fb: 'Some mucus, tube at 21 cm at the lip, not kinked.' },
+      { id: 'salb', label: 'Bronchodilator', fb: 'Salbutamol through the circuit. The wheeze settles and the peak falls to within a few cmH₂O of the plateau.', patient: 'scW5c', needs: 'bite', needsFb: 'Take the teeth out of it first: the gas is not reaching the airways while he bites.' },
+      { id: 'drain', label: 'Chest drain', fb: 'A pneumothorax would raise the plateau too. The X-ray is clear. Not done.', bad: true },
+      { id: 'vtdown', label: 'Lower VT to 4 mL/kg', fb: 'Treats the alarm, not the cause, and his CO₂ would rise with a swollen brain. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Bite block in', !!a.bite],
+      ['Tube checked and suctioned', !!a.suction],
+      ['Bronchodilator given', !!a.salb],
+      ['Peak − plateau ≤ 8 cmH₂O', m.ppeak - m.pplat <= 8],
+      ['No chest drain', !a.drain],
+      ['Tidal volume 6–8 mL/kg (240–320 mL)', m.vte >= 238 && m.vte <= 322 && !a.vtdown]] },
+  { id: 'w25b', scen: 'w25', stage: 2, keep: true, t: 'Day 3 evening · the brain', eyebrow: 'Sim scenario 25 · stage 2 of 2', title: WAVES[4].t, chord: 'night', ibw: 40, setting: 'PICU · day 3 evening',
+    story: 'The airway is quiet now. The ICP monitor reads 24 mmHg and rising, and the gas shows a PaCO₂ of 46.',
+    event: 'A raised CO₂ dilates cerebral vessels and pushes the intracranial pressure up, so with a swollen brain the target is normocapnia, 35–40 mmHg: not permissive hypercapnia, and not hyperventilation, which narrows the vessels so far that the brain becomes ischaemic. The minute ventilation was raised to bring the CO₂ to normal, and the head-up position and sedation did the rest.',
+    dx: 'Raised intracranial pressure: target normocapnia (PaCO₂ 35–40). Avoid hypercapnia and routine hyperventilation.', learn: [8, 'Hypoventilation and PaCO₂'],
+    assess: { vit: [['HR', '88'], ['BP', '124/72'], ['SpO₂', 'live'], ['ICP', '24 mmHg']], exam: ['Pupils equal and reactive', 'Bite block in, no wheeze', 'Sedated, not triggering'], cxrAns: 'normal', ettAns: 'ok', cxr: 'Clear lungs. Tube and NG in place.', img: 'assets/cxr/cxr-drill05-clear.png', abg: [['pH', '7.34'], ['PaCO₂', '46'], ['PaO₂', '96'], ['HCO₃', '24']], vent: 'Your settings carry over' },
+    patient: 'scW5c', start: { mode: 'VC', vt: 280, rr: 20, peep: 5, ti: 1.0, fio2: 35, pinsp: 20 },
+    brief: 'Bring the PaCO₂ to 35–40: raise the rate (and the tidal volume within 6–8 mL/kg) until the minute ventilation is about 7–8 L/min. Do not hyperventilate below 35. Head up 30°, keep him sedated, keep the saturation normal.',
+    actions: [
+      { id: 'head', label: 'Head up 30°, neck midline', fb: 'Venous drainage from the head improves. The ICP drops by 2–3 mmHg.' },
+      { id: 'sedation', label: 'Sedation and analgesia adequate', fb: 'Fentanyl and midazolam checked, a bolus before suctioning. No coughing on the tube.' },
+      { id: 'hypervent', label: 'Hyperventilate to a PaCO₂ of 25', fb: 'Routine hyperventilation constricts cerebral vessels enough to cause ischaemia. Only as a short bridge for signs of herniation. Not done.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: noShunt(m, m0) }),
+    goals: (m, a, s) => [
+      ['Minute ventilation 6.6–8.5 L/min (PaCO₂ 35–40)', m.mv >= 6.6 && m.mv <= 8.5],
+      ['Tidal volume 6–8 mL/kg (240–320 mL)', m.vte >= 238 && m.vte <= 322],
+      ['No hyperventilation', !a.hypervent],
+      ['Head up 30°', !!a.head],
+      ['Sedation adequate', !!a.sedation],
+      ['SpO₂ ≥ 94%', m.spo2 >= 94]],
+    debrief: ['Peak minus plateau is resistance: the tube, the teeth, secretions, bronchospasm.', 'Plateau minus PEEP is the lung: a pneumothorax or a stiff lung raises the plateau too.', 'Work from the mouth inwards: bite block, tube, suction, bronchodilator.', 'With raised ICP aim for normocapnia, PaCO₂ 35–40. Hypercapnia raises ICP; hyperventilation causes ischaemia.', 'Head up, sedation and a normal saturation are part of the ventilation plan.'] }
+);
 SIM_STAGES.forEach(x => CASES.push(x));
 const SU_MODES = [['AC-PC', 'Pressure A/C'], ['AC-VC', 'Volume A/C'], ['SIMV-PC', 'Pressure SIMV+PS'], ['SIMV-VC', 'Volume SIMV+PS'], ['PS', 'Pressure PS/CPAP']];
 const SU_MODES_NIV = [['NIV-CPAP', 'CPAP'], ['NIV-S', 'Bilevel S'], ['NIV-ST', 'Bilevel ST'], ['NIV-T', 'Bilevel T'], ['iVAPS', 'iVAPS']];
@@ -4475,6 +4698,11 @@ function model0(s, pat) {
   }
   if (pat.autoBase) { r.auto += pat.autoBase; r.pplat += pat.autoBase; r.ppeak += pat.autoBase; }
   if (pat.fight) { const s0 = r.sample; r.sample = tm => { const o = s0(tm), ph = ((tm % T) + T) % T; if (ph < ti) o.p -= pat.fight * 7 * Math.sin(Math.PI * ph / ti); return o; }; }
+  // Wave-case patients: starve = flow starvation (scooped pressure, only with set square flow in volume control); saw = secretions or circuit water (sawtooth flow);
+  // leakInv = gas lost around an uncuffed tube (VTe < VTi, the volume trace does not return to zero).
+  if (pat.starve && s.mode === 'VC') { const s0 = r.sample; r.sample = tm => { const o = s0(tm), ph = ((tm % T) + T) % T; if (ph < ti) o.p -= pat.starve * 9 * Math.sin(Math.PI * Math.min(1, ph / (0.8 * ti))); return o; }; }
+  if (pat.saw) { const s0 = r.sample; r.sample = tm => { const o = s0(tm), ph = ((tm % T) + T) % T, k = ph < ti ? 0.5 : 1; o.f += pat.saw * k * 7 * Math.sin(2 * Math.PI * 11 * ph); o.p += pat.saw * k * 0.8 * Math.sin(2 * Math.PI * 11 * ph); return o; }; }
+  if (pat.leakInv) { const L = pat.leakInv, vi = r.vte * 1000, s0 = r.sample; r.sample = tm => { const o = s0(tm), ph = ((tm % T) + T) % T; if (ph >= ti) o.v = o.v * (1 - L) + vi * L * Math.max(0, 1 - (ph - ti) / Math.max(0.2, T - ti) * 0.15); return o; }; r.vte *= 1 - L; r.vti = vi; }
   r.tau = tau; r.totalPeep = peep + r.auto; r.dp = r.pplat - r.totalPeep;
   r.vte = r.vte * 1000; r.mv = r.vte * s.rr / 1000; r.fio2 = s.fio2; r.rr = s.rr;
   return r;
