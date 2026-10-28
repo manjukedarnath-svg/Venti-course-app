@@ -36,6 +36,8 @@ def parse_vent(v):
             ms.append(['', p]); continue
         k, val = m.group(1), m.group(2)
         k = k.replace('measured ', '')
+        if not re.search(r'\d', val):  # 'intermittent Ppeak alarm', 'no auto-PEEP': words, not numbers
+            ms.append(['', p]); continue
         if k.split()[0] in SET_KEYS:
             st.append([k.split()[0], val.replace(' mL', '').replace(' (titrated)', '')])
         else:
@@ -80,6 +82,82 @@ def table_html(tb):
             f'<span style="display:block; margin-top:6px; font-size:15px; line-height:1.35; color:var(--text-secondary);">{e(tb.get("note", ""))}</span></div>')
 
 
+VG = {}   # vent-graphics scenarios written for this deck: one per screen, from that screen's own settings
+
+
+def num(x, d=None):
+    m = re.search(r'-?\d+(?:\.\d+)?', str(x or ''))
+    return float(m.group(0)) if m else d
+
+
+def scenario(key, v, kg, kind='ards', extra=None):
+    """A waveform that matches the settings and the measured numbers on the screen."""
+    S = {k: val for k, val in v['set']}
+    M = {k: val for k, val in v['meas']}
+    rr = (extra or {}).get('rr') or num(S.get('RR'), 30)
+    ie = re.match(r'1:(\d+(?:\.\d+)?)', S.get('I:E', '') or '')
+    ti = round(60 / rr / (1 + float(ie.group(1))), 2) if ie else round(min(1.0, 60 / rr / 3), 2)
+    peep = num(S.get('PEEP'), 5)
+    vt = num(S.get('VT'), 7 * kg)
+    plat = num(M.get('Plateau'), None)
+    peak = num(M.get('Peak') or M.get('PIP'), None)
+    if plat is None: plat = (peak - 4) if peak else peep + 16
+    C = max(1.5, min(60, vt / max(4, plat - peep)))
+    R = 25 if kind == 'ards' else 60
+    mode = v['mode']
+    sc = {'peep': peep, 'C': round(C, 1), 'R': R, 'rr': rr, 'window': round(3 * 60 / rr, 2), 'scale': {'v': round(vt * 1.6)}}
+    if mode == 'NIV':
+        sc.update({'mode': 'PS', 'ps': num(S.get('PS'), 10), 'rr': rr, 'efforts': [{'t': round(0.22 + i * 60 / rr, 3), 'amp': 7, 'dur': round(min(0.5, 25 / rr), 2)} for i in range(3)]})
+    elif mode == 'VC':
+        if peak and plat:
+            fl = vt / 1000 / max(0.2, ti - 0.15)
+            sc['R'] = round(max(10, (peak - plat) / fl))
+        sc.update({'mode': 'VC', 'vt': vt, 'ti': ti, 'pause': 0.15})
+    else:  # PRVC and PC: a decelerating, pressure-limited breath that delivers the set VT
+        sc.update({'mode': 'PC', 'pinsp': round(plat - peep, 1), 'ti': ti})
+    if extra: sc.update(extra)
+    VG[key] = sc
+    return key
+
+
+def write_vg():
+    p = os.path.join(APP, 'vent-graphics.js'); t = open(p).read()
+    block = '    // AA-START (ARDS and asthma live deck: one screen each, from tools/build_aa.py)\n' + ''.join(f"    '{k}': {json.dumps(v)},\n" for k, v in VG.items()) + '    // AA-END\n'
+    if '// AA-START' in t:
+        t = t[:t.index('    // AA-START')] + block + t[t.index('    // AA-END') + len('    // AA-END\n'):]
+    else:
+        t = t.replace('    // VS-START', block + '    // VS-START', 1)
+    open(p, 'w').write(t)
+
+
+def bedside_slide(d, sid, ords, T, n, st, tag):
+    pic = (f'<div style="flex:none; height:{390 if sid in CXR else 470}px; border-radius:6px; overflow:hidden; background:#F4EFE6; border:1px solid var(--border-subtle);"><img src="{bd.ipath(n)}" alt="The patient" style="display:block; width:100%; height:100%; object-fit:cover;"></div>')
+    if sid in CXR:
+        pic += f'<div style="flex:1; min-height:0; border-radius:6px; overflow:hidden; background:#0E1012;"><img src="../{CXR[sid]}" alt="Chest X-ray" style="display:block; width:100%; height:100%; object-fit:contain;"></div>'
+    gas = ' · '.join(f'{k} {v}' for k, v in (st.get('abg') or []))
+    exam = ''.join(f'<span style="font-size:24px; line-height:1.35; color:var(--text-secondary);">{e(x)}</span>' for x in (st.get('exam') or [])[:3])
+    mid = (f'<div style="display:flex; flex-direction:column; gap:20px; min-width:0;">{bd.monitor(d["scr"]["mon"], 1.55)}'
+           f'<span style="font-size:28px; line-height:1.35;">{e(d["hist"])}</span>{exam}'
+           + (f'<span style="font-family:var(--font-mono); font-size:22px; color:var(--text-accent);">Gas · {e(gas)}</span>' if gas else '') + '</div>')
+    foot = ''
+    if T:
+        foot = (f'<div style="flex:none; display:flex; gap:24px; align-items:baseline; border:1px dashed var(--text-accent); border-radius:6px; padding:12px 18px; margin-right:540px;">'
+                f'<span style="{MONO} font-size:18px; color:var(--text-accent);">On your phone</span><span style="font-size:28px;">{e(T["ask"])}, then tap your order</span>'
+                f'<span data-set-count style="{MONO} font-size:18px; color:var(--text-secondary); margin-left:auto;">Waiting for settings</span></div>')
+    body = (bd.header(d['eyebrow'], d['head'], tag) +
+            f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:600px minmax(0,1fr) 470px; gap:36px;">'
+            f'<div style="display:flex; flex-direction:column; gap:14px; min-height:0;">{pic}</div>{mid}'
+            f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Your order</span>{bd.order_cards(ords)}</div></div>' + foot)
+    return bd.section(bd.plain(d['head']), body, d['hist'] + ' ' + st['q'], live=sid, mode='ask', setq=T and T['q'])
+
+
+def console_slide(d, sid, scr, T, label, tag, live, mode, extra=''):
+    body = (bd.header(d['eyebrow'], d['head'], tag) +
+            f'<div style="flex:1; min-height:0; display:flex; justify-content:center;"><div style="width:1500px; height:100%; min-height:0;">{bd.device(scr, foot=extra)}</div></div>')
+    note = '; '.join(scr.get('extra') or [])
+    return bd.section(label, body, 'The ventilator, full screen: mode, settings, the waveforms and the measured values.' + (' ' + note if note else ''), live=live, mode=mode, setq=T and T['q'], pad='56px 72px 120px')
+
+
 def room_slide(d, sid, ords, T, rule, sevmap):
     left = ''
     if T:
@@ -99,38 +177,108 @@ def room_slide(d, sid, ords, T, rule, sevmap):
     return sec.replace('<section ', '<section' + attrs + ' ', 1)
 
 
+def response_slide(d, sid, ords, after, T):
+    body = (bd.header(d['eyebrow'], d['head'], 'The response') +
+            f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 560px; gap:44px;">'
+            f'<div style="display:flex; flex-direction:column; gap:14px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Each order · the response</span>{bd.order_cards(ords, reveal=True)}</div>'
+            f'<div style="display:flex; flex-direction:column; gap:18px; min-width:0;">{bd.monitor(after["mon"], 1.2)}'
+            f'<span style="{MONO} font-size:20px; color:var(--text-accent);">What happened</span><span style="font-size:30px; line-height:1.3;">{e(after["happen"])}</span>'
+            + (f'<span style="{MONO} font-size:20px; color:var(--text-secondary);">Why</span><span style="font-size:26px; line-height:1.35; color:var(--text-secondary);">{e(after["why"])}</span>' if after.get('why') else '') +
+            '</div></div>')
+    return bd.section(bd.plain(d['head']) + ' · response', body, 'The response. ' + after['happen'] + ' ' + after.get('why', ''), live=sid + '_r', mode='show', results=sid, setq=T and T['q'])
+
+
+def table_slide(label, eyebrow, head, cols, rows, note, notes, tag=''):
+    th = ''.join(f'<th style="{MONO} font-size:18px; color:var(--text-secondary); padding:10px 12px; text-align:center; border-bottom:2px solid var(--border-default);">{c}</th>' for c in cols)
+    trs = ''.join('<tr>' + ''.join(f'<td style="font:500 30px/1.2 var(--font-mono); padding:12px; text-align:center; border-bottom:1px solid var(--border-subtle);{" color:var(--text-accent);" if j == 0 else ""}">{c}</td>' for j, c in enumerate(r)) + '</tr>' for r in rows)
+    body = (bd.header(eyebrow, head, tag) + f'<table style="width:100%; border-collapse:collapse; table-layout:fixed;"><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table>'
+            + (f'<span style="font-size:26px; line-height:1.4; color:var(--text-secondary);">{note}</span>' if note else ''))
+    return bd.section(label, body, notes, pad='64px 96px')
+
+
+def ardsnet():
+    lo_f = ['0.3', '0.4', '0.4', '0.5', '0.5', '0.6', '0.7', '0.7', '0.7', '0.8', '0.9', '0.9', '0.9', '1.0']
+    lo_p = ['5', '5', '8', '8', '10', '10', '10', '12', '14', '14', '14', '16', '18', '18–24']
+    hi_f = ['0.3', '0.3', '0.3', '0.3', '0.3', '0.4', '0.4', '0.5', '0.5', '0.5–0.8', '0.8', '0.9', '1.0', '1.0']
+    hi_p = ['5', '8', '10', '12', '14', '14', '16', '16', '18', '20', '22', '22', '22', '24']
+    rows = [['Lower PEEP · FiO₂'] + lo_f, ['Lower PEEP · PEEP'] + lo_p, ['Higher PEEP · FiO₂'] + hi_f, ['Higher PEEP · PEEP'] + hi_p]
+    th = ''.join(f'<th style="padding:0;"></th>' for _ in range(15))
+    trs = ''.join('<tr>' + ''.join((f'<td style="{MONO} font-size:17px; color:var(--text-accent); padding:14px 10px; text-align:left; border-bottom:1px solid var(--border-subtle); width:250px;">{c}</td>' if j == 0 else
+                                   f'<td style="font:500 26px/1.1 var(--font-mono); padding:14px 4px; text-align:center; border-bottom:1px solid var(--border-subtle);{" background:rgba(176,68,40,.07);" if "PEEP · PEEP" in r[0] else ""}">{c}</td>') for j, c in enumerate(r)) + '</tr>' for r in rows)
+    body = (bd.header('PEEP titration · a starting point', 'The ARDSNet <em>tables</em>', 'ARDSNet 2000 · ALVEOLI 2004') +
+            f'<table style="width:100%; border-collapse:collapse; table-layout:fixed;"><colgroup><col style="width:250px">' + '<col>' * 14 + f'</colgroup><tbody>{trs}</tbody></table>'
+            '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:24px;">'
+            '<div style="border:1px solid var(--border-default); border-radius:4px; padding:20px 24px; font-size:26px; line-height:1.35;">Read across: the FiO₂ she needs gives the least PEEP to pair with it.</div>'
+            '<div style="border:1px solid var(--border-default); border-radius:4px; padding:20px 24px; font-size:26px; line-height:1.35;">Our girl at FiO₂ 1.0: the lower table says 18–24. Her best compliance was at 12.</div>'
+            '<div style="border:1px solid var(--border-default); border-radius:4px; padding:20px 24px; font-size:26px; line-height:1.35;">PALICC-2: use the table or higher, then titrate to compliance, oxygenation and the blood pressure.</div></div>')
+    return bd.section('ARDSNet table', body, 'The ARDSNet lower and higher PEEP / FiO2 tables, as tables. A starting point, not a target: our girl on FiO2 1.0 would get PEEP 18 to 24 from the lower table, yet her best compliance was at 12. PALICC-2 accepts the table or higher, then titration.', pad='64px 96px')
+
+
+def deadspace():
+    rows = [['6', '50', '36', '(50 − 36) ÷ 50', '0.28'], ['12', '50', '45', '(50 − 45) ÷ 50', '0.10']]
+    th = ''.join(f'<th style="{MONO} font-size:17px; color:var(--text-secondary); padding:10px; text-align:center; border-bottom:2px solid var(--border-default);">{c}</th>' for c in ['PEEP', 'PaCO₂', 'EtCO₂', 'AVDSf', 'Result'])
+    trs = ''.join('<tr>' + ''.join(f'<td style="font:500 34px/1.2 var(--font-mono); padding:16px 10px; text-align:center; border-bottom:1px solid var(--border-subtle);{" color:var(--text-accent);" if j == 4 else ""}">{c}</td>' for j, c in enumerate(r)) + '</tr>' for r in rows)
+    body = (bd.header('Our girl · before and after the titration', 'Dead space <em>fraction</em>', 'Calculate') +
+            '<div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:56px; flex:1; min-height:0;">'
+            '<div style="display:flex; flex-direction:column; gap:22px;">'
+            '<span style="font-family:var(--font-display); font-size:60px; line-height:1.1;">AVDSf = (PaCO₂ − EtCO₂) ÷ PaCO₂</span>'
+            '<span style="font-size:28px; line-height:1.4;">Alveolar dead space fraction: the share of ventilated alveoli that get no blood flow.</span>'
+            '<span style="font-size:28px; line-height:1.4;">Bohr–Enghoff (physiological): (PaCO₂ − PēCO₂) ÷ PaCO₂, with mixed expired CO₂ from volumetric capnography.</span>'
+            '<span style="font-size:28px; line-height:1.4; color:var(--text-secondary);">Recruiting PEEP lowers it; over-distending PEEP raises it again. A high dead space fraction marks a sicker child (Ghuman, PCCM 2012).</span></div>'
+            f'<div style="display:flex; flex-direction:column; gap:20px;"><table style="width:100%; border-collapse:collapse;"><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table>'
+            '<span style="font-size:24px; line-height:1.4; color:var(--text-secondary);">PaCO₂ 50 on both gases (PEEP 7 before titration, PEEP 12 an hour after); EtCO₂ from the titration sheet. Same VT, same rate.</span></div></div>')
+    return bd.section('Dead space fraction', body, 'Ask the room to calculate it before the answer. At PEEP 6: PaCO2 50, EtCO2 36, about 0.28. At PEEP 12: PaCO2 50, EtCO2 45, about 0.10. Recruitment cut the dead space; at PEEP 14 the EtCO2 gap would open again as she over-distends.', pad='64px 96px')
+
+
+def pocus_day2():
+    slots = ''.join(bd.video_slot(n, c, 520) for n, c in [('ivc-normal', 'IVC: normal size, varies with the breath'), ('a4c-normal', 'Apical four-chamber: normal squeeze'), ('subcostal-normal', 'Subcostal: no effusion')])
+    body = bd.header('Case 1 · Day 2 · the echo on the round', 'POCUS before the <em>bolus</em>', 'Video') + f'<div style="flex:1; min-height:0; display:flex; gap:28px; align-items:center;">{slots}</div>'
+    return bd.section('Day 2 · POCUS', body, 'The round echo: an adequate IVC and a normal heart. Perfusion is adequate, so the low-normal blood pressure does not need a bolus; more fluid goes into a wet lung. Lung ultrasound next: B-lines and consolidation, reassessed after every change.')
+
+
+SPECIAL = {'#ardsnet': ardsnet, '#deadspace': deadspace, '#pocus-day2': pocus_day2}
+
+
 def build_case(C, n_case, code):
     z = SCB[C['id']]
+    kind = 'ards' if C['id'] == 'sc-ards' else 'asthma'
     stages = [s for s in z['stages'] if s.get('opts')]
-    ids = [('ar' if C['id'] == 'sc-ards' else 'as') + str(i) for i in range(len(stages))]
+    ids = [('ar' if kind == 'ards' else 'as') + str(i) for i in range(len(stages))]
     out = bd.opener(f"{C['id']}_case", f'Case {n_case} of 2', C['name'].split(' · ')[0] + ', <em>' + C['name'].split(' · ')[1] + '</em>', C['open'],
                     ILL[C['id']][0], ' '.join(C['open']) + '. History only: the room works out the rest. Every phone follows its own patient from here.', code)
-    course = []
+    course, last_v, last_key = [], None, None
     for i, (st, sid) in enumerate(zip(stages, ids)):
         A = C['stages'][i]
         nxt = stages[i + 1] if i + 1 < len(stages) else None
         mon, mnotes = mon_of(st.get('vit'))
         v = parse_vent(st.get('vent'))
+        on_vent = i >= 2  # both children are intubated from stage 3 on
+        if v:
+            wx = dict(A.get('wave_extra') or {})
+            if v['mode'] == 'NIV': wx['rr'] = num(dict(st.get('vit') or []).get('RR'), 30)
+            key = scenario(f'aa-{sid}', v, C['kg'], kind, wx or None)
+            last_v, last_key = v, key
+        elif on_vent and last_v and not st['t'].startswith('Intubated'):
+            v, key = last_v, last_key
+        else:
+            key = None
+        if sid == 'as5' and last_v:  # sudden collapse: the same settings, the chest full of trapped gas
+            key = scenario('aa-as5', last_v, C['kg'], kind, {'R': 160, 'C': 4, 'rr': 12})
         gas = st.get('abg') or []
-        meas = (v['meas'] if v else []) + [[k, val] for k, val in gas if k in ('pH', 'PaCO₂', 'PaO₂')][:3 if not v else 2]
-        prev_v = parse_vent(stages[i - 1].get('vent')) if i else None
-        scr = {'mode': v['mode'] if v else ('MASK' if i == 0 else 'TUBE'), 'modeLong': v['modeLong'] if v else st['t'],
-               'set': v['set'] if v else [], 'meas': meas, 'wave': (st.get('trace') or {}).get('sc') if v else None,
-               'mon': mon or [['Status', 'See the history']], 'note': '; '.join((st.get('exam') or [])[:2] + mnotes)[:160],
-               'msg': 'Not on the ventilator' if not v else ''}
-        if not v and (st.get('trace') or {}).get('sc'):  # tube in, the ventilator waiting: show the trace anyway
-            scr['wave'] = st['trace']['sc']; scr['modeLong'] = 'Ventilator connected'
-        elif not v and i >= 2:  # already on the ventilator: the last settings stay on the screen
-            if prev_v and not st['t'].startswith('Intubated'):
-                scr.update({'mode': prev_v['mode'], 'modeLong': prev_v['modeLong'], 'set': prev_v['set']})
-            scr['msg'] = 'High-pressure alarm' if 'alarm' in st['story'].lower() else ('Waiting for your settings' if st['t'].startswith('Intubated') else 'Ventilator running')
+        scr = {'mode': v['mode'] if v else 'MASK', 'modeLong': v['modeLong'] if v else st['t'], 'set': v['set'] if v else [],
+               'meas': (v['meas'] if v else []) + [[k, val] for k, val in gas if k in ('pH', 'PaCO₂', 'PaO₂')][:2 if v else 3],
+               'wave': key, 'mon': mon or [['Status', 'See the history']], 'note': '; '.join(v['extra']) if v else '', 'msg': ''}
+        if not v:
+            scr['msg'] = 'Waiting for your settings' if st['t'].startswith('Intubated') else 'Not on the ventilator'
+        if sid == 'as5': scr['msg'] = 'High-pressure alarm'
         if st.get('img'): CXR[sid] = st['img']
         right = next(o for o in st['opts'] if o[1])
         nv = parse_vent(nxt.get('vent')) if nxt else None
         nmon = mon_of(nxt.get('vit'))[0] if nxt and nxt.get('vit') else mon
         after = {'mon': nmon or mon, 'happen': first_sentence(right[2]), 'why': first_sentence(st.get('teach', ''))}
-        if nv: after.update({'mode': nv['mode'], 'modeLong': nv['modeLong'], 'set': nv['set'], 'meas': nv['meas'], 'wave': (nxt.get('trace') or {}).get('sc'),
-                             'msg': '' if (nxt.get('trace') or {}).get('sc') else ('On NIV' if nv['mode'] == 'NIV' else 'Ventilator running')})
+        if nv:
+            akey = scenario(f'aa-{sid}-a', nv, C['kg'], kind)
+            after.update({'mode': nv['mode'], 'modeLong': nv['modeLong'], 'set': nv['set'], 'meas': nv['meas'], 'wave': akey})
         d = {'id': sid, 'eyebrow': f'Case {n_case} · ' + C['name'], 'head': re.sub(r'(\S+)$', r'<em>\1</em>', st['t']), 'hist': st['story'],
              'scr': scr, 'short': A['short'], 'after': after, 'theory': C['theory'][i] if i < len(C['theory']) else [], 'setq': A['setq']}
         bd.ST[sid] = {'story': st['story'], 'live': {'q': st['q'], 'opts': st['opts']}, 'illus': ILL[C['id']][min(i, len(ILL[C['id']]) - 1)]}
@@ -138,18 +286,37 @@ def build_case(C, n_case, code):
         sevmap = {'ABCD'[(j - k) % 4]: A['sev'][j] for j in range(4)}
         ords = bd.orders(sid, A['short'])
         T = bd.set_task(d, sid)
-        s12 = bd.stage_slides(d, code)
-        if st.get('table'):  # PEEP titration: the nurse's table in place of the monitor
-            s12 = re.sub(r'<div style="flex:none; zoom:1\.42;"><x-import component-from-global-scope="bedside-monitor".*?</x-import></div>', table_html(st['table']).replace('\\', '\\\\'), s12, count=1)
-        j = s12.index(f'<section data-live="{sid}_r"')
-        out += s12[:j] + room_slide(d, sid, ords, T, A['rule'], sevmap) + s12[j:]
+        bd.stage_slides(d, code)  # phone entries only; the slides are laid out below
+        vent_task = bool(T) and set(A['setq']['ifaces']) == {'VENT'}
+        n_pic = ILL[C['id']][min(i, len(ILL[C['id']]) - 1)]
+        out += bedside_slide(d, sid, ords, None if vent_task else T, n_pic, st, 'Live · the bedside')
+        if v or vent_task:
+            setfoot = ''
+            if vent_task:
+                setfoot = (f'<div style="flex:none; display:flex; justify-content:space-between; align-items:baseline; gap:16px; border:1px dashed var(--text-accent); border-radius:6px; padding:12px 18px;">'
+                           f'<span style="font-size:28px;"><span style="{MONO} font-size:18px; color:var(--text-accent);">On your phone · </span>{e(T["ask"])}</span>'
+                           f'<span data-set-count style="{MONO} font-size:18px; color:var(--text-secondary);">Waiting for settings</span></div>')
+            if st.get('table'):
+                setfoot = table_html(st['table']) + setfoot
+            out += console_slide(d, sid, scr, T, bd.plain(d['head']) + ' · ventilator', 'Live · the ventilator', sid, 'ask', setfoot)
+        j = None
+        out += room_slide(d, sid, ords, T, A['rule'], sevmap)
+        out += response_slide(d, sid, ords, after, T)
+        if after.get('set'):
+            ascr = {**scr, **{kk: after[kk] for kk in ('mode', 'modeLong', 'set', 'meas', 'wave') if kk in after}, 'mon': after['mon'], 'msg': ''}
+            sumfoot = ''
+            if T:
+                sumfoot = (f'<div style="flex:none; border-top:1px solid var(--border-subtle); padding-top:10px; display:flex; gap:16px; align-items:baseline;">'
+                           f'<span style="{MONO} font-size:17px; color:var(--text-accent); flex:none;">The room set</span>'
+                           f'<span data-set-summary style="font-size:24px; line-height:1.35; color:var(--text-secondary);">No settings sent</span></div>')
+            out += console_slide(d, sid, ascr, T, bd.plain(d['head']) + ' · the ventilator after', 'The settings · after', sid + '_r', 'show', sumfoot)
         bd.LIVE_OUT[sid].update({'sev': {L: [A['sev'][jj], st['opts'][jj][2]] for jj in range(4) for L in ['ABCD'[(jj - k) % 4]]},
                                  'monOk': after['mon'], 'kg': C['kg']})
         if A['rule']: bd.LIVE_OUT[sid]['rule'] = A['rule']
         if i: bd.LIVE_OUT[sid]['prev'] = ids[i - 1]
         course.append((sid, st['t'], sevmap, A['rule']))
         for t in d['theory']:
-            out += bd.reuse('disease-specific.html', t)
+            out += SPECIAL[t]() if t in SPECIAL else bd.reuse('disease-specific.html', t)
     # the course: the room's patients stage by stage, and each phone's own
     key = f"{C['id']}_course"
     bd.LIVE_OUT[key] = {'t': "Your patient's course", 'lines': ['Each stage, how your patient did on your orders and settings.'], 'course': [[sid, t] for sid, t, *_ in course]}
@@ -157,8 +324,7 @@ def build_case(C, n_case, code):
                    f' style="display:grid; grid-template-columns:420px minmax(0,1fr); gap:24px; align-items:start;"><span style="font-size:26px; line-height:1.25;">{e(t)}</span><div data-bar-sev></div></div>'
                    for sid, t, sm, rl in course)
     body = bd.header(f'Case {n_case} · ' + C['name'], "The room's <em>course</em>", 'Debrief') + f'<div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:16px; overflow:hidden;">{rows}</div>'
-    sec = bd.section(f"Case {n_case} · the room's course", body, 'Stage by stage, how the room\'s patients did: improving, no change, worse, life-threatening, from the orders and the settings together. Each phone shows its own patient\'s course.', live=key, mode='course', pad='56px 72px 64px')
-    out += sec
+    out += bd.section(f"Case {n_case} · the room's course", body, 'Stage by stage, how the room\'s patients did: improving, no change, worse, life-threatening, from the orders and the settings together. Each phone shows its own patient\'s course.', live=key, mode='course', pad='56px 72px 64px')
     deb = (z['stages'][-1].get('debrief') or [])
     if deb:
         items = ''.join(f'<li style="font-size:30px; line-height:1.35; margin-bottom:12px;">{e(x)}</li>' for x in deb)
@@ -186,6 +352,7 @@ def build():
 if __name__ == '__main__':
     bd.USED.clear(); bd._POCUS_DONE.clear()
     t = build()
+    write_vg()
     open(os.path.join(APP, 'talks', 'ards-asthma.html'), 'w').write(t)
     secs = re.findall(r'<section [^>]*>', t)
     print('ards-asthma.html', len([x for x in secs if 'data-deck-skip' not in x]), 'visible of', len(secs))

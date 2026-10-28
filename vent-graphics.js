@@ -123,6 +123,29 @@
     'ltv-b2p': {"mode": "VC", "vt": 55, "peep": 10, "C": 3.6, "R": 95, "rr": 20, "ti": 0.7, "window": 6, "scale": {"v": 70}, "efforts": [{"t": 0.9, "amp": 9, "dur": 0.4}, {"t": 1.6, "amp": 9, "dur": 0.4}, {"t": 2.4, "amp": 9, "dur": 0.4}, {"t": 3.9, "amp": 9, "dur": 0.4}, {"t": 4.5, "amp": 9, "dur": 0.4}, {"t": 5.4, "amp": 9, "dur": 0.4}]},
     'ltv-b2f': {"mode": "VC", "vt": 55, "peep": 10, "C": 4, "R": 95, "rr": 20, "ti": 0.7, "window": 6, "scale": {"v": 70}},
     // LTV-END
+    // AA-START (ARDS and asthma live deck: one screen each, from tools/build_aa.py)
+    'aa-ar0-a': {"peep": 6.0, "C": 4.4, "R": 25, "rr": 30, "window": 6.0, "scale": {"v": 112}, "mode": "PS", "ps": 10.0, "efforts": [{"t": 0.22, "amp": 7, "dur": 0.5}, {"t": 2.22, "amp": 7, "dur": 0.5}, {"t": 4.22, "amp": 7, "dur": 0.5}]},
+    'aa-ar1': {"peep": 6.0, "C": 4.4, "R": 25, "rr": 40.0, "window": 4.5, "scale": {"v": 112}, "mode": "PS", "ps": 10.0, "efforts": [{"t": 0.22, "amp": 7, "dur": 0.5}, {"t": 1.72, "amp": 7, "dur": 0.5}, {"t": 3.22, "amp": 7, "dur": 0.5}]},
+    'aa-ar2-a': {"peep": 7.0, "C": 3.9, "R": 25, "rr": 30.0, "window": 6.0, "scale": {"v": 120}, "mode": "PC", "pinsp": 19.0, "ti": 0.67},
+    'aa-ar3': {"peep": 7.0, "C": 3.9, "R": 25, "rr": 30.0, "window": 6.0, "scale": {"v": 120}, "mode": "PC", "pinsp": 19.0, "ti": 0.67},
+    'aa-ar4-a': {"peep": 12.0, "C": 5.4, "R": 25, "rr": 30.0, "window": 6.0, "scale": {"v": 120}, "mode": "PC", "pinsp": 14.0, "ti": 0.67},
+    'aa-ar5': {"peep": 12.0, "C": 5.4, "R": 25, "rr": 30.0, "window": 6.0, "scale": {"v": 120}, "mode": "PC", "pinsp": 14.0, "ti": 0.67},
+    'aa-ar5-a': {"peep": 10.0, "C": 4.7, "R": 25, "rr": 30.0, "window": 6.0, "scale": {"v": 120}, "mode": "PC", "pinsp": 16.0, "ti": 0.67},
+    'aa-ar6': {"peep": 10.0, "C": 4.7, "R": 25, "rr": 30.0, "window": 6.0, "scale": {"v": 120}, "mode": "PC", "pinsp": 16.0, "ti": 0.67, "efforts": [{"t": 0.15, "amp": 9, "dur": 0.4}, {"t": 1.1, "amp": 9, "dur": 0.4}, {"t": 2.05, "amp": 9, "dur": 0.4}, {"t": 3.0, "amp": 9, "dur": 0.4}, {"t": 3.95, "amp": 9, "dur": 0.4}, {"t": 4.9, "amp": 9, "dur": 0.4}]},
+    'aa-ar6-a': {"peep": 10.0, "C": 4.7, "R": 25, "rr": 40.0, "window": 4.5, "scale": {"v": 120}, "mode": "PC", "pinsp": 16.0, "ti": 0.5},
+    'aa-ar7': {"peep": 10.0, "C": 4.7, "R": 25, "rr": 40.0, "window": 4.5, "scale": {"v": 120}, "mode": "PC", "pinsp": 16.0, "ti": 0.5},
+    'aa-ar7-a': {"peep": 10.0, "C": 4.2, "R": 25, "rr": 30.0, "window": 6.0, "scale": {"v": 120}, "mode": "PC", "pinsp": 18.0, "ti": 0.67},
+    'aa-ar8': {"peep": 10.0, "C": 4.2, "R": 25, "rr": 30.0, "window": 6.0, "scale": {"v": 120}, "mode": "PC", "pinsp": 18.0, "ti": 0.67},
+    'aa-ar8-a': {"peep": 10.0, "C": 3.6, "R": 25, "rr": 25.0, "window": 7.2, "scale": {"v": 104}, "mode": "PC", "pinsp": 18.0, "ti": 0.8},
+    'aa-ar9': {"peep": 10.0, "C": 3.6, "R": 25, "rr": 25.0, "window": 7.2, "scale": {"v": 104}, "mode": "PC", "pinsp": 18.0, "ti": 0.8},
+    'aa-as2-a': {"peep": 4.0, "C": 7.0, "R": 91, "rr": 14.0, "window": 12.86, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 0.86, "pause": 0.15},
+    'aa-as3': {"peep": 4.0, "C": 7.0, "R": 91, "rr": 14.0, "window": 12.86, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 0.86, "pause": 0.15},
+    'aa-as3-a': {"peep": 0.0, "C": 6.4, "R": 60, "rr": 12.0, "window": 15.0, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 1.0, "pause": 0.15},
+    'aa-as4': {"peep": 0.0, "C": 6.4, "R": 60, "rr": 12.0, "window": 15.0, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 1.0, "pause": 0.15, "efforts": [{"t": 2.2, "amp": 5, "dur": 0.6}, {"t": 5.5, "amp": 5, "dur": 0.6}, {"t": 8.8, "amp": 5, "dur": 0.6}, {"t": 12.1, "amp": 5, "dur": 0.6}]},
+    'aa-as5': {"peep": 0.0, "C": 4, "R": 160, "rr": 12, "window": 15.0, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 1.0, "pause": 0.15},
+    'aa-as5-a': {"peep": 6.0, "C": 10.0, "R": 60, "rr": 12.0, "window": 15.0, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 1.0, "pause": 0.15},
+    'aa-as6': {"peep": 6.0, "C": 10.0, "R": 60, "rr": 12.0, "window": 15.0, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 1.0, "pause": 0.15},
+    // AA-END
     // VS-START (case decks: screens not covered above)
     'vs-bo4f': { mode: 'PS', ps: 8, peep: 6, C: 8, R: 25, rr: 30, window: 5, efforts: eff(reg(30, 5), 6, 0.6) },
     // VS-END

@@ -39,7 +39,8 @@ ARDS = {
       sev=[0, 2, 2, 1],
       setq=S(ifaces=VENT, start=S(iface='VENT', mode='PRVC', v=S(vt=75, pe=12, rr=30, ti=0.65, o=100)), ask='Change the ventilator'),
       rule=S(iface={'VENT': 0}, knobs=S(ti=[0.75, 1.0, 0.6, 1.2], vt=[60, 80, 50, 100], pe=[10, 12, 8, 14], rr=[25, 32, 20, 40], o=[80, 100, 60, 100], pi=[12, 20, 10, 25]))),
-    S(short=[['DOPE checks, then sedation', 'Settles, synchronous'], ['Blocker infusion first', 'Paralysed, not sedated'], ['Set rate up to 60', 'Stacks breaths'], ['Extubate to NIV', 'Re-intubation, arrest risk']],
+    S(wave_extra={'efforts': [{'t': round(0.15 + i * 0.95, 2), 'amp': 9, 'dur': 0.4} for i in range(6)]},
+      short=[['DOPE checks, then sedation', 'Settles, synchronous'], ['Blocker infusion first', 'Paralysed, not sedated'], ['Set rate up to 60', 'Stacks breaths'], ['Extubate to NIV', 'Re-intubation, arrest risk']],
       sev=[0, 2, 2, 3], setq=None, rule=None),
     S(short=[['Fluids even, antibiotics, Hb 7', 'Lung stops getting wetter'], ['20 mL/kg bolus', 'Into a wet lung'], ['Transfuse to Hb 12', 'Volume, lung injury'], ['Steroids and IVIG', 'No indication']],
       sev=[0, 2, 2, 1], setq=None, rule=None),
@@ -51,8 +52,9 @@ ARDS = {
       rule=S(iface={'VENT': 0}, knobs=S(vt=[55, 75, 50, 90], pe=[8, 12, 6, 14], rr=[20, 30, 16, 40], ti=[0.6, 0.9, 0.5, 1.1], o=[80, 100, 60, 100], pi=[12, 20, 10, 25]))),
   ],
   # theory from the disease-specific talk after each stage
-  'theory': [['PARDS definition', 'Severity'], [], ['Baby lung', 'Driving pressure', 'Targets'], ['Stiff lung on screen'], ['Titrating PEEP', 'PEEP table'],
-             ['Oxygen and CO2'], ['VILI'], [], ['Refractory defined', 'Prone', 'Rescue ladder'], ['HFOV', 'ECMO']],
+  'theory': [['PARDS definition', 'Severity'], [], ['Baby lung', 'Driving pressure', 'Targets'], ['Stiff lung on screen', 'Stress index'],
+             ['Titrating PEEP', '#ardsnet', 'Recruitment staircase', 'R/I ratio', '#deadspace'],
+             ['Oxygen and CO2'], ['VILI'], ['#pocus-day2', 'Ultrasound'], ['Refractory defined', 'Prone', 'Rescue ladder'], ['HFOV', 'ECMO']],
 }
 
 ASTHMA = {
@@ -74,7 +76,8 @@ ASTHMA = {
       sev=[0, 2, 2, 2],
       setq=S(ifaces=VENT, start=S(iface='VENT', mode='VC', v=S(vt=140, pe=4, rr=14, ti=0.9, o=80)), ask='Leave or change the ventilator'),
       rule=S(iface={'VENT': 0}, knobs=S(vt=[120, 160, 100, 200], rr=[10, 16, 8, 20], ti=[0.6, 1.0, 0.5, 1.2], pe=[0, 5, 0, 8], o=[40, 100, 30, 100], pi=[15, 25, 10, 30], te=[3.5, 99, 2, 99]))),
-    S(short=[['PEEP about 6', 'Triggers with less effort'], ['Keep PEEP 0', 'Ineffective efforts'], ['PEEP 12', 'Adds to hyperinflation'], ['Paralyse again, PEEP 0', 'Myopathy risk']],
+    S(wave_extra={'efforts': [{'t': round(2.2 + i * 3.3, 2), 'amp': 5, 'dur': 0.6} for i in range(4)]},
+      short=[['PEEP about 6', 'Triggers with less effort'], ['Keep PEEP 0', 'Ineffective efforts'], ['PEEP 12', 'Adds to hyperinflation'], ['Paralyse again, PEEP 0', 'Myopathy risk']],
       sev=[0, 1, 2, 1],
       setq=S(ifaces=VENT, start=S(iface='VENT', mode='VC', v=S(vt=140, pe=0, rr=12, ti=0.9, o=50)), ask='Set the PEEP'),
       rule=S(iface={'VENT': 0}, knobs=S(pe=[5, 7, 2, 9], vt=[120, 160, 100, 200], rr=[10, 16, 8, 20], ti=[0.6, 1.0, 0.5, 1.2], o=[30, 70, 21, 100], te=[3.5, 99, 2, 99]))),
