@@ -2016,7 +2016,6 @@ const SIM_STAGES = [
     goals: (m, a, s) => [
       ['Tidal volume 6–8 mL/kg (60–80 mL)', m.vte >= 58 && m.vte <= 82],
       ['Rate 25–35', m.rr >= 25 && m.rr <= 35],
-      ['PEEP 6–8 to start', s.peep >= 6 && s.peep <= 8],
       ['Plateau ≤ 30 cmH₂O', m.pplat <= 30],
       ['Expiration complete: auto-PEEP ≤ 1', m.auto <= 1],
       ['FiO₂ 1.0 until the first gas', m.fio2 >= 90]] },
