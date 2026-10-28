@@ -280,15 +280,29 @@ def video_slot(name, cap, h=560):
 _POCUS_DONE = set()
 
 
+POCUS_TXT = {
+    'mm1': ('The heart and the IVC with each <em>breath</em>', 'Heart first: a small, vigorously squeezing LV says empty, not failing. Then the IVC. On controlled ventilation, in sinus rhythm and deeply sedated, an IVC whose diameter swings with each positive-pressure breath predicts a rise in output with fluid. A full, fixed IVC does not. Fluid responsiveness is not fluid need: pair it with the pressure, the lactate and the lung.'),
+    'lv2': ('Full IVC, big right <em>heart</em>', 'The IVC is plethoric and does not move with the breath; the right ventricle is dilated and pushes the septum into the left. This is a right heart failing against its load, not a tank running dry. No bolus.'),
+    'su1': ('How well does the LV <em>squeeze</em>?', 'Eyeball the function: how close do the walls come in systole, how close does the mitral leaflet come to the septum. Here they barely move. Fluid will not help this heart; an inotrope will. The IVC clip is the same pattern as Leo\'s: full and fixed.'),
+}
+
+
 def pocus_slide(d, name, cap):
-    """One slide per case holds every clip (IVC and heart side by side)."""
+    """One slide per case holds every clip side by side."""
     if d['id'] in _POCUS_DONE:
         return ''
     _POCUS_DONE.add(d['id'])
-    slots = ''.join(video_slot(n, c) for n, c in d['pocus'])
-    body = header(d['eyebrow'], 'POCUS: the IVC and the <em>heart</em>', 'Video') + f'<div style="flex:1; min-height:0; display:flex; gap:30px; align-items:center;">{slots}</div>'
-    extra = {'su1': ' The IVC clip is the same pattern as Leo\'s: a plethoric IVC that does not vary with the breath.', 'mm1': ' No heart clip yet for Maya: describe a small, hyperdynamic LV.'}.get(d['id'], '')
-    return section(plain(d['head']) + ' · POCUS', body, 'Show the clips. Ask: empty, pump, obstructed or compressed? IVC: size and respiratory variation. Heart: LV size and squeeze, RV size, septum, effusion.' + extra)
+    head, notes = POCUS_TXT.get(d['id'], ('POCUS: the IVC and the <em>heart</em>', 'Show the clips. Empty, pump, obstructed or compressed?'))
+    k = len(d['pocus'])
+    slots = ''.join(video_slot(n, c, 600 if k < 3 else 470) for n, c in d['pocus'])
+    body = header(d['eyebrow'], head, 'POCUS · video') + f'<div style="flex:1; min-height:0; display:flex; gap:30px; align-items:center;">{slots}</div>'
+    return section(plain(d['head']) + ' · POCUS', body, notes)
+
+
+def views_slide(eyebrow='POCUS · the views you need'):
+    slots = ''.join(video_slot(n, c, 520) for n, c in [('subcostal-normal', 'Subcostal four-chamber'), ('a4c-normal', 'Apical four-chamber'), ('ivc-normal', 'IVC entering the right atrium')])
+    body = header(eyebrow, 'Four views, one <em>question</em>', 'POCUS · video') + f'<div style="flex:1; min-height:0; display:flex; gap:30px; align-items:center;">{slots}</div>'
+    return section('POCUS · the views', body, 'The basic views: subcostal four-chamber, apical four-chamber and the IVC as it enters the right atrium. One question at a time: is the heart empty, is it squeezing, is the right side obstructed, is it compressed.')
 
 
 def opener(key, eyebrow, name, lines, n, notes, code):
@@ -551,6 +565,7 @@ def build_part2(body_only=False):
          f'<div style="display:flex; flex-direction:column; gap:30px;">' + ''.join(f'<span style="font-size:44px; line-height:1.25;">{e(x)}</span>' for x in ['Blood gas: arterial or venous?', 'Chest X-ray', 'Bedside ultrasound: echo?']) + '</div></div>')
     out += section('Investigations', body, 'Three things in the first minutes: a blood gas (venous is enough to start), a chest film, and the ultrasound on the heart before any fluid.', live='inv2', mode='info')
     for lab in ['Blood gas', 'Gas answer', 'Chest X-ray', 'Echo', 'Your diagnosis', 'Provisional diagnosis']:
+        if lab == 'Echo' and not FULL: out += views_slide('A 4-year-old · before the echo')
         out += reuse('cp-interactions.html', lab, strip_live=False)
     for d in BOY:
         out += stage_slides(d, code)
