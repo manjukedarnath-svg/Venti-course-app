@@ -101,7 +101,7 @@ function api(route, b) {
 
 http.createServer((req, res) => {
   if (req.url.startsWith('/api/')) {
-    const cors = req.url.startsWith('/api/live/') ? { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } : {};
+    const cors = req.url.startsWith('/api/') ? { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } : {};
     if (req.method === 'OPTIONS') { res.writeHead(204, cors); return res.end(); }
     let body = '';
     req.on('data', c => { body += c; if (body.length > 1e5) req.destroy(); });
