@@ -14,7 +14,7 @@ let body = '';
 // ---------- cover ----------
 body += `<section class="cover">
   <div class="mono dim">VentCourse · Paediatric ventilation · Simulator scenario book</div>
-  <div class="cover-mid"><h1>Twenty children on the <em>ventilator</em></h1>
+  <div class="cover-mid"><h1>Twenty-five children on the <em>ventilator</em></h1>
   <p class="lede">Every simulator scenario in the app, stage by stage: what the candidate sees, what they can ask for and do, what the patient does in response, the targets that close each stage, and what was going on.</p></div>
   <div class="mono">Dr Manju Kedarnath<br><span class="dim">Pediatrics, Peds ER and PICU · KIMS Hospitals, Electronic City, Bangalore</span><br><span class="dim">${D.length} scenarios · ${nStages} stages · October 2026</span></div>
 </section>`;
