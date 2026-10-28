@@ -10,6 +10,26 @@ import json, re, html, sys, hashlib, os, subprocess, tempfile
 import segno  # pip install segno
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from deckdata import MAYA, LEO, CHD, BOY, SURESH, LTV
+_TH = {'mm1': ['Danger of intubation', 'Shock index'], 'mm3': ['Venous return', 'The crash', 'Three commands'], 'mm5': ['PPV', 'In children', 'ITP matrix'],
+       'lv2': ['PVR U-curve', 'Interdependence', 'D-sign', 'Decode'], 'lv3': ['RV-protective ventilation'], 'lv4': ['Hyperinflation', 'Auto-PEEP on screen', 'Disconnection test'],
+       'bo1': ['LV afterload', 'MV as VAD', 'POCUS'], 'bo3': ['ACPE cycle'], 'su3': ['Afterload and stroke volume'],
+       'sd2': ['ltv:Road home', 'ltv:The team'], 'sg2': ['ltv:Defining PMV', 'ltv:Four indications', 'ltv:Timing', 'ltv:Go early or wait'], 'sp2': ['ltv:Assume the tube', 'ltv:The algorithm', 'ltv:False passage']}
+for _d in MAYA + LEO + CHD + BOY + SURESH + LTV:
+    if _d['id'] in _TH: _d['theory'] = list(dict.fromkeys(_TH[_d['id']] + [t for t in _d['theory'] if t not in ('Pre-induction',)] + (['Pre-induction'] if _d['id'] == 'mm2' else [])))
+
+_HIDE = {'ch1': ('Child 1 of 5 · 4 months, 5 kg · intubated for bronchiolitis', 'Saturation 100%, lactate <em>rising</em>'),
+         'ch2': ('Child 2 of 5 · 7 months, 7 kg · blue spells', 'A spell that needs the <em>tube</em>'),
+         'ch3': ('Child 3 of 5 · newborn, 3.5 kg · day 1 after heart surgery', 'Saturation 90%, NIRS <em>falling</em>'),
+         'ch4': ('Child 4 of 5 · 6 months, 6 kg · after heart surgery', 'Blue, with a plethoric <em>face</em>'),
+         'ch5': ('Child 5 of 5 · 4 years, 16 kg · after heart surgery', 'Liver up, lactate <em>rising</em>'),
+         'so1': ('Case 1 of 5 · 3 y, 14 kg · the night after tonsil surgery', None), 'sd1': ('Case 2 of 5 · 15 y, 45 kg · weak since early childhood', None),
+         'sm1': ('Case 3 of 5 · 5 mo, 6 kg · floppy since birth, now a cold', None), 'sg1': ('Case 4 of 5 · 10 y, 30 kg · weak legs for a week, now arms', None),
+         'sp1': ('Case 5 of 5 · 7 mo, 5 kg · born at 25 weeks, never off the ventilator', None),
+         'su1': ('An 8-year-old · 24 kg', None)}
+for _d in CHD + LTV + SURESH:
+    if _d['id'] in _HIDE:
+        ey, hd = _HIDE[_d['id']]; _d['eyebrow'] = ey
+        if hd: _d['head'] = hd
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOST = 'https://venti-course-app-production.up.railway.app'
@@ -20,7 +40,7 @@ ST = D['stages']
 FALLBACK_ILLUS = {'so1': 'rapid1_aarav_osa', 'so2': 'rapid1_aarav_osa', 'sd1': 'rapid2_rohan_duchenne', 'sd2': 'rapid2_rohan_duchenne',
                   'sm1': 'rapid3_meera_sma', 'sm2': 'rapid3_meera_sma', 'sg1': 'rapid4_diya_gbs', 'sg2': 'rapid4_diya_gbs',
                   'sp1': 'rapid5_kabir_bpd', 'sp2': 'rapid5_kabir_bpd', 'bo3': None, 'bo4': None}
-SRC = {name: open(os.path.join(APP, 'talks', name)).read() for name in ['cp-interactions.html', 'rapid-cases.html']}
+SRC = {name: open(os.path.join(APP, 'talks', name)).read() for name in ['cp-interactions.html', 'rapid-cases.html', 'long-term-ventilation.html']}
 
 e = lambda t: html.escape(str(t), quote=True)
 MONO = "font-family:var(--font-mono); letter-spacing:.14em; text-transform:uppercase;"
@@ -200,6 +220,7 @@ def stage_slides(d, code):
     body = header(d['eyebrow'], d['head'], 'Live · what do you do?') + \
         f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:540px minmax(0,1fr) 470px; gap:30px;">{col1}{device(scr)}{col3}</div>'
     s1 = section(f'{title_plain}', body, notes1, live=sid, mode='ask')
+    if sid in SET_WORD: s1 = set_slide(d) + s1
     # slide 2: the response
     notes2 = 'The response. ' + right[3] + ' ' + (st.get('event') or '')
     col1 = f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0; min-height:0;">{picture(n_after, sid=sid)}{monitor(aft["mon"])}</div>'
@@ -210,6 +231,26 @@ def stage_slides(d, code):
         f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:540px minmax(0,1fr) 470px; gap:30px;">{col1}{device(aft_scr, dim=("set" not in aft))}{col3}</div>' + foot
     s2 = section(f'{title_plain} · response', body, notes2, live=sid + '_r', mode='show', results=sid)
     return s1 + s2
+
+
+SET_WORD = {'mm2': 'NIV for pre-oxygenation', 'mm3': 'ventilator for the tube', 'ch1': 'ventilator', 'ch2': 'ventilator', 'ch3': 'ventilator', 'ch4': 'ventilator', 'ch5': 'ventilator',
+            'bo1': 'support: high-flow, NIV or ventilator', 'bo2': 'ventilator for the tube', 'su2': 'ventilator before the drugs',
+            'so1': 'support: high-flow, CPAP or bilevel', 'sd1': 'home support: CPAP or bilevel', 'sm1': 'support: high-flow, CPAP or bilevel', 'sg1': 'ventilator', 'sp1': 'ventilator'}
+
+
+def set_slide(d):
+    sid = d['id']; key = sid + '_set'; word = SET_WORD[sid]; scr = d['scr']
+    n = illus_of(sid)
+    LIVE_OUT[key] = {'t': d['eyebrow'] + ' · your settings', 'mon': scr['mon'], 'lines': [ST[sid]['story']],
+                     'q': 'Set the ' + word + ': type mode and settings (e.g. EPAP 8, IPAP 14, FiO₂ 0.6)', 'text': True}
+    if n: LIVE_OUT[key]['illus'] = ipath(n, '')
+    col1 = f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0; min-height:0;">{picture(n, sid=sid)}{monitor(scr["mon"])}</div>'
+    wall = ('<div style="position:relative; min-height:0; border:1px dashed var(--border-default); border-radius:6px;">'
+            '<div data-live-texts style="position:absolute; inset:18px; display:flex; flex-wrap:wrap; gap:14px; align-content:flex-start; overflow:hidden;"></div>'
+            f'<div data-live-empty style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:52px; color:var(--text-secondary); text-align:center; padding:40px;">Type your settings on the phone</div></div>')
+    body = header(d['eyebrow'], 'You set the <em>' + e(word.split(':')[0]) + '</em>', 'Live · type your settings') + \
+        f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:540px minmax(0,1fr); gap:30px;">{col1}{wall}</div>'
+    return section(plain(d['head']) + ' · your settings', body, ST[sid]['story'] + ' Before we show the screen: what would you set? Type it on the phones.', live=key, mode='text')
 
 
 def opener(key, eyebrow, name, lines, n, notes, code):
@@ -224,6 +265,7 @@ def opener(key, eyebrow, name, lines, n, notes, code):
 
 
 def reuse(src, label, new_label=None, strip_live=True):
+    if label.startswith('ltv:'): src, label = 'long-term-ventilation.html', label[4:]
     s = SRC[src]
     i = s.index(f'data-label="{label}"')
     a = s.rfind('<section', 0, i)
@@ -323,22 +365,22 @@ def build_part1():
                       'Three cases on the ventilator: the difficult airway, the failing right ventricle, the congenital heart.',
                       'Thirty minutes, three cases, and you run them. Every case starts at the bedside: the child, the monitor and the ventilator. You choose the order on your phone, and the screen shows what the child does next. The physiology comes in as the cases need it.')
     out += join_slide(code, 'Scan the code with your phone camera. It opens the VentCourse app straight into this session; no account needed. If the camera will not scan, open the app, tap Live session and type CP1.')
-    out += opener('maya_case', 'Case 1 · the physiologically difficult airway', 'Maya: the haemodynamic <em>cliff</em>',
-                  ['3 years · 15 kg · refractory septic shock', 'Needs a tube, no reserve to survive one'], 'maya1_arrival',
+    out += opener('maya_case', 'Case 1 · Maya', 'A 3-year-old <em>girl</em>',
+                  ['15 kg · three days of fever, vomiting, lethargy', 'One 20 mL/kg bolus in the ED; arrives obtunded, mottled'], 'maya1_arrival',
                   'Maya, three years, fifteen kilos. Three days of fever, now obtunded and mottled to the thighs on one cannula. She needs a tube, and she has no reserve to survive one. VT 6 to 8 mL/kg is 90 to 120 mL.', code)
     for d in MAYA:
         out += stage_slides(d, code)
         for t in d['theory']: out += reuse('cp-interactions.html', t)
     out += reuse('cp-interactions.html', 'Maya · debrief')
-    out += opener('leo_case', 'Case 2 · the failing right ventricle', 'Leo: crashing on the <em>ventilator</em>',
-                  ['6 years · 20 kg · influenza PARDS', 'Intubated 24 hours, deeply sedated'], 'leo1_desat_on_turning',
+    out += opener('leo_case', 'Case 2 · Leo', 'A 6-year-old <em>boy</em>',
+                  ['20 kg · flu-like illness, worsening breathing', 'Intubated 24 hours ago; desaturated when turned'], 'leo1_desat_on_turning',
                   'Leo, six years, twenty kilos, influenza A pneumonia, intubated twenty-four hours ago. He desaturates, the PEEP goes up, and the right ventricle fails. VT 6 mL/kg is 120 mL; he is running 110.', code)
     for d in LEO:
         out += stage_slides(d, code)
         for t in d['theory']: out += reuse('cp-interactions.html', t)
     out += reuse('cp-interactions.html', 'Leo · debrief')
-    out += opener('chd_case', 'Case 3 · the congenital heart', 'Five lesions, five <em>screens</em>',
-                  ['PVR and SVR are the levers', 'Each lesion needs the opposite of the last'], 'chd0_anatomy_normal',
+    out += opener('chd_case', 'Case 3 · five children', 'Five children, five <em>hearts</em>',
+                  ['Infants and children with heart disease', 'Each one on a ventilator, each one different'], 'chd0_anatomy_normal',
                   'Five bedside vignettes, one ventilator screen each. FiO2, CO2, pH and mean airway pressure move PVR. The normal heart first, so each lesion can be compared against it.', code)
     out += reuse('cp-interactions.html', 'Two spigots')
     for d in CHD:
@@ -357,7 +399,7 @@ def build_part2():
     out += join_slide(code, 'Scan the code with your phone camera to join; no account needed. Or open the app, tap Live session and type CP2.')
     # the 4-year-old: bedside, investigations, then the ventilator
     LIVE_OUT['boy_case'] = {'t': 'A 4-year-old boy', 'illus': ipath('live1_arrival', ''), 'lines': ['Five days of fever, runny nose and cough', 'Fast breathing since yesterday', 'Lethargic since this morning, increased work of breathing', 'Received in the ER']}
-    out += opener('boy_case', 'Case 1 · the failing left ventricle', 'A 4-year-old <em>boy</em>',
+    out += opener('boy_case', 'Case 1 · in the ER', 'A 4-year-old <em>boy</em>',
                   ['Five days of fever, runny nose, cough', 'Fast breathing, lethargic since morning'], 'live1_arrival',
                   'Five days of fever, runny nose and cough. Fast breathing since yesterday, lethargic since this morning, more work of breathing. Received in the ER. What do you see?', code)
     LIVE_OUT['boy_case']['lines'] = ['Five days of fever, runny nose and cough', 'Fast breathing since yesterday', 'Lethargic since this morning, increased work of breathing', 'Received in the ER']
@@ -386,16 +428,22 @@ def build_part2():
                        [('Start', ['EPAP 8 is the treatment', 'Inotrope, no bolus']), ('The tube', ['The drugs are the danger', 'Pre-set, push-dose, ketamine']),
                         ('After', ['PEEP 8–10 while the BP holds', 'Closed suction only']), ('Weaning', ['A cardiac stress test', 'Extubate onto NIV'])],
                        'Positive pressure is a treatment for the failing LV: start it through a mask, EPAP 8. If the tube is needed, the danger is the induction drugs. After the tube keep the PEEP that unloads the LV. And wean onto NIV, not off it.')
-    out += opener('suresh_case', 'Case 2 · KarPediCon Station D', 'Suresh: the heart <em>first</em>',
-                  ['8 years · 24 kg · acute myocarditis', 'EF 15%, moderate MR, BP 68/40'], 'suresh1_bedside',
+    out += opener('suresh_case', 'Case 2 · KarPediCon Station D', 'An 8-year-old <em>boy</em>',
+                  ['24 kg · five days of fever and fatigue', 'Referred after one fluid bolus; BP 68/40'], 'suresh1_bedside',
                   'Suresh, eight, twenty-four kilos, acute myocarditis, ejection fraction 15 per cent with moderate mitral regurgitation, in cardiogenic shock after one fluid bolus. Support the heart before the tube; set the ventilator before the drugs; protect preload after the tube; then PEEP for the LV.', code)
     for d in SURESH:
         out += stage_slides(d, code)
         for t in d['theory']: out += reuse('cp-interactions.html', t)
-    out += cards_slide('Suresh · debrief', 'Suresh · debrief', 'The order <em>matters</em>',
-                       [('Recognise', ['JVP, liver, cold, low EF', 'No more fluid']), ('Support', ['Adrenaline or milrinone', 'No pure constrictor alone']),
-                        ('Intubate', ['Ventilator set first', 'Ketamine reduced, pads on']), ('After', ['Preload, then the rate', 'Then PEEP for the LV'])],
-                       'Cardiogenic shock: raised JVP, hepatomegaly, cool peripheries, fluid-unresponsive, low EF. Adrenaline or milrinone, not a pure vasoconstrictor. Set the ventilator before induction, ketamine at a reduced dose, push-dose adrenaline and pads on. After the tube: preload first, then match his minute ventilation, then PEEP for the LV. Escalate to ECMO or VAD early: I need you here now.')
+    DEB = [('Shock Recognition', 'What distinguishes cardiogenic from distributive (septic) shock in this child?', 'Cardiogenic: raised JVP, hepatomegaly, cool peripheries, fluid-unresponsive, elevated BNP/troponin, low EF on ECHO; septic: warm peripheries, low SVR, flat JVP, fluid-responsive (early)'),
+           ('Inotrope Choice', 'Why is fluid administration potentially harmful in cardiogenic shock and what is your first inotrope choice?', 'Fluid overloads a failing ventricle → worsens pulmonary oedema and MR; first choice: low-dose adrenaline (0.05–0.1 mcg/kg/min) or milrinone (reduces afterload, inotrope); avoid pure vasoconstrictors'),
+           ('Safe Intubation', 'Why did you avoid ketamine for induction in cardiogenic shock?', 'Ketamine is a sympathomimetic — causes tachycardia and hypertension; in a failing myocardium with HR 168, this is dangerous; use etomidate (haemodynamically neutral) or low-dose fentanyl + midazolam'),
+           ('Post-Intubation Management', 'Why did BP fall after intubation and how do you manage it?', 'IPPV reduces venous return (preload) → CO falls in volume-depleted/failing heart; cautious 5 mL/kg fluid; reduce PEEP; vasopressor uptitration; this is expected — anticipate before intubation, not react after'),
+           ('Escalation', 'At what point would you consider mechanical circulatory support (ECMO/VAD)?', 'Refractory cardiogenic shock: MAP < 50 despite 2 vasopressors, lactate rising despite treatment, OI > 16, deteriorating ECHO function; early referral to centre with ECMO/VAD capability; Berlin Heart for chronic cardiomyopathy'),
+           ('Communication', 'How do you communicate urgency to the cardiology team when calling for help?', 'SBAR + "I need you here now": state BP, lactate, EF; don\'t say "when you get a chance"; document time of call; escalate to attending if specialist delayed > 15 minutes')]
+    for part, rows in (('1 of 2', DEB[:3]), ('2 of 2', DEB[3:])):
+        trs = ''.join(f'<tr><td style="padding:16px; font-family:var(--font-display); font-size:32px; vertical-align:top; border-bottom:1px solid var(--border-subtle);">{e(a)}</td><td style="padding:16px; font-size:24px; line-height:1.3; vertical-align:top; border-bottom:1px solid var(--border-subtle);">{e(b)}</td><td style="padding:16px; font-size:24px; line-height:1.3; vertical-align:top; border-bottom:1px solid var(--border-subtle);">{e(c)}</td></tr>' for a, b, c in rows)
+        body = header('Suresh · debrief · ' + part, 'Debrief <em>domains</em>', 'Station D') + f'<div style="flex:1; display:flex; align-items:center;"><table style="border-collapse:collapse; width:100%;"><tr><th style="text-align:left; padding:12px 16px; {MONO} font-size:18px;">Domain</th><th style="text-align:left; padding:12px 16px; {MONO} font-size:18px;">Question</th><th style="text-align:left; padding:12px 16px; {MONO} font-size:18px;">Key points</th></tr>{trs}</table></div>'
+        out += section('Suresh · debrief ' + part, body, 'Debrief, station sheet.', pad='70px 100px')
     out += close_slide('Preload first, then <em>PEEP</em>', 'Both cases are in the app: Cases · Sim scenarios 11 and 12.',
                        'For the failing left ventricle, positive pressure is a drug and the induction is the danger. Both children are simulator scenarios 11 and 12 in the app. Thank you.', 'Part 2')
     return shell('Cardiopulmonary interactions · Part 2', out, code)
