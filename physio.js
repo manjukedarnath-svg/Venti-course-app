@@ -87,6 +87,9 @@
         if (P.kind === 'asthma') {   // flow limitation (the waterfall): external PEEP up to ~80% of the intrinsic PEEP does not raise the total
           const tot = pe <= 0.8 * s.auto ? s.auto : s.auto + (pe - 0.8 * s.auto) * 0.9; s.autoI = s.auto; s.auto = Math.max(0, tot - pe); }
         else s.autoI = s.auto;
+        // the high-pressure limit (40 cmH₂O): the ventilator ends the breath early, so less volume goes in
+        s.auto = Math.min(s.auto, Math.max(0, 38 - pe));   // trapped pressure cannot pass the limit: the chest stays full and barely ventilates
+        if (pe + s.auto + s.vt / C > 40) { s.vt = Math.max(0.1 * (v.vt || 6 * kg), (40 - pe - s.auto) * C); s.limited = true; } else s.limited = false;
         s.pEnd = pe + s.auto + s.vt / C;
         s.mapAw = pe + (s.pEnd - pe) * (ti * rr / 60) * (set.mode === 'VC' ? 0.6 : 0.9);
         L = lung(K, pe + s.auto + (K.kmap ?? 0.5) * (s.mapAw - pe - s.auto), s.pEnd); C = 0.6 * C + 0.4 * cUnit * L.cRel; }   // recruitment follows the time-averaged pressure; damped: overstretch and plateau feed each other

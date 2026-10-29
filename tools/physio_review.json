@@ -327,18 +327,18 @@
    "TotPEEP": "8"
   },
   "after": {
-   "SpO2": "65",
-   "HR": "218",
-   "BP": "46/34",
-   "pH": "6.96",
-   "PaCO2": "138",
-   "PaO2": "38",
-   "Plat": "74.5",
-   "dP": "38.8",
-   "Crs": "5.1",
+   "SpO2": "66",
+   "HR": "221",
+   "BP": "49/36",
+   "pH": "6.90",
+   "PaCO2": "160",
+   "PaO2": "39",
+   "Plat": "40",
+   "dP": "4.4",
+   "Crs": "5.7",
    "TotPEEP": "35.6"
   },
-  "alarm": "Plateau 74.5: above 30 · Driving pressure 38.8: above 15 · High pressure alarm: peak 106.5 · Expiration does not finish: auto-PEEP 27.6 · VT 200 mL: 10.0 mL/kg · Cardiac output down 82%: venous return squeezed"
+  "alarm": "Plateau 40: above 30 · High pressure limit reached: breaths cut short, VT 25 mL delivered · Expiration does not finish: auto-PEEP 27.6 · Cardiac output down 77%: venous return squeezed"
  },
  {
   "n": 12,
@@ -358,18 +358,18 @@
    "TotPEEP": "8"
   },
   "after": {
-   "SpO2": "80",
-   "HR": "195",
-   "BP": "68/47",
+   "SpO2": "81",
+   "HR": "194",
+   "BP": "69/48",
    "pH": "6.90",
    "PaCO2": "160",
-   "PaO2": "53",
-   "Plat": "41.8",
-   "dP": "25",
-   "Crs": "5.6",
+   "PaO2": "54",
+   "Plat": "40",
+   "dP": "23.2",
+   "Crs": "5.7",
    "TotPEEP": "16.8"
   },
-  "alarm": "Plateau 41.8: above 30 · Driving pressure 25: above 15 · High pressure alarm: peak 61.4 · Expiration does not finish: auto-PEEP 12.8 · Cardiac output down 52%: venous return squeezed"
+  "alarm": "Plateau 40: above 30 · Driving pressure 23.2: above 15 · High pressure limit reached: breaths cut short, VT 133 mL delivered · Expiration does not finish: auto-PEEP 12.8 · Cardiac output down 50%: venous return squeezed"
  },
  {
   "n": 13,
