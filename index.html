@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="_ds/solstice-design-system-a0f434e9-f981-4221-9ca5-ab89c7b9d6bc/styles.css">
   <script src="_ds/solstice-design-system-a0f434e9-f981-4221-9ca5-ab89c7b9d6bc/_ds_bundle.js"></script>
   <script src="./vent-graphics.js"></script>
+  <script src="./physio.js"></script>
   <script src="./patient-figure.js"></script>
   <script src="./bedside-monitor.js"></script>
   <style>
@@ -4690,31 +4691,47 @@ function lvSupport(set, P) {
   d.ox = d.fio2 * recruit(d.map);
   return d;
 }
+const LVP_CAL = {};
 function lvPatient(P, set, ordSev) {
-  const A = P.anc, a = lvSupport(A.set, P), c = lvSupport(set, P); if (!a || !c) return null;
-  const mon = A.mon || [], g = A.gas || {}, n = k => { const r = mon.find(([x]) => x.replace(/₂/g, '2').startsWith(k)); return r ? parseFloat(r[1]) : NaN; };
-  const spA = n('SpO2'), po2A = g['PaO₂'] || lvPO2(isNaN(spA) ? 92 : spA), pco2A = g['PaCO₂'] || 45, hco3 = g.pH ? 0.03 * pco2A * Math.pow(10, g.pH - 6.1) : (g['HCO₃'] || 24);
-  const po2 = Math.max(25, Math.min(500, po2A * c.ox / a.ox)), pco2 = Math.max(22, Math.min(140, pco2A * a.va / Math.max(1, c.va)));
-  const ph = 6.1 + Math.log10(hco3 / (0.03 * pco2));
-  let sp = Math.round(lvSO2(po2)); if (!isNaN(spA) && Math.abs(sp - lvSO2(po2A)) < 0.5) sp = Math.round(spA);
-  const ard = P.kind === 'ards', sev = ordSev || 0, dS = [0, 0, -12, -28], dH = [0, 0, 15, 35];
-  const bpDrop = (ard ? Math.max(0, c.map - Math.max(a.map, 19)) * 2.5 : 0) + Math.max(0, c.auto - Math.max(a.auto, 2)) * 2.5 + (ph < 7.1 ? 8 : 0);
-  const out = mon.map(([k, x]) => { const t = String(x), K = k.replace(/₂/g, '2');
-    if (/^SpO2/.test(K)) return [k, String(Math.max(40, sp - (sev >= 2 ? 3 * (sev - 1) : 0)))];
-    if (/^RR/.test(K)) return [k, c.ctl ? String(Math.round(c.rr)) : String(Math.round(Math.max(12, (parseFloat(t) || c.rr) * Math.pow(a.va / Math.max(1, c.va), 0.4))))];
-    if (/BP/.test(K)) { const m = t.match(/(\d+)\s*\/\s*(\d+)/); return m ? [k, Math.max(30, Math.round(+m[1] - bpDrop + dS[sev])) + '/' + Math.max(15, Math.round(+m[2] - bpDrop * 0.6 + dS[sev] * 0.6))] : [k, x]; }
-    if (/^HR/.test(K)) { const h = parseFloat(t) || 140; return [k, String(Math.round(Math.max(60, Math.min(230, h + 1.2 * ((isNaN(spA) ? sp : spA) - sp) + 0.3 * (pco2 - pco2A) + 0.6 * bpDrop + dH[sev]))))]; }
+  const V = window.VCPhysio; if (!V || !set) return null;
+  const A = P.anc, mon = A.mon || [], f = k => (mon.find(([x]) => x.replace(/₂/g, '2').startsWith(k)) || [])[1];
+  const ck = JSON.stringify(P); let cal = LVP_CAL[ck];
+  if (!cal) { try { cal = LVP_CAL[ck] = V.calibrate(P, { set: A.set, gas: A.gas, bp: f('BP') || f('ABP') || '', spo2: parseFloat(f('SpO2')) || null }); } catch (e) { return null; } }
+  const s = lvParse(set), r = V.run(P, cal, s), d = lvSupport(s, { ...P, C: r.C });   // the breath is drawn on the compliance the physiology gives
+  const sev = ordSev || 0, dS = [0, 0, -12, -28], dH = [0, 0, 15, 35], spA = parseFloat(f('SpO2')), hrA = parseFloat(f('HR')) || 140;
+  const sp = Math.round(Math.max(40, Math.min(100, (isNaN(spA) ? V.so2(cal.ref.pa) : spA) + r.dSat - (sev >= 2 ? 3 * (sev - 1) : 0))));
+  const hr = Math.round(Math.max(60, Math.min(230, hrA * (1 + 0.35 * (1 - r.mapBp / r.mapBpA)) + 1.2 * Math.max(0, -r.dSat) - 0.5 * Math.max(0, r.dSat) + 0.25 * (r.paco2 - cal.ref.paco2) + dH[sev])));
+  const out = mon.map(([k, x]) => { const K = k.replace(/₂/g, '2');
+    if (/^SpO2/.test(K)) return [k, String(sp)];
+    if (/^HR/.test(K)) return [k, String(hr)];
+    if (/^RR/.test(K)) return [k, String(Math.round(r.sup.ctl ? Math.max(r.sup.rr, 0) : r.sup.rr))];
+    if (/BP/.test(K)) return [k, Math.max(30, r.sys + dS[sev]) + '/' + Math.max(15, Math.round(r.dia + dS[sev] * 0.6))];
     return [k, x]; });
   const f1 = x => (Math.round(x * 10) / 10).toString(), meas = [];
-  if (c.stats) { meas.push(['Peak', f1(c.stats.pip)]); if (c.ctl) meas.push(['Plateau', f1(c.stats.plat)], ['ΔP', f1(c.stats.plat - c.peep)]); meas.push(['VTe', String(Math.round(c.vtEff || c.vt))], ['MAP', f1(c.map)]); if (c.auto >= 1) meas.push(['Auto-PEEP', f1(c.auto)]); }
-  meas.push(['pH', ph.toFixed(2)], ['PaCO₂', String(Math.round(pco2))], ['PaO₂', String(Math.round(po2))]);
-  const alarm = [];
-  if (c.stats && c.ctl && c.stats.plat > 30) alarm.push('Plateau ' + f1(c.stats.plat) + ': above 30');
-  if (c.stats && c.ctl && c.stats.plat - c.peep > 15) alarm.push('Driving pressure ' + f1(c.stats.plat - c.peep) + ': above 15');
-  if (c.stats && c.stats.pip > 40) alarm.push('High pressure alarm: peak ' + f1(c.stats.pip));
-  if (c.auto > 5) alarm.push('Expiration does not finish: auto-PEEP ' + f1(c.auto));
-  if (c.vt > 9 * P.kg) alarm.push('VT ' + Math.round(c.vt) + ' mL: ' + (c.vt / P.kg).toFixed(1) + ' mL/kg');
-  return { mon: out, meas, sc: c.sc, set: c.set, sp, alarm: alarm.join(' · ') };
+  if (d && d.stats) { meas.push(['Peak', f1(d.stats.pip)]); if (r.sup.ctl) meas.push(['Plateau', f1(d.stats.plat)], ['ΔP', f1(d.stats.plat - r.sup.peep)]);
+    meas.push(['VTe', String(Math.round(d.stats.vt))], ['MAP', f1(d.stats.map)], ['Crs', f1(r.C)]); if (r.sup.auto >= 1) meas.push(['Auto-PEEP', f1(r.sup.auto)]); }
+  meas.push(['pH', r.ph.toFixed(2)], ['PaCO₂', String(Math.round(r.paco2))], ['PaO₂', String(Math.round(r.pa))]);
+  if (r.sup.ctl || s.iface === 'NIV') meas.push(['OI', f1(r.oi)]);
+  const alarm = [], plat = d && d.stats ? d.stats.plat : r.sup.pEnd;
+  if (r.sup.ctl && plat > 30) alarm.push('Plateau ' + f1(plat) + ': above 30');
+  if (r.sup.ctl && plat - r.sup.peep > 15) alarm.push('Driving pressure ' + f1(plat - r.sup.peep) + ': above 15');
+  if (d && d.stats && d.stats.pip > 40) alarm.push('High pressure alarm: peak ' + f1(d.stats.pip));
+  if (r.sup.auto > 5) alarm.push('Expiration does not finish: auto-PEEP ' + f1(r.sup.auto));
+  if (r.sup.vt > 9 * P.kg) alarm.push('VT ' + Math.round(r.sup.vt) + ' mL: ' + (r.sup.vt / P.kg).toFixed(1) + ' mL/kg');
+  if (r.coRel < 0.75) alarm.push('Cardiac output down ' + Math.round((1 - r.coRel) * 100) + '%: venous return squeezed');
+  return { mon: out, meas, sc: d ? d.sc : null, set: s, sp, alarm: alarm.join(' · ') };
+}
+// after a change the patient settles, it does not jump: oxygen over about 25 s, CO₂ and pH over about a minute (sped up for the session)
+function lvSettle(from, to, t) {
+  if (!from || !to || t > 240) return to;
+  const tau = k => /^SpO|PaO|OI/.test(k) ? 25 : /PaCO|pH/.test(k) ? 60 : 12;
+  const mix = (k, a, b) => { const A = String(a), B = String(b), w = Math.exp(-t / tau(k));
+    const m1 = A.match(/^(\d+)\/(\d+)$/), m2 = B.match(/^(\d+)\/(\d+)$/);
+    if (m1 && m2) return Math.round(+m2[1] + (m1[1] - m2[1]) * w) + '/' + Math.round(+m2[2] + (m1[2] - m2[2]) * w);
+    const x = parseFloat(A), y = parseFloat(B); if (isNaN(x) || isNaN(y) || !/^[\d.]+$/.test(B)) return b;
+    const dec = (B.split('.')[1] || '').length; return (y + (x - y) * w).toFixed(dec); };
+  const m = (arr, old) => arr.map(([k, v]) => { const o = (old || []).find(x => x[0] === k); return [k, o ? mix(k, o[1], v) : v]; });
+  return { ...to, mon: m(to.mon, from.mon), meas: to.meas.map(([k, v]) => /^(pH|PaCO|PaO|OI)/.test(k) ? [k, mix(k, ((from.meas || []).find(x => x[0] === k) || [k, v])[1], v)] : [k, v]), settling: true };
 }
 // Module 09 carries high-flow and NIV as well as long-term ventilation (merged 29 Oct 2026, up the ladder: oxygen, high-flow,
 // CPAP and bilevel, then long term and home). Module 04 keeps the indications. MIG09 remaps saved progress from the old layout.
@@ -5007,6 +5024,7 @@ class Component extends DCLogic {
   }
   lvAnswer = async (q, a) => {
     const s = this.state, au = s.auth, db = this.users(), body = { room: s.lvRoom, q, a, d: this.devId() };
+    if (/~s$/.test(q) && this._lvApplied) { this._lvPrev = { q, enc: this._lvApplied, at: Date.now() }; clearInterval(this._lvSettleT); this._lvSettleT = setInterval(() => { if (Date.now() - this._lvPrev.at > 240000) clearInterval(this._lvSettleT); this.setState({ lvTick: Date.now() }); }, 2000); }
     if (au && db[au.u]) { body.u = au.u; body.ph = db[au.u].ph; }
     try { const r = await this.api('live/answer', body);
       if (r.ok) return this.setState(st => { const m = { ...(st.lvMine || {}), [q]: a }; this.lsSet('vc-lv-' + st.lvRoom, JSON.stringify(m)); return { lvMine: m, lvErr: '' }; });
@@ -5028,7 +5046,10 @@ class Component extends DCLogic {
       const dEnc = draft ? lvEnc(draft) : null, preview = !!(dEnc && dEnc !== sent);
       const o = ordOf(E, M[sid]), ordSev = o && E.sev && E.sev[o] ? E.sev[o][0] : 0;
       const gS = x => { const g = x && E.rule ? vcGrade(E.rule, x) : null; return g ? g.sev : 0; };
-      const pt = applied ? lvPatient(P, applied, Math.max(ordSev, gS(applied))) : null, shown = preview ? lvPatient(P, dEnc, 0) : pt;
+      let pt = applied ? lvPatient(P, applied, Math.max(ordSev, gS(applied))) : null;
+      this._lvApplied = applied || lvEnc(P.anc.set);
+      const pv = this._lvPrev; if (pt && pv && T && pv.q === T.q) pt = lvSettle(lvPatient(P, pv.enc, 0), pt, (Date.now() - pv.at) / 1000);
+      const shown = preview ? lvPatient(P, dEnc, 0) : pt;
       const startOf = applied ? lvParse(applied) : null;
       return { sid, pt, shown, preview, carried, start: startOf && startOf.v ? { iface: startOf.iface, mode: startOf.mode, v: startOf.v } : null }; })();
     const ownVent = (() => { const x = own && own.shown; if (!x) return null; const st = x.set, ks = LV_KN[st.mode] || [];
@@ -5036,7 +5057,7 @@ class Component extends DCLogic {
       return { mode: ((LV_MODES[st.iface] || []).find(m => m[0] === st.mode) || [0, st.mode])[1], wave,
         set: ks.map(([k, label]) => ({ k: k === 'o' ? 'FiO₂' : label.replace(' above PEEP', ''), v: k === 'o' ? ((st.v[k] ?? LV_DEF[k]) / 100).toFixed(2) : String(st.v[k] ?? LV_DEF[k]) })),
         meas: x.meas.map(([k, v]) => ({ k, v })), alarm: x.alarm,
-        who: own.preview ? 'Preview · send to apply it to your patient' : own.carried ? 'Your settings · from your last change' : 'Your settings', tone: own.preview ? '#E9B54A' : '#7FD69A' }; })();
+        who: own.preview ? 'Preview · send to apply it to your patient' : x.settling ? 'Your settings · the patient is settling' : own.carried ? 'Your settings · from your last change' : 'Your settings', tone: own.preview ? '#E9B54A' : '#7FD69A' }; })();
     return { isLive: s.screen === 'live', lvNotJoined: !s.lvRoom, lvJoined: !!s.lvRoom, lvRoomLabel: s.lvRoom ? ' · ' + s.lvRoom : '',
       lvCode: s.lvCode || '', setLvCode: e => this.setState({ lvCode: e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6), lvErr: '' }), lvJoin: this.lvJoin, lvErr: s.lvErr || '',
       lvWaiting: !!s.lvRoom && !L, lvWaitText: s.lvWait ? 'Waiting for the speaker to open session ' + s.lvRoom + '. Keep this page open: it connects by itself.' : 'Connected. Watch the screen; the next part of the case appears here.', lvHasStage: !!L, lvTitle: L ? L.t : '', lvHasMon: !!(L && L.mon), lvMon: own && own.pt && !L.of ? JSON.stringify(own.pt.mon) : L && L.mon ? JSON.stringify(L.mon) : '[]',

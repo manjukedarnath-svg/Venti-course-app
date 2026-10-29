@@ -1,0 +1,266 @@
+[
+ [
+  "PASS",
+  "O2 curve",
+  "P50 ≈ 27 mmHg",
+  "SaO2 at 26.8 = 49.9%"
+ ],
+ [
+  "PASS",
+  "O2 curve",
+  "PaO2 60 → SaO2 ≈ 90%",
+  "90.6%"
+ ],
+ [
+  "PASS",
+  "O2 curve",
+  "PaO2 100 → SaO2 ≈ 97–98%",
+  "97.7%"
+ ],
+ [
+  "PASS",
+  "CO2",
+  "Halving the rate roughly doubles PaCO2",
+  "PaCO2 40 → 81.3"
+ ],
+ [
+  "PASS",
+  "CO2",
+  "A bigger VT lowers PaCO2 more than in proportion (dead space is fixed)",
+  "PaCO2 40 → 27.8 (VT ×1.3)"
+ ],
+ [
+  "PASS",
+  "O2",
+  "Hypoventilating on room air lowers PaO2",
+  "PaO2 95 → 47.6"
+ ],
+ [
+  "PASS",
+  "O2",
+  "Normal lung: FiO2 0.21 → 0.6 raises PaO2 several-fold",
+  "PaO2 95 → 355.1"
+ ],
+ [
+  "PASS",
+  "Shunt",
+  "ARDS (large shunt): FiO2 0.6 → 1.0 raises PaO2 only modestly",
+  "PaO2 50 → 65 · shunt 40%"
+ ],
+ [
+  "PASS",
+  "Shunt",
+  "ARDS shunt fraction in the severe range (> 25%)",
+  "40%"
+ ],
+ [
+  "PASS",
+  "PEEP · ARDS",
+  "Compliance is best at a middle PEEP (10–14)",
+  "best compliance at PEEP 12 (5:4 7:4.2 8:4.3 10:4.6 12:4.8 14:4.7 16:4.5 18:4.3 20:4.1)"
+ ],
+ [
+  "PASS",
+  "PEEP · ARDS",
+  "Driving pressure is lowest at the best-compliance PEEP",
+  "lowest ΔP at PEEP 12 (5:15 7:14.4 8:13.9 10:13 12:12.6 14:12.7 16:13.3 18:14 20:14.5)"
+ ],
+ [
+  "PASS",
+  "PEEP · ARDS",
+  "PaO2 rises with PEEP from 5 to 12",
+  "PaO2 5:61 7:66 8:70 10:83 12:92 14:92 16:84 18:76 20:70"
+ ],
+ [
+  "PASS",
+  "PEEP · ARDS",
+  "PaO2 stops improving beyond best PEEP (overdistension)",
+  "PEEP 16: 84 · PEEP 20: 70"
+ ],
+ [
+  "PASS",
+  "PEEP · ARDS",
+  "Cardiac output falls at high PEEP",
+  "CO PEEP 12: 96% · PEEP 20: 80% of baseline"
+ ],
+ [
+  "PASS",
+  "PEEP · ARDS",
+  "Blood pressure falls at high PEEP",
+  "systolic PEEP 12: 86 · PEEP 20: 78"
+ ],
+ [
+  "PASS",
+  "VT · ARDS",
+  "10 mL/kg: plateau above 30",
+  "plateau 37.8 (VT 75: 26.2)"
+ ],
+ [
+  "PASS",
+  "VT · ARDS",
+  "10 mL/kg: compliance falls (overstretch)",
+  "C 3.9 → 3.3 mL/cmH2O"
+ ],
+ [
+  "PASS",
+  "VT · ARDS",
+  "10 mL/kg: alveolar dead space rises",
+  "VDalv/VT 5.4% → 15.5%"
+ ],
+ [
+  "PASS",
+  "Asthma",
+  "Auto-PEEP rises as the rate rises (shorter expiration)",
+  "auto-PEEP RR 12: 1.7 · 20: 7.4 · 28: 16.6"
+ ],
+ [
+  "PASS",
+  "Asthma",
+  "Auto-PEEP rises with a bigger VT",
+  "VT 140: 7.4 · VT 200: 10.6"
+ ],
+ [
+  "PASS",
+  "Asthma",
+  "Blood pressure falls with auto-PEEP",
+  "systolic RR 12: 116 · RR 28: 54"
+ ],
+ [
+  "PASS",
+  "Asthma",
+  "A faster rate does not clear CO2 once gas traps",
+  "PaCO2 RR 20: 64.2 · RR 28: 156.9"
+ ],
+ [
+  "PASS",
+  "Heart–lung",
+  "PEEP 18 lowers cardiac output more when the child is dry",
+  "CO at PEEP 18: dry 47% · filled 80%"
+ ],
+ [
+  "PASS",
+  "Sheet · ARDS",
+  "PEEP 6: SpO2 90, systolic 110 on the sheet",
+  "model SpO2 90, systolic 110"
+ ],
+ [
+  "PASS",
+  "Sheet · ARDS",
+  "PEEP 8: SpO2 92, systolic 110 on the sheet",
+  "model SpO2 92, systolic 109"
+ ],
+ [
+  "PASS",
+  "Sheet · ARDS",
+  "PEEP 10: SpO2 94, systolic 110 on the sheet",
+  "model SpO2 95, systolic 109"
+ ],
+ [
+  "PASS",
+  "Sheet · ARDS",
+  "PEEP 12: SpO2 96, systolic 110 on the sheet",
+  "model SpO2 96, systolic 108"
+ ],
+ [
+  "PASS",
+  "Sheet · ARDS",
+  "PEEP 14: SpO2 96, systolic 100 on the sheet",
+  "model SpO2 96, systolic 106"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar0: anchor settings reproduce the scripted gas",
+  "PaCO2 56 (script 56) · PaO2 70 (script 70)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar1: anchor settings reproduce the scripted gas",
+  "PaCO2 65 (script 65) · PaO2 55 (script 55)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar2: anchor settings reproduce the scripted gas",
+  "PaCO2 50 (script 50) · PaO2 65 (script 65)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar3: anchor settings reproduce the scripted gas",
+  "PaCO2 50 (script 50) · PaO2 65 (script 65)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar4: anchor settings reproduce the scripted gas",
+  "PaCO2 40 · PaO2 54.7"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar5: anchor settings reproduce the scripted gas",
+  "PaCO2 50 (script 50) · PaO2 65 (script 65)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar6: anchor settings reproduce the scripted gas",
+  "PaCO2 40 · PaO2 54.7"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar7: anchor settings reproduce the scripted gas",
+  "PaCO2 58 (script 58) · PaO2 65 (script 65)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar8: anchor settings reproduce the scripted gas",
+  "PaCO2 58 (script 58) · PaO2 65 (script 65)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "ar9: anchor settings reproduce the scripted gas",
+  "PaCO2 75 (script 75) · PaO2 55 (script 55)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "as0: anchor settings reproduce the scripted gas",
+  "PaCO2 40 · PaO2 51.4"
+ ],
+ [
+  "PASS",
+  "Script",
+  "as2: anchor settings reproduce the scripted gas",
+  "PaCO2 78 (script 78) · PaO2 90 (script 90)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "as3: anchor settings reproduce the scripted gas",
+  "PaCO2 78 (script 78) · PaO2 90 (script 90)"
+ ],
+ [
+  "PASS",
+  "Script",
+  "as4: anchor settings reproduce the scripted gas",
+  "PaCO2 40 · PaO2 75.7"
+ ],
+ [
+  "PASS",
+  "Script",
+  "as5: anchor settings reproduce the scripted gas",
+  "PaCO2 40 · PaO2 42.5"
+ ],
+ [
+  "PASS",
+  "Script",
+  "as6: anchor settings reproduce the scripted gas",
+  "PaCO2 50 (script 50) · PaO2 95 (script 95)"
+ ]
+]
