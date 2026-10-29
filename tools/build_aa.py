@@ -63,6 +63,7 @@ def first_sentence(t):
 
 
 CXR = {}
+MATCH = {}
 _pic = bd.picture
 def picture(n, h=320, sid=None):
     """The patient, and the X-ray beside it when the stage has one."""
@@ -89,6 +90,75 @@ def num(x, d=None):
     m = re.search(r'-?\d+(?:\.\d+)?', str(x or ''))
     return float(m.group(0)) if m else d
 
+
+
+WORDS = os.environ.get('WORDS') == '1'  # the free-text version: candidates type their order, the deck reads it as an option
+PFX = 'w' if WORDS else ''
+vk = lambda sid: 'aa-' + sid.lstrip('w')
+
+CONTROLLED = ('PC', 'VC', 'PRVC', 'AC · PRVC', 'AC · PC', 'AC · VC')
+
+
+def is_controlled(v):
+    return bool(v) and v['mode'] != 'NIV'
+
+
+def sync_rr(mon, v, own=False):
+    """A paralysed, ventilated child breathes at the set rate: the monitor RR follows the ventilator.
+    With the child's own recorded RR (own=True), a higher number means it is triggering above the set rate and stays."""
+    if not mon or not is_controlled(v):
+        return mon
+    rr = dict(v['set']).get('RR')
+    if not rr:
+        return mon
+    out, done = [], False
+    for k, x in mon:
+        if k == 'RR':
+            done = True
+            keep = 'set' in str(x) or (own and (num(x) or 0) > num(rr))
+            out.append([k, x] if keep else [k, str(int(num(rr)))])
+        else:
+            out.append([k, x])
+    if not done:
+        out.insert(1, ['RR', str(int(num(rr)))])
+    return out
+
+
+def improve(mon):
+    """The right order: the child responds. A modest, believable improvement on the current numbers."""
+    out = []
+    for k, x in mon or []:
+        n = num(x)
+        if n is None:
+            out.append([k, x]); continue
+        if k == 'HR': out.append([k, str(int(round(n * 0.92)))])
+        elif k.startswith('SpO'): out.append([k, str(int(min(97, n + 4)))])
+        elif k == 'RR' and '–' in str(x): out.append([k, str(int(round(n * 0.8)))])
+        elif 'BP' in k:
+            m = re.match(r'(\d+)\s*/\s*(\d+)', str(x)); out.append([k, f'{int(m.group(1)) + 6}/{int(m.group(2)) + 4}'] if m else [k, x])
+        elif k == 'CRT': out.append([k, str(max(2, int(n) - 1)) + (' s' if 's' in str(x) else '')])
+        else: out.append([k, x])
+    return out
+
+
+def enc_of(v):
+    """Ventilator settings from the script, in the phone's settings encoding ({iface, mode, v})."""
+    S = {k: val for k, val in v['set']}
+    rr = num(S.get('RR'), 30)
+    ie = re.match(r'1:(\d+(?:\.\d+)?)', S.get('I:E', '') or '')
+    ti = round(60 / rr / (1 + float(ie.group(1))), 2) if ie else round(min(1.0, 60 / rr / 3), 2)
+    o = round(num(S.get('FiO₂'), 1.0) * 100)
+    pe = num(S.get('PEEP'), 5)
+    if v['mode'] == 'NIV':
+        return {'iface': 'NIV', 'mode': 'ST', 'v': {'ip': pe + num(S.get('PS'), 10), 'ep': pe, 'br': 20, 'ti': 0.7, 'o': o}}
+    if v['mode'] == 'PC':
+        return {'iface': 'VENT', 'mode': 'PC', 'v': {'pi': num(S.get('Pinsp') or S.get('PIP'), 16), 'pe': pe, 'rr': rr, 'ti': ti, 'o': o}}
+    return {'iface': 'VENT', 'mode': 'VC' if v['mode'] == 'VC' else 'PRVC', 'v': {'vt': num(S.get('VT'), 100), 'pe': pe, 'rr': rr, 'ti': ti, 'o': o}}
+
+
+def gas_of(st):
+    g = {k: num(x) for k, x in (st.get('abg') or [])}
+    return {k: g[k] for k in ('pH', 'PaCO₂', 'PaO₂', 'HCO₃') if g.get(k) is not None}
 
 def scenario(key, v, kg, kind='ards', extra=None):
     """A waveform that matches the settings and the measured numbers on the screen."""
@@ -130,6 +200,12 @@ def write_vg():
     open(p, 'w').write(t)
 
 
+def TYPE_BOX(q):
+    return (f'<div style="display:flex; flex-direction:column; gap:14px; border:1px solid var(--border-default); border-radius:4px; padding:22px 24px;">'
+            f'<span style="font-family:var(--font-display); font-size:38px; line-height:1.1;">{e(q)}</span>'
+            f'<span style="font-size:24px; line-height:1.35; color:var(--text-secondary);">Type your order on your phone, in your own words. The screen reads each answer as one of the team\'s options.</span></div>')
+
+
 def bedside_slide(d, sid, ords, T, n, st, tag):
     pic = (f'<div style="flex:none; height:{390 if sid in CXR else 470}px; border-radius:6px; overflow:hidden; background:#F4EFE6; border:1px solid var(--border-subtle);"><img src="{bd.ipath(n)}" alt="The patient" style="display:block; width:100%; height:100%; object-fit:cover;"></div>')
     if sid in CXR:
@@ -142,12 +218,12 @@ def bedside_slide(d, sid, ords, T, n, st, tag):
     foot = ''
     if T:
         foot = (f'<div style="flex:none; display:flex; flex-direction:column; gap:8px; border:1px dashed var(--text-accent); border-radius:6px; padding:14px 18px; margin-top:8px;">'
-                f'<span style="{MONO} font-size:18px; color:var(--text-accent);">On your phone</span><span style="font-size:26px; line-height:1.3;">{e(T["ask"])}, then tap your order</span>'
+                f'<span style="{MONO} font-size:18px; color:var(--text-accent);">On your phone</span><span style="font-size:26px; line-height:1.3;">{e(T["ask"])}, then {"type" if WORDS else "tap"} your order</span>'
                 f'<span data-set-count style="{MONO} font-size:18px; color:var(--text-secondary);">Waiting for settings</span></div>')
     body = (bd.header(d['eyebrow'], d['head'], tag) +
             f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:600px minmax(0,1fr) 470px; gap:36px;">'
             f'<div style="display:flex; flex-direction:column; gap:14px; min-height:0;">{pic}</div>{mid}'
-            f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Your order</span>{bd.order_cards(ords)}' + foot + '</div></div>')
+            f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Your order</span>' + (TYPE_BOX(st['q']) if WORDS else bd.order_cards(ords)) + foot + '</div></div>')
     return bd.section(bd.plain(d['head']), body, d['hist'] + ' ' + st['q'], live=sid, mode='ask', setq=T and T['q'])
 
 
@@ -166,7 +242,13 @@ def room_slide(d, sid, ords, T, rule, sevmap):
                 f'<div data-set-cloud style="display:flex; flex-wrap:wrap; gap:12px; align-content:flex-start; min-height:300px;"></div>'
                 f'<span style="{MONO} font-size:20px; color:var(--text-secondary);">Support chosen</span><div data-set-pct style="display:flex; flex-direction:column; gap:10px;"></div>'
                 f'<span style="{MONO} font-size:20px; color:var(--text-secondary);">Their patients on these settings</span><div data-sev-set></div></div>')
-    right = (f'<div style="display:flex; flex-direction:column; gap:14px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Orders</span>{bd.order_cards(ords)}'
+    other = ('<div data-opt="Other" style="position:relative; overflow:hidden; display:flex; flex-direction:column; padding:14px 24px; border-radius:4px; border:1px dashed var(--border-default);">'
+             '<div data-bar style="position:absolute; left:0; top:0; bottom:0; width:0; background:rgba(110,106,99,.14); transition:width .7s cubic-bezier(.2,.7,.2,1);"></div>'
+             '<div style="position:relative; display:flex; gap:18px; align-items:baseline;"><span style="font-family:var(--font-mono); font-size:24px; color:var(--text-secondary);">?</span>'
+             '<span style="flex:1; font-size:26px; color:var(--text-secondary);">Other: not one of these</span><span data-cnt style="flex:none; font-family:var(--font-mono); font-size:20px; color:var(--text-accent);"></span></div></div>')
+    typed = (f'<span style="{MONO} font-size:20px; color:var(--text-secondary);">Orders the room typed</span>'
+             f'<div data-live-texts style="display:flex; flex-wrap:wrap; gap:10px; align-content:flex-start; max-height:250px; overflow:hidden; zoom:.6;"></div>') if WORDS else ''
+    right = (f'<div style="display:flex; flex-direction:column; gap:14px; min-width:0;">{typed}<span style="{MONO} font-size:20px; color:var(--text-secondary);">{"Read as the options" if WORDS else "Orders"}</span>{bd.order_cards(ords)}{other if WORDS else ""}'
              f'<span style="{MONO} font-size:20px; color:var(--text-secondary); margin-top:10px;">Their patients after these orders</span><div data-sev-ord></div></div>')
     grid = f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:{"minmax(0,1.15fr) minmax(0,1fr)" if T else "minmax(0,1fr)"}; gap:56px;">{left}{right}</div>'
     body = bd.header(d['eyebrow'], d['head'], 'The room')
@@ -174,6 +256,7 @@ def room_slide(d, sid, ords, T, rule, sevmap):
                      'The room, live: every setting the phones sent, the support chosen in percent, and how the patients are doing on what the room chose. We judge by how sick the patients got, not by who picked the right box. Each phone is already showing its own patient.',
                      live=sid, mode='cloud', setq=T and T['q'])
     attrs = f' data-sev="{e(json.dumps(sevmap))}"' + (f' data-rule="{e(json.dumps(rule))}"' if rule else '')
+    if WORDS: attrs += f' data-match="{e(json.dumps(MATCH[sid]))}"'
     return sec.replace('<section ', '<section' + attrs + ' ', 1)
 
 
@@ -185,7 +268,8 @@ def response_slide(d, sid, ords, after, T):
             f'<span style="{MONO} font-size:20px; color:var(--text-accent);">What happened</span><span style="font-size:30px; line-height:1.3;">{e(after["happen"])}</span>'
             + (f'<span style="{MONO} font-size:20px; color:var(--text-secondary);">Why</span><span style="font-size:26px; line-height:1.35; color:var(--text-secondary);">{e(after["why"])}</span>' if after.get('why') else '') +
             '</div></div>')
-    return bd.section(bd.plain(d['head']) + ' · response', body, 'The response. ' + after['happen'] + ' ' + after.get('why', ''), live=sid + '_r', mode='show', results=sid, setq=T and T['q'])
+    sec = bd.section(bd.plain(d['head']) + ' · response', body, 'The response. ' + after['happen'] + ' ' + after.get('why', ''), live=sid + '_r', mode='show', results=sid, setq=T and T['q'])
+    return sec.replace('<section ', f'<section data-match="{e(json.dumps(MATCH[sid]))}" ', 1) if WORDS else sec
 
 
 def table_slide(label, eyebrow, head, cols, rows, note, notes, tag=''):
@@ -243,7 +327,7 @@ def build_case(C, n_case, code):
     z = SCB[C['id']]
     kind = 'ards' if C['id'] == 'sc-ards' else 'asthma'
     stages = [s for s in z['stages'] if s.get('opts')]
-    ids = [('ar' if kind == 'ards' else 'as') + str(i) for i in range(len(stages))]
+    ids = [PFX + ('ar' if kind == 'ards' else 'as') + str(i) for i in range(len(stages))]
     out = bd.opener(f"{C['id']}_case", f'Case {n_case} of 2', C['name'].split(' · ')[0] + ', <em>' + C['name'].split(' · ')[1] + '</em>', C['open'],
                     ILL[C['id']][0], ' '.join(C['open']) + '. History only: the room works out the rest. Every phone follows its own patient from here.', code)
     course, last_v, last_key, last_mon = [], None, None, None
@@ -253,18 +337,20 @@ def build_case(C, n_case, code):
         mon, mnotes = mon_of(st.get('vit'))
         if not mon and last_mon: mon = last_mon  # no new vitals at this stage: the monitor keeps the last numbers
         if mon: last_mon = mon
+        nv0 = parse_vent(stages[i + 1].get('vent')) if i + 1 < len(stages) else None
+        mon = sync_rr(mon, parse_vent(st.get('vent')) or (nv0 if i >= 2 else None), own=bool(st.get('vit')))
         v = parse_vent(st.get('vent'))
         on_vent = i >= 2  # both children are intubated from stage 3 on
         if v:
             wx = dict(A.get('wave_extra') or {})
             if v['mode'] == 'NIV': wx['rr'] = num(dict(st.get('vit') or []).get('RR'), 30)
-            key = scenario(f'aa-{sid}', v, C['kg'], kind, wx or None)
+            key = scenario(vk(sid), v, C['kg'], kind, wx or None)
             last_v, last_key = v, key
         elif on_vent and last_v and not st['t'].startswith('Intubated'):
             v, key = last_v, last_key
         else:
             key = None
-        if sid == 'as5' and last_v:  # sudden collapse: the same settings, the chest full of trapped gas
+        if sid.lstrip('w') == 'as5' and last_v:  # sudden collapse: the same settings, the chest full of trapped gas
             key = scenario('aa-as5', last_v, C['kg'], kind, {'R': 160, 'C': 4, 'rr': 12})
         gas = st.get('abg') or []
         scr = {'mode': v['mode'] if v else 'MASK', 'modeLong': v['modeLong'] if v else st['t'], 'set': v['set'] if v else [],
@@ -272,14 +358,15 @@ def build_case(C, n_case, code):
                'wave': key, 'mon': mon or [['Status', 'See the history']], 'note': '; '.join(v['extra']) if v else '', 'msg': ''}
         if not v:
             scr['msg'] = 'Waiting for your settings' if st['t'].startswith('Intubated') else 'Not on the ventilator'
-        if sid == 'as5': scr['msg'] = 'High-pressure alarm'
+        if sid.lstrip('w') == 'as5': scr['msg'] = 'High-pressure alarm'
         if st.get('img'): CXR[sid] = st['img']
         right = next(o for o in st['opts'] if o[1])
         nv = parse_vent(nxt.get('vent')) if nxt else None
         nmon = mon_of(nxt.get('vit'))[0] if nxt and nxt.get('vit') else mon
-        after = {'mon': nmon or mon, 'happen': first_sentence(right[2]), 'why': first_sentence(st.get('teach', ''))}
+        amon = improve(mon) if mon else nmon
+        after = {'mon': sync_rr(amon, nv or v), 'happen': first_sentence(right[2]), 'why': first_sentence(st.get('teach', ''))}
         if nv:
-            akey = scenario(f'aa-{sid}-a', nv, C['kg'], kind)
+            akey = scenario(vk(sid) + '-a', nv, C['kg'], kind)
             after.update({'mode': nv['mode'], 'modeLong': nv['modeLong'], 'set': nv['set'], 'meas': nv['meas'], 'wave': akey})
         d = {'id': sid, 'eyebrow': f'Case {n_case} · ' + C['name'], 'head': re.sub(r'(\S+)$', r'<em>\1</em>', st['t']), 'hist': st['story'],
              'scr': scr, 'short': A['short'], 'after': after, 'theory': C['theory'][i] if i < len(C['theory']) else [], 'setq': A['setq']}
@@ -287,6 +374,7 @@ def build_case(C, n_case, code):
         k = bd.rot(sid)
         sevmap = {'ABCD'[(j - k) % 4]: A['sev'][j] for j in range(4)}
         ords = bd.orders(sid, A['short'])
+        MATCH[sid] = [[o[0], o[4], o[1]] for o in ords]
         T = bd.set_task(d, sid)
         bd.stage_slides(d, code)  # phone entries only; the slides are laid out below
         vent_task = bool(T) and set(A['setq']['ifaces']) == {'VENT'}
@@ -315,14 +403,25 @@ def build_case(C, n_case, code):
         bd.LIVE_OUT[sid].update({'sev': {L: [A['sev'][jj], st['opts'][jj][2]] for jj in range(4) for L in ['ABCD'[(jj - k) % 4]]},
                                  'monOk': after['mon'], 'kg': C['kg']})
         if A['rule']: bd.LIVE_OUT[sid]['rule'] = A['rule']
+        if WORDS:  # the phone types its order; it is read as one of these options
+            bd.LIVE_OUT[sid].pop('opts', None); bd.LIVE_OUT[sid]['text'] = True; bd.LIVE_OUT[sid]['match'] = MATCH[sid]
+        # each phone's own patient: lung mechanics and the starting point its settings are judged against
+        sc0 = VG.get(key) or VG.get(vk(sid) + '-a') or {}
+        if T or v:
+            if st['t'].startswith('Intubated') and nv and T:
+                anc = {'set': enc_of(nv), 'mon': after['mon'], 'gas': gas_of(nxt) or gas_of(st)}
+            else:
+                anc = {'set': enc_of(v) if (v and (is_controlled(v) or not T)) else T['start'], 'mon': mon, 'gas': gas_of(st)}
+            bd.LIVE_OUT[sid]['phys'] = {'C': sc0.get('C', 5 if kind == 'ards' else 8), 'R': sc0.get('R', 25 if kind == 'ards' else 60), 'kg': C['kg'], 'kind': kind,
+                                        'own': num(dict(st.get('vit') or []).get('RR'), 30), 'anc': anc}
         if i: bd.LIVE_OUT[sid]['prev'] = ids[i - 1]
         course.append((sid, st['t'], sevmap, A['rule']))
         for t in d['theory']:
             out += SPECIAL[t]() if t in SPECIAL else bd.reuse('disease-specific.html', t)
     # the course: the room's patients stage by stage, and each phone's own
-    key = f"{C['id']}_course"
+    key = PFX + f"{C['id']}_course"
     bd.LIVE_OUT[key] = {'t': "Your patient's course", 'lines': ['Each stage, how your patient did on your orders and settings.'], 'course': [[sid, t] for sid, t, *_ in course]}
-    rows = ''.join(f'<div data-cq="{sid}" data-sev="{e(json.dumps(sm))}"' + (f' data-rule="{e(json.dumps(rl))}"' if rl else '') +
+    rows = ''.join(f'<div data-cq="{sid}" data-sev="{e(json.dumps(sm))}"' + (f' data-rule="{e(json.dumps(rl))}"' if rl else '') + (f' data-match="{e(json.dumps(MATCH[sid]))}"' if WORDS else '') +
                    f' style="display:grid; grid-template-columns:420px minmax(0,1fr); gap:24px; align-items:start;"><span style="font-size:26px; line-height:1.25;">{e(t)}</span><div data-bar-sev></div></div>'
                    for sid, t, sm, rl in course)
     body = bd.header(f'Case {n_case} · ' + C['name'], "The room's <em>course</em>", 'Debrief') + f'<div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:16px; overflow:hidden;">{rows}</div>'
@@ -336,11 +435,11 @@ def build_case(C, n_case, code):
 
 
 def build():
-    code = 'ARDS'
+    code = 'ARDSW' if WORDS else 'ARDS'
     out = bd.title_slide('VentCourse · Difficult ventilatory scenarios', 'Two children, two <em>lungs</em>',
-                         'You set the support and give the orders on your phone. Your patient answers you; the room\'s patients answer us.',
+                         ('You set the support and type your orders on your phone, in your own words. ' if WORDS else 'You set the support and give the orders on your phone. ') + 'Your patient answers you; the room\'s patients answer us.',
                          'Two children on the ventilator. Every phone follows its own patient: the orders and settings each person chooses change that patient, and at fixed points the story moves on for everyone. We judge by how sick the patients got, not by who picked the right box.')
-    out += bd.join_slide(code, 'Scan the code to join; no account needed. Or open the app, tap Live session and type ARDS. Late joiners: the code is on every slide.')
+    out += bd.join_slide(code, f'Scan the code to join; no account needed. Or open the app, tap Live session and type {code}. Late joiners: the code is on every slide.')
     out += build_case(ARDS, 1, code)
     out += build_case(ASTHMA, 2, code)
     for t in ['Side by side', 'Takeaways']:
@@ -348,7 +447,7 @@ def build():
     out += bd.close_slide('Judge by the <em>patient</em>', 'Both children are in the app: Cases · Discuss the decisions.',
                           'The patient tells you how you did. Both children are in the app as case discussions. Thank you.', 'Difficult ventilatory scenarios')
     out += bd.appendix('disease-specific.html', 'PARDS definition', 'Part 8')
-    return bd.shell('Difficult ventilatory scenarios · live', out, code)
+    return bd.shell('Difficult ventilatory scenarios · live' + (' · typed orders' if WORDS else ''), out, code)
 
 
 if __name__ == '__main__':
@@ -361,15 +460,22 @@ if __name__ == '__main__':
     t = re.sub(r'<(h1|h2)\b[^>]*>.*?</\1>', _sub, t, flags=re.S)
     t = re.sub(r'<(span|div)\b[^>]*font-family:var\(--font-display\)[^>]*>[^<]*(?:<em>[^<]*</em>[^<]*)*</\1>', _sub, t)
     write_vg()
-    open(os.path.join(APP, 'talks', 'ards-asthma.html'), 'w').write(t)
+    OUT = 'ards-asthma-words.html' if WORDS else 'ards-asthma.html'
+    open(os.path.join(APP, 'talks', OUT), 'w').write(t)
     secs = re.findall(r'<section [^>]*>', t)
-    print('ards-asthma.html', len([x for x in secs if 'data-deck-skip' not in x]), 'visible of', len(secs))
+    print(OUT, len([x for x in secs if 'data-deck-skip' not in x]), 'visible of', len(secs))
     # write only this deck's phone entries
     p = os.path.join(APP, 'index.html'); s = open(p).read()
     a, b = s.index('// LIVE-START'), s.index('// LIVE-END')
     m = re.search(r'const LIVE = (\{.*\});', s[a:b], re.S)
     live = json.loads(m.group(1))
-    live.update({k: v for k, v in bd.LIVE_OUT.items() if re.match(r'(ar|as)\d|sc-(ards|asthma)_|xards\d', k)})
+    KEYS = r'w(ar|as)\d|wsc-(ards|asthma)_|xardsw\d' if WORDS else r'(ar|as)\d|sc-(ards|asthma)_|xards\d'
+    live.update({k: v for k, v in bd.LIVE_OUT.items() if re.match(KEYS, k)})
     s = s[:a] + '// LIVE-START (generated from the CP interactions talk builder and tools/build_decks.py)\nconst LIVE = ' + json.dumps(live, ensure_ascii=False) + ';\n' + s[b:]
     open(p, 'w').write(s)
-    print('LIVE entries', len([k for k in bd.LIVE_OUT if re.match(r'(ar|as)\d|sc-(ards|asthma)_|xards\d', k)]))
+    print('LIVE entries', len([k for k in bd.LIVE_OUT if re.match(KEYS, k)]))
+    # the word matcher, shared with the phones
+    s = open(p).read(); MJS = open(os.path.join(APP, 'tools', 'match.js')).read()
+    a, b = s.index('// VC-MATCH-START'), s.index('// VC-MATCH-END')
+    s = s[:a] + '// VC-MATCH-START (copied from tools/match.js by tools/build_aa.py)\n' + MJS + s[b:]
+    open(p, 'w').write(s)

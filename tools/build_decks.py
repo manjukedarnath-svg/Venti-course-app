@@ -548,11 +548,17 @@ def shell(title, sections, code, thumb_from='cp-interactions.html'):
     setInterval(sendSet, 3000);""")
     tail = tail.replace("      fill(); lastQ = undefined; syncLive();", "      fill(); lastQ = undefined; syncLive(); sendSet();")
     # branching cases: word cloud of the settings, the room's support percentages, and the severity of the room's patients
-    GRADE_JS = open(os.path.join(APP, 'tools', 'grade.js')).read()
+    GRADE_JS = open(os.path.join(APP, 'tools', 'grade.js')).read() + '\n' + open(os.path.join(APP, 'tools', 'match.js')).read()
     # only the slide on screen animates its monitor traces (SMIL); the other slides stay still
     tail = tail.replace("    const onChange = () => { const s = active(); syncVideos(); if (s && s !== last) { last = s; animate(s); syncLive(); } };",
         "    const smil = s => document.querySelectorAll('deck-stage > section').forEach(x => x.querySelectorAll('svg').forEach(g => { try { x === s ? g.unpauseAnimations() : g.pauseAnimations(); } catch (e) {} }));\n    const onChange = () => { const s = active(); syncVideos(); if (s && s !== last) { last = s; smil(s); animate(s); syncLive(); } };")
     assert 'smil(s)' in tail, 'smil patch failed'
+    # free-text stages: typed answers are read as options first; the word cloud shows on any slide that has one
+    tail = tail.replace("const tick = async () => { try { const r = await post('results', { room, q: rq }); if (!r.ok) return; render(s, mode, r.j);",
+        "const tick = async () => { try { const r = await post('results', { room, q: rq }); if (!r.ok) return; vcFixCounts(s, r.j); render(s, mode, r.j);")
+    tail = tail.replace("      if (mode === 'text') {\n        const box = s.querySelector('[data-live-texts]'); if (!box) return;",
+        "      if (mode === 'text' || s.querySelector('[data-live-texts]')) {\n        const box = s.querySelector('[data-live-texts]'); if (!box) return;")
+    assert 'vcFixCounts(s, r.j); render' in tail and "mode === 'text' || s.querySelector" in tail, 'words patch failed'
     tail = tail.replace("      if (mode === 'show' || mode === 'poll') {", "      if (mode === 'show' || mode === 'poll' || mode === 'cloud') {")
     tail = tail.replace("        s.querySelectorAll('[data-set-summary]').forEach(el => { el.textContent = txt ? 'median of ' + all.length + ' · ' + txt : 'No settings sent'; }); } catch (x) {} };",
         "        s.querySelectorAll('[data-set-summary]').forEach(el => { el.textContent = txt ? 'median of ' + all.length + ' · ' + txt : 'No settings sent'; });\n        vcRoomSet(s, all); } catch (x) {} };")

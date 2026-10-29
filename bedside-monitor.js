@@ -6,9 +6,10 @@
   const UNIT = { hr: 'bpm', spo2: '%', bp: 'mmHg', rr: '/min', temp: '°C', cvp: 'cmH₂O', etco2: 'mmHg' };
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   function split(v) {
-    const m = /^\s*([+−-]?[<>~≈]?\d[\d.\/]*(?:–\d+)?)\s*(%|°C|°|s|mL|mmHg|\/min)?\s*[,·]?\s*(.*)$/.exec(String(v));
+    const m = /^\s*([+−-]?[<>~≈]?\d[\d.\/]*)\s*(%|°C|°|s|mL|mmHg|\/min)?\s*[,·]?\s*(.*)$/.exec(String(v));
     if (!m) return { big: '––', small: String(v) };
-    return { big: m[1], small: m[3] || '' };
+    const rg = /^\s*\d[\d.]*\s*[–-]\s*\d/.test(String(v));  // a range such as 88–90: the first number big, the range written out small
+    return { big: m[1], small: rg ? 'range ' + String(v).replace(/\s*%/, '').trim() : (m[3] || '') };
   }
   const W = 300, H = 40, SPEED = 100;
   function wave(type, rate) {

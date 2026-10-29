@@ -43,6 +43,7 @@
     async function vcCourse(s, post, room) {
       for (const row of s.querySelectorAll('[data-cq]')) { const q = row.getAttribute('data-cq'), sev = vcJSON(row, 'data-sev'), rule = vcJSON(row, 'data-rule');
         try { const a = await post('results', { room, q }), c = [0, 0, 0, 0]; let n = 0;
+          if (a.ok && row.hasAttribute('data-match')) vcFixCounts(row, a.j);
           if (a.ok && sev) { Object.entries(a.j.counts || {}).forEach(([L, k]) => { if (sev[L] !== undefined) { c[sev[L]] += k; n += k; } }); }
           if (rule) { const b = await post('results', { room, q: q + '~s' }); if (b.ok) b.j.texts.forEach(t => { const g = vcGrade(rule, t.t); if (g !== null) { c[g] += t.n; n += t.n; } }); }
           vcBar(row.querySelector('[data-bar-sev]'), c, n); } catch (x) {} }
