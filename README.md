@@ -1,5 +1,7 @@
 # VentCourse
 
+**Open all decks → [venti-course-app-production.up.railway.app/present.html](https://venti-course-app-production.up.railway.app/present.html)** (all 19 talks, with their live room codes. Open on the laptop in Chrome; F for full screen.)
+
 Paediatric mechanical-ventilation course app for PICU trainees (KIMS / Cuddles, Bengaluru): Learn modules (7), ventilator simulator, cases, admin, plus three teaching decks.
 
 This folder **is the live app**. There's no build step: what's here is what Railway serves.
