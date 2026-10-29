@@ -564,7 +564,8 @@ class Component extends DCLogic {
     fill();
     // ── one hook for all three ──
     let last = null;
-    const onChange = () => { const s = active(); syncVideos(); if (s && s !== last) { last = s; animate(s); syncLive(); } };
+    const smil = s => document.querySelectorAll('deck-stage > section').forEach(x => x.querySelectorAll('svg').forEach(g => { try { x === s ? g.unpauseAnimations() : g.pauseAnimations(); } catch (e) {} }));
+    const onChange = () => { const s = active(); syncVideos(); if (s && s !== last) { last = s; smil(s); animate(s); syncLive(); } };
     document.addEventListener('slidechange', () => setTimeout(onChange, 40));
     new MutationObserver(() => setTimeout(onChange, 40)).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['data-deck-active'] });
     setTimeout(onChange, 800);

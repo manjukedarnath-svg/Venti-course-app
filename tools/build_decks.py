@@ -427,6 +427,7 @@ def key_points(sec):
         if not t or t == title or t in ('KIMS Hospitals Bengaluru',) or re.fullmatch(r'[·\-–—|/]+', t):
             continue
         if len(t) < 26:  # short labels and numbers: join into one line
+            if t in buf.split(' · ') or t in out: continue  # the same label twice (a formula in the figure and its caption)
             buf = (buf + ' · ' + t) if buf else t
             if len(buf) > 70: out.append(buf); buf = ''
             continue
@@ -548,6 +549,10 @@ def shell(title, sections, code, thumb_from='cp-interactions.html'):
     tail = tail.replace("      fill(); lastQ = undefined; syncLive();", "      fill(); lastQ = undefined; syncLive(); sendSet();")
     # branching cases: word cloud of the settings, the room's support percentages, and the severity of the room's patients
     GRADE_JS = open(os.path.join(APP, 'tools', 'grade.js')).read()
+    # only the slide on screen animates its monitor traces (SMIL); the other slides stay still
+    tail = tail.replace("    const onChange = () => { const s = active(); syncVideos(); if (s && s !== last) { last = s; animate(s); syncLive(); } };",
+        "    const smil = s => document.querySelectorAll('deck-stage > section').forEach(x => x.querySelectorAll('svg').forEach(g => { try { x === s ? g.unpauseAnimations() : g.pauseAnimations(); } catch (e) {} }));\n    const onChange = () => { const s = active(); syncVideos(); if (s && s !== last) { last = s; smil(s); animate(s); syncLive(); } };")
+    assert 'smil(s)' in tail, 'smil patch failed'
     tail = tail.replace("      if (mode === 'show' || mode === 'poll') {", "      if (mode === 'show' || mode === 'poll' || mode === 'cloud') {")
     tail = tail.replace("        s.querySelectorAll('[data-set-summary]').forEach(el => { el.textContent = txt ? 'median of ' + all.length + ' · ' + txt : 'No settings sent'; }); } catch (x) {} };",
         "        s.querySelectorAll('[data-set-summary]').forEach(el => { el.textContent = txt ? 'median of ' + all.length + ' · ' + txt : 'No settings sent'; });\n        vcRoomSet(s, all); } catch (x) {} };")

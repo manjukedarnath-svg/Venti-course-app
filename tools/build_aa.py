@@ -141,13 +141,13 @@ def bedside_slide(d, sid, ords, T, n, st, tag):
            + (f'<span style="font-family:var(--font-mono); font-size:22px; color:var(--text-accent);">Gas · {e(gas)}</span>' if gas else '') + '</div>')
     foot = ''
     if T:
-        foot = (f'<div style="flex:none; display:flex; gap:24px; align-items:baseline; border:1px dashed var(--text-accent); border-radius:6px; padding:12px 18px; margin-right:540px;">'
-                f'<span style="{MONO} font-size:18px; color:var(--text-accent);">On your phone</span><span style="font-size:28px;">{e(T["ask"])}, then tap your order</span>'
-                f'<span data-set-count style="{MONO} font-size:18px; color:var(--text-secondary); margin-left:auto;">Waiting for settings</span></div>')
+        foot = (f'<div style="flex:none; display:flex; flex-direction:column; gap:8px; border:1px dashed var(--text-accent); border-radius:6px; padding:14px 18px; margin-top:8px;">'
+                f'<span style="{MONO} font-size:18px; color:var(--text-accent);">On your phone</span><span style="font-size:26px; line-height:1.3;">{e(T["ask"])}, then tap your order</span>'
+                f'<span data-set-count style="{MONO} font-size:18px; color:var(--text-secondary);">Waiting for settings</span></div>')
     body = (bd.header(d['eyebrow'], d['head'], tag) +
             f'<div style="flex:1; min-height:0; display:grid; grid-template-columns:600px minmax(0,1fr) 470px; gap:36px;">'
             f'<div style="display:flex; flex-direction:column; gap:14px; min-height:0;">{pic}</div>{mid}'
-            f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Your order</span>{bd.order_cards(ords)}</div></div>' + foot)
+            f'<div style="display:flex; flex-direction:column; gap:16px; min-width:0;"><span style="{MONO} font-size:20px; color:var(--text-secondary);">Your order</span>{bd.order_cards(ords)}' + foot + '</div></div>')
     return bd.section(bd.plain(d['head']), body, d['hist'] + ' ' + st['q'], live=sid, mode='ask', setq=T and T['q'])
 
 
@@ -226,7 +226,7 @@ def deadspace():
             '<span style="font-size:28px; line-height:1.4;">Bohr–Enghoff (physiological): (PaCO₂ − PēCO₂) ÷ PaCO₂, with mixed expired CO₂ from volumetric capnography.</span>'
             '<span style="font-size:28px; line-height:1.4; color:var(--text-secondary);">Recruiting PEEP lowers it; over-distending PEEP raises it again. A high dead space fraction marks a sicker child (Ghuman, PCCM 2012).</span></div>'
             f'<div style="display:flex; flex-direction:column; gap:20px;"><table style="width:100%; border-collapse:collapse;"><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table>'
-            '<span style="font-size:24px; line-height:1.4; color:var(--text-secondary);">PaCO₂ 50 on both gases (PEEP 7 before titration, PEEP 12 an hour after); EtCO₂ from the titration sheet. Same VT, same rate.</span></div></div>')
+            '<span style="font-size:24px; line-height:1.4; color:var(--text-secondary);">PaCO₂ 50 on both gases; EtCO₂ from the titration sheet at the PEEP 6 and PEEP 12 steps. Same rate.</span></div></div>')
     return bd.section('Dead space fraction', body, 'Ask the room to calculate it before the answer. At PEEP 6: PaCO2 50, EtCO2 36, about 0.28. At PEEP 12: PaCO2 50, EtCO2 45, about 0.10. Recruitment cut the dead space; at PEEP 14 the EtCO2 gap would open again as she over-distends.', pad='64px 96px')
 
 
@@ -246,11 +246,13 @@ def build_case(C, n_case, code):
     ids = [('ar' if kind == 'ards' else 'as') + str(i) for i in range(len(stages))]
     out = bd.opener(f"{C['id']}_case", f'Case {n_case} of 2', C['name'].split(' · ')[0] + ', <em>' + C['name'].split(' · ')[1] + '</em>', C['open'],
                     ILL[C['id']][0], ' '.join(C['open']) + '. History only: the room works out the rest. Every phone follows its own patient from here.', code)
-    course, last_v, last_key = [], None, None
+    course, last_v, last_key, last_mon = [], None, None, None
     for i, (st, sid) in enumerate(zip(stages, ids)):
         A = C['stages'][i]
         nxt = stages[i + 1] if i + 1 < len(stages) else None
         mon, mnotes = mon_of(st.get('vit'))
+        if not mon and last_mon: mon = last_mon  # no new vitals at this stage: the monitor keeps the last numbers
+        if mon: last_mon = mon
         v = parse_vent(st.get('vent'))
         on_vent = i >= 2  # both children are intubated from stage 3 on
         if v:
@@ -352,6 +354,12 @@ def build():
 if __name__ == '__main__':
     bd.USED.clear(); bd._POCUS_DONE.clear()
     t = build()
+    # Instrument Serif has no subscript digits: in serif text, draw ₂ as a small lowered 2
+    SUB = '<span style="font-size:.6em; vertical-align:-.12em;">2</span>'
+    def _sub(m):
+        return re.sub(r'>([^<]*)<', lambda x: '>' + x.group(1).replace('₂', SUB) + '<', m.group(0))
+    t = re.sub(r'<(h1|h2)\b[^>]*>.*?</\1>', _sub, t, flags=re.S)
+    t = re.sub(r'<(span|div)\b[^>]*font-family:var\(--font-display\)[^>]*>[^<]*(?:<em>[^<]*</em>[^<]*)*</\1>', _sub, t)
     write_vg()
     open(os.path.join(APP, 'talks', 'ards-asthma.html'), 'w').write(t)
     secs = re.findall(r'<section [^>]*>', t)

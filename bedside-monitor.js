@@ -6,7 +6,7 @@
   const UNIT = { hr: 'bpm', spo2: '%', bp: 'mmHg', rr: '/min', temp: '°C', cvp: 'cmH₂O', etco2: 'mmHg' };
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   function split(v) {
-    const m = /^\s*([+−-]?[<>~≈]?\d[\d.\/]*)\s*(%|°C|°|s|mL|mmHg|\/min)?\s*[,·]?\s*(.*)$/.exec(String(v));
+    const m = /^\s*([+−-]?[<>~≈]?\d[\d.\/]*(?:–\d+)?)\s*(%|°C|°|s|mL|mmHg|\/min)?\s*[,·]?\s*(.*)$/.exec(String(v));
     if (!m) return { big: '––', small: String(v) };
     return { big: m[1], small: m[3] || '' };
   }

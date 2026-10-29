@@ -790,9 +790,14 @@
       // thumbnails.
       const OWN_ATTRS = /^data-(deck-(?!skip$)|screen-label$|om-(validate|slide-id)$|dc-tpl$)/;
       this._liveDirty = new Set();
+      const LIVE_SEL = '[data-live-status],[data-live-code],[data-live-host],[data-set-count],[data-set-summary],[data-set-cloud],[data-set-pct],[data-sev-set],[data-sev-ord],[data-bar-sev],[data-kwn],[data-cloud],[data-live-bars],[data-join-chip],bedside-monitor,vent-trace';
       this._liveObserver = new MutationObserver((records) => {
         for (const r of records) {
           if (r.type === 'attributes' && OWN_ATTRS.test(r.attributeName || '')) continue;
+          // Live-session counters, word clouds and bars change every few seconds: the slide
+          // itself updates, the rail thumbnail does not need re-cloning for them.
+          { const el = r.target.nodeType === 1 ? r.target : r.target.parentElement;
+            if (el && el.closest && el.closest(LIVE_SEL)) continue; }
           let n = r.target;
           while (n && n.parentElement !== this) n = n.parentElement;
           // Skip/unskip is handled below without re-cloning (the badge sits
@@ -2228,6 +2233,8 @@
       }
       sr.appendChild(clone);
       entry.frame.appendChild(host);
+      // Thumbnails are still pictures: stop the SVG (SMIL) monitor traces in the copy.
+      clone.querySelectorAll('svg').forEach((g) => { try { g.pauseAnimations(); } catch (e) {} });
       entry.host = host;
       entry.clone = clone;
       if (this._thumbScale) clone.style.transform = 'scale(' + this._thumbScale + ')';
