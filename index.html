@@ -2008,7 +2008,7 @@ const STAGE_ILLUS = { sa1: 'a3_just_intubated', sa2: 'a4_desaturating', sa3: 'a4
   so1: 'rapid1_aarav_osa', so2: 'rapid1_aarav_osa', sd1: 'rapid2_rohan_duchenne', sd2: 'rapid2_rohan_duchenne', sd3: 'rapid2_rohan_duchenne', sm1: 'rapid3_meera_sma', sm2: 'rapid3_meera_sma',
   sg1: 'rapid4_diya_gbs', sg2: 'rapid4_diya_gbs', sg3: 'rapid4_diya_gbs', sp1: 'rapid5_kabir_bpd', sp2: 'rapid5_kabir_bpd',
   bo3: 'bo3_pink_froth', bo4: 'bo4_tpiece_trial', c16b: 's16b_still_hypoxic', c16c: 's16c_day2_hme', c17b: 's17b_left_chest_still', c17c: 's17c_day2_drain',
-  c18c: 's18c_ready_to_come_off', c19b: 's19b_after_nappy_change', c19c: 's19c_day3_trapping', c20b: 's20b_cold_feet', c20c: 's20c_missed_efforts' };
+  c18c: 's18c_ready_to_come_off', c19b: 's19b_after_nappy_change', c19c: 's19c_day3_trapping', c20b: 's20b_cold_feet', c20c: 's20c_missed_efforts', c18b: 's18b_tense_abdomen', w22b: 'w22b_water_in_circuit' };
 const illusOf = c => c ? IL(c.illus || STAGE_ILLUS[c.id]) : '';
 const PERF_LOOK = { exam: 'Examine', cxr: 'Chest X-ray', gas: 'Blood gas', vent: 'Handover', img: 'Chest X-ray', table: 'Chart', trace: 'Monitor' };
 const SA_VIT = (hr, bp, extra) => (m, a, s) => [['HR', String(hr)], ['BP', bp], ['SpO₂', 'live'], ...(extra || [])];
