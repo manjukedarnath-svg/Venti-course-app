@@ -15,13 +15,14 @@
 
   // lung and circulation per disease. The ARDS values were fitted (tools/physio_test.js) to the case's PEEP titration sheet (SpO₂ and BP at PEEP 6–14)
   // and to the case's own decision points (PEEP 12 helps, a 10 mL/kg breath does not, PEEP 18 costs blood pressure).
-  // kov: how much overstretch stiffens the lung; ovq: blood flow left in overstretched units; kvd: their dead space; kpvr: plateau → RV afterload. fB: always-open fraction; fD: recruitable fraction (the rest is consolidated, never opens);
+  // kov: how much overstretch stiffens the lung; ovq: blood flow left in overstretched units; kvd: their dead space; kpvr: plateau → RV afterload;
+  // kmap: how much the time-averaged pressure (not only PEEP) recruits; kmapq: aeration gain per cmH₂O of mean airway pressure; xe: expiratory/inspiratory time-constant ratio (asthma, calibrated to the scripted auto-PEEP). fB: always-open fraction; fD: recruitable fraction (the rest is consolidated, never opens);
   // Pcrit/w: the PEEP at which half the recruitable lung is open, and how gradually; Pover/wo: end-inspiratory pressure where units overdistend;
   // hpv: how much hypoxic vasoconstriction cuts flow to closed units; trans: fraction of airway pressure reaching the pleura (stiff lungs transmit less);
   // Hb g/dL; pms: mean systemic filling pressure, mmHg (venous return driving pressure with Pra 6).
   const KIND = {
-    ards:   { fB: 0.40, fD: 0.15, Pcrit: 9, w: 2.0, Pover: 28, wo: 3, kov: 0.25, ovq: 0.85, kvd: 0.15, kpvr: 0.005, hpv: 0.45, trans: 0.15, Hb: 9, pms: 18 },
-    asthma: { fB: 0.93, fD: 0.05, Pcrit: 4, w: 2.0, Pover: 35, wo: 5.0, kov: 0.3, hpv: 0.5, trans: 0.55, Hb: 12, pms: 18 },
+    ards:   { fB: 0.40, fD: 0.15, Pcrit: 13, w: 2.0, Pover: 28, wo: 3, kov: 0.25, ovq: 0.85, kvd: 0.15, kpvr: 0.005, kmapq: 0.02, kmap: 0.5, hpv: 0.45, trans: 0.15, Hb: 9, pms: 18 },
+    asthma: { fB: 0.93, fD: 0.05, Pcrit: 4, w: 2.0, Pover: 35, wo: 5.0, kov: 0.3, hpv: 0.5, trans: 0.4, Hb: 12, pms: 18 },
     normal: { fB: 0.97, fD: 0.03, Pcrit: 3, w: 1.5, Pover: 30, wo: 3.5, kov: 0.4, hpv: 0.5, trans: 0.5, Hb: 12, pms: 18 }
   };
 
@@ -41,10 +42,10 @@
     let co = cal.co0, pa = cal.pao2a, out;
     for (let it = 0; it < 6; it++) {
       const vdAlv = s.vt * ((K.kvd ?? 0.35) * L.ov + 0.12 * Math.max(0, 1 - co / cal.co0));
-      const va = s.rr * Math.max(0.2 * s.vt, s.vt - vdAnat - vdAlv) * Math.max(0.35, 1 - 0.04 * Math.max(0, (s.auto || 0) - 4));
+      const va = s.rr * Math.max(0.2 * s.vt, s.vt - vdAnat - vdAlv) * Math.max(0.35, 1 - 0.04 * Math.max(0, (s.autoI ?? s.auto ?? 0) - 4));   // trapped gas, not PEEP set against it, costs ventilation
       const paco2 = clamp(cal.kCO2 / va, 18, 160);
       const pAO2 = Math.max(20, s.fio2 * PIO2 - paco2 / 0.8);
-      const qs = clamp(shuntOf(L, K) + cal.qx, 0.01, 0.92);
+      const qs = clamp((shuntOf(L, K) + cal.qx) * Math.exp(-(K.kmapq ?? 0.03) * (s.mapAw - cal.mapAwA)), 0.01, 0.92);   // a higher mean airway pressure keeps open units better aerated
       const vo2 = 6 * kg;                                                  // mL/min
       const ca = cont(pAO2, K.Hb) - qs / (1 - qs) * vo2 / (co * 10);
       pa = po2Of(Math.max(2, ca), K.Hb);
@@ -75,17 +76,21 @@
       s.fio2 = (v.o || 21) / 100; s.peep = pe; s.ps = ps; s.rr = Math.max(own * (1 - 0.25 * Math.min(1, ps / 10)), set.mode === 'ST' ? (v.br || 0) : 0);
       spont(pe, ps); s.mapAw = pe + ps * 0.35; }
     else {
-      const rr = v.rr || 20, ti = Math.min(v.ti || 0.7, 60 / rr - 0.15), pe = v.pe || 0, te = 60 / rr - ti;
+      const rr = Math.max(v.rr || 20, P.trig || 0), ti = Math.min(v.ti || 0.7, 60 / rr - 0.15), pe = v.pe || 0, te = 60 / rr - ti;   // a triggering child breathes above the set rate
       s.fio2 = (v.o || 21) / 100; s.peep = pe; s.rr = rr; s.ctl = true;
       for (let i = 0; i < 30; i++) {
         // time constants from the open lung (overstretch stiffens the lung but does not speed emptying: trapped volume grows with VT, as Tuxen described)
-        const tauI = R * cUnit * L.open / 1000, tauE = tauI * (P.kind === 'asthma' ? 2.5 : 1);
+        const tauI = R * cUnit * L.open / 1000, tauE = tauI * (K.xe ?? (P.kind === 'asthma' ? 2.5 : 1));
         s.vt = set.mode === 'PC' ? (v.pi || 12) * C * (1 - Math.exp(-ti / tauI)) : (v.vt || 6 * kg);
         const left = Math.exp(-Math.max(0.05, te) / tauE);
         s.auto = s.vt * left / (1 - left) / (cUnit * L.open);   // the trapped volume, over the compliance of the open lung
+        if (P.kind === 'asthma') {   // flow limitation (the waterfall): external PEEP up to ~80% of the intrinsic PEEP does not raise the total
+          const tot = pe <= 0.8 * s.auto ? s.auto : s.auto + (pe - 0.8 * s.auto) * 0.9; s.autoI = s.auto; s.auto = Math.max(0, tot - pe); }
+        else s.autoI = s.auto;
         s.pEnd = pe + s.auto + s.vt / C;
-        L = lung(K, pe + s.auto, s.pEnd); C = 0.6 * C + 0.4 * cUnit * L.cRel; }   // damped: overstretch and plateau feed each other
-      s.mapAw = pe + (s.pEnd - pe) * (ti * rr / 60) * (set.mode === 'VC' ? 0.6 : 0.9); }
+        s.mapAw = pe + (s.pEnd - pe) * (ti * rr / 60) * (set.mode === 'VC' ? 0.6 : 0.9);
+        L = lung(K, pe + s.auto + (K.kmap ?? 0.5) * (s.mapAw - pe - s.auto), s.pEnd); C = 0.6 * C + 0.4 * cUnit * L.cRel; }   // recruitment follows the time-averaged pressure; damped: overstretch and plateau feed each other
+      }
     s.C = C; s.L = L;
     return s;
   }
@@ -95,6 +100,7 @@
   function calibrate(P, A) {
     const K = { ...(KIND[P.kind] || KIND.normal), ...(P.k || {}) }, g0 = A.gas || {};
     let cUnit = P.C / 0.6; for (let i = 0; i < 40; i++) { const b = breath(P, K, cUnit, A.set); cUnit *= Math.pow(P.C / b.C, 0.5); }
+    if (P.autoA) { let lo = 0.5, hi = 20; for (let i = 0; i < 40; i++) { K.xe = Math.sqrt(lo * hi); const b = breath(P, K, cUnit, A.set); if (b.peep + b.auto < P.autoA) lo = K.xe; else hi = K.xe; } }
     A = { ...A, sup: breath(P, K, cUnit, A.set) };
     const bp = (A.bp && A.bp.match(/(\d+)\s*\/\s*(\d+)/)) || [0, 90, 55];
     const cal = { co0: 0.15 * P.kg, kCO2: 1, qx: 0, hco3: 24, mapAwA: A.sup.mapAw, autoA: A.sup.auto || 0, pvrA: 1, pao2a: g0['PaO₂'] || 0 };
@@ -119,7 +125,7 @@
     const svrA = (mapA - 6) / r.co, svr = svrA * (1 + 0.5 * (1 - st.co / r.co));          // the baroreflex makes up half the fall
     const map = clamp(st.co * svr + st.pra, 20, 140), pp = ppA * clamp(st.co / r.co, 0.3, 1.5);
     return { ...st, sys: Math.round(map + 2 * pp / 3), dia: Math.round(map - pp / 3), mapBp: map, mapBpA: mapA,
-      dSat: so2(st.pa) - so2(r.pa), coRel: st.co / r.co, sup: s, C: s.C, oi: s.mapAw * s.fio2 * 100 / st.pa, pf: st.pa / s.fio2 };
+      dSat: so2(st.pa) - so2(r.pa), coRel: st.co / r.co, sup: s, C: s.C, plat: s.pEnd, oi: s.mapAw * s.fio2 * 100 / st.pa, pf: st.pa / s.fio2 };
   }
   g.VCPhysio = { KIND, lung, breath, calibrate, run, so2, cont, po2Of, version: 1 };
 })(typeof window !== 'undefined' ? window : globalThis);

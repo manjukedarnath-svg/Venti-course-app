@@ -414,6 +414,13 @@ def build_case(C, n_case, code):
                 anc = {'set': enc_of(v) if (v and (is_controlled(v) or not T)) else T['start'], 'mon': mon, 'gas': gas_of(st)}
             bd.LIVE_OUT[sid]['phys'] = {'C': sc0.get('C', 5 if kind == 'ards' else 8), 'R': sc0.get('R', 25 if kind == 'ards' else 60), 'kg': C['kg'], 'kind': kind,
                                         'own': num(dict(st.get('vit') or []).get('RR'), 30), 'anc': anc}
+            # a ventilated child breathing above the set rate (triggering), and the scripted auto-PEEP to calibrate expiration against
+            rr_own, rr_set = num(dict(st.get('vit') or []).get('RR')), num(dict((v or {}).get('set') or []).get('RR')) if v else None
+            if v and is_controlled(v) and rr_own and rr_set and rr_own > rr_set: bd.LIVE_OUT[sid]['phys']['trig'] = rr_own
+            av = nv if (st['t'].startswith('Intubated') and nv and T) else v   # the ventilator the anchor came from
+            ap = next((num(x) for k, x in ((av or {}).get('meas') or []) if 'auto-peep' in k.lower()), None)
+            ap = ap or num(re.search(r'[Aa]uto-PEEP (?:is )?(\d+)', st.get('q', '') + ' ' + st.get('story', '')).group(1)) if re.search(r'[Aa]uto-PEEP (?:is )?(\d+)', st.get('q', '') + ' ' + st.get('story', '')) else ap
+            if ap: bd.LIVE_OUT[sid]['phys']['autoA'] = ap
         if i: bd.LIVE_OUT[sid]['prev'] = ids[i - 1]
         course.append((sid, st['t'], sevmap, A['rule']))
         for t in d['theory']:

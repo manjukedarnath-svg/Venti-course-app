@@ -57,115 +57,127 @@
   "PASS",
   "PEEP · ARDS",
   "Compliance is best at a middle PEEP (10–14)",
-  "best compliance at PEEP 12 (5:4 7:4.2 8:4.3 10:4.6 12:4.8 14:4.7 16:4.5 18:4.3 20:4.1)"
+  "best compliance at PEEP 14 (5:4 7:4.1 8:4.2 10:4.4 12:4.6 14:4.7 16:4.6 18:4.4 20:4.3)"
  ],
  [
   "PASS",
   "PEEP · ARDS",
   "Driving pressure is lowest at the best-compliance PEEP",
-  "lowest ΔP at PEEP 12 (5:15 7:14.4 8:13.9 10:13 12:12.6 14:12.7 16:13.3 18:14 20:14.5)"
+  "lowest ΔP at PEEP 14 (5:14.9 7:14.6 8:14.4 10:13.7 12:13 14:12.7 16:13 18:13.5 20:14)"
  ],
  [
   "PASS",
   "PEEP · ARDS",
   "PaO2 rises with PEEP from 5 to 12",
-  "PaO2 5:61 7:66 8:70 10:83 12:92 14:92 16:84 18:76 20:70"
+  "PaO2 5:59 7:62 8:65 10:72 12:87 14:111 16:133 18:143 20:147"
  ],
  [
   "PASS",
   "PEEP · ARDS",
-  "PaO2 stops improving beyond best PEEP (overdistension)",
-  "PEEP 16: 84 · PEEP 20: 70"
+  "O2 delivery peaks near best-compliance PEEP, while PaO2 may keep rising (Suter 1975)",
+  "best DO2 at PEEP 12 · best compliance at 14 · PaO2 at PEEP 20: 147"
  ],
  [
   "PASS",
   "PEEP · ARDS",
   "Cardiac output falls at high PEEP",
-  "CO PEEP 12: 96% · PEEP 20: 80% of baseline"
+  "CO PEEP 12: 96% · PEEP 20: 82% of baseline"
  ],
  [
   "PASS",
   "PEEP · ARDS",
   "Blood pressure falls at high PEEP",
-  "systolic PEEP 12: 86 · PEEP 20: 78"
+  "systolic PEEP 12: 86 · PEEP 20: 79"
  ],
  [
   "PASS",
   "VT · ARDS",
   "10 mL/kg: plateau above 30",
-  "plateau 37.8 (VT 75: 26.2)"
+  "plateau 36.1 (VT 75: 26.2)"
  ],
  [
   "PASS",
   "VT · ARDS",
   "10 mL/kg: compliance falls (overstretch)",
-  "C 3.9 → 3.3 mL/cmH2O"
+  "C 3.9 → 3.4 mL/cmH2O"
  ],
  [
   "PASS",
   "VT · ARDS",
   "10 mL/kg: alveolar dead space rises",
-  "VDalv/VT 5.4% → 15.5%"
+  "VDalv/VT 5.4% → 14.8%"
  ],
  [
   "PASS",
   "Asthma",
   "Auto-PEEP rises as the rate rises (shorter expiration)",
-  "auto-PEEP RR 12: 1.7 · 20: 7.4 · 28: 16.6"
+  "auto-PEEP RR 12: 5.6 · 20: 16.8 · 28: 33.1"
  ],
  [
   "PASS",
   "Asthma",
   "Auto-PEEP rises with a bigger VT",
-  "VT 140: 7.4 · VT 200: 10.6"
+  "VT 140: 16.8 · VT 200: 24"
  ],
  [
   "PASS",
   "Asthma",
   "Blood pressure falls with auto-PEEP",
-  "systolic RR 12: 116 · RR 28: 54"
+  "systolic RR 12: 113 · RR 28: 47"
  ],
  [
   "PASS",
   "Asthma",
   "A faster rate does not clear CO2 once gas traps",
-  "PaCO2 RR 20: 64.2 · RR 28: 156.9"
+  "PaCO2 RR 20: 160 · RR 28: 160"
+ ],
+ [
+  "PASS",
+  "Asthma",
+  "External PEEP below the auto-PEEP barely raises total PEEP (waterfall)",
+  "auto-PEEP 8 · total at PEEP 6: 8"
+ ],
+ [
+  "PASS",
+  "Asthma",
+  "External PEEP above the auto-PEEP adds to it",
+  "total at PEEP 14: 14.9"
  ],
  [
   "PASS",
   "Heart–lung",
   "PEEP 18 lowers cardiac output more when the child is dry",
-  "CO at PEEP 18: dry 47% · filled 80%"
+  "CO at PEEP 18: dry 50% · filled 81%"
  ],
  [
   "PASS",
   "Sheet · ARDS",
-  "PEEP 6: SpO2 90, systolic 110 on the sheet",
-  "model SpO2 90, systolic 110"
+  "PEEP 6: SpO2 90, systolic 110, Crs 3.1 on the sheet",
+  "model SpO2 90, systolic 110, Crs 3.1"
  ],
  [
   "PASS",
   "Sheet · ARDS",
-  "PEEP 8: SpO2 92, systolic 110 on the sheet",
-  "model SpO2 92, systolic 109"
+  "PEEP 8: SpO2 92, systolic 110, Crs 3.3 on the sheet",
+  "model SpO2 92, systolic 110, Crs 3.6"
  ],
  [
   "PASS",
   "Sheet · ARDS",
-  "PEEP 10: SpO2 94, systolic 110 on the sheet",
-  "model SpO2 95, systolic 109"
+  "PEEP 10: SpO2 94, systolic 110, Crs 3.8 on the sheet",
+  "model SpO2 93, systolic 109, Crs 3.8"
  ],
  [
   "PASS",
   "Sheet · ARDS",
-  "PEEP 12: SpO2 96, systolic 110 on the sheet",
-  "model SpO2 96, systolic 108"
+  "PEEP 12: SpO2 96, systolic 110, Crs 4.3 on the sheet",
+  "model SpO2 96, systolic 109, Crs 3.9"
  ],
  [
   "PASS",
   "Sheet · ARDS",
-  "PEEP 14: SpO2 96, systolic 100 on the sheet",
-  "model SpO2 96, systolic 106"
+  "PEEP 14: SpO2 96, systolic 100, Crs 3.8 on the sheet",
+  "model SpO2 98, systolic 107, Crs 4"
  ],
  [
   "PASS",

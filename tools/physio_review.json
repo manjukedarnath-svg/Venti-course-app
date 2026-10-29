@@ -1,0 +1,498 @@
+[
+ {
+  "n": 1,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "your ER",
+  "what": "ER on a non-rebreather 15 L/min → NIV 16/6, FiO₂ 0.85",
+  "before": {
+   "SpO2": "92",
+   "HR": "150",
+   "BP": "90/55",
+   "pH": "7.35",
+   "PaCO2": "56",
+   "PaO2": "70",
+   "Plat": "–",
+   "dP": "–",
+   "Crs": "–",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "95",
+   "HR": "148",
+   "BP": "86/54",
+   "pH": "7.43",
+   "PaCO2": "47",
+   "PaO2": "89",
+   "Plat": "–",
+   "dP": "–",
+   "Crs": "4.2",
+   "TotPEEP": "–"
+  },
+  "alarm": ""
+ },
+ {
+  "n": 2,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "your ER",
+  "what": "ER on a non-rebreather → high-flow 2 L/kg, FiO₂ 0.6",
+  "before": {
+   "SpO2": "92",
+   "HR": "150",
+   "BP": "90/55",
+   "pH": "7.35",
+   "PaCO2": "56",
+   "PaO2": "70",
+   "Plat": "–",
+   "dP": "–",
+   "Crs": "–",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "90",
+   "HR": "152",
+   "BP": "88/54",
+   "pH": "7.42",
+   "PaCO2": "47",
+   "PaO2": "62",
+   "Plat": "–",
+   "dP": "–",
+   "Crs": "–",
+   "TotPEEP": "–"
+  },
+  "alarm": ""
+ },
+ {
+  "n": 3,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "your ER",
+  "what": "ER on a non-rebreather → simple mask 6 L/min",
+  "before": {
+   "SpO2": "92",
+   "HR": "150",
+   "BP": "90/55",
+   "pH": "7.35",
+   "PaCO2": "56",
+   "PaO2": "70",
+   "Plat": "–",
+   "dP": "–",
+   "Crs": "–",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "86",
+   "HR": "159",
+   "BP": "88/54",
+   "pH": "7.35",
+   "PaCO2": "56",
+   "PaO2": "53",
+   "Plat": "–",
+   "dP": "–",
+   "Crs": "–",
+   "TotPEEP": "–"
+  },
+  "alarm": ""
+ },
+ {
+  "n": 4,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "30 minutes later",
+  "what": "PRVC VT 75, PEEP 7 → PEEP 12",
+  "before": {
+   "SpO2": "88",
+   "HR": "167",
+   "BP": "88/50",
+   "pH": "7.30",
+   "PaCO2": "50",
+   "PaO2": "65",
+   "Plat": "26.2",
+   "dP": "19.2",
+   "Crs": "3.9",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "92",
+   "HR": "166",
+   "BP": "87/50",
+   "pH": "7.27",
+   "PaCO2": "54",
+   "PaO2": "89",
+   "Plat": "29.6",
+   "dP": "17.6",
+   "Crs": "4.3",
+   "TotPEEP": "–"
+  },
+  "alarm": "Driving pressure 17.6: above 15"
+ },
+ {
+  "n": 5,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "30 minutes later",
+  "what": "PRVC VT 75, PEEP 7 → PEEP 18",
+  "before": {
+   "SpO2": "88",
+   "HR": "167",
+   "BP": "88/50",
+   "pH": "7.30",
+   "PaCO2": "50",
+   "PaO2": "65",
+   "Plat": "26.2",
+   "dP": "19.2",
+   "Crs": "3.9",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "95",
+   "HR": "168",
+   "BP": "82/49",
+   "pH": "7.22",
+   "PaCO2": "60",
+   "PaO2": "171",
+   "Plat": "35.8",
+   "dP": "17.8",
+   "Crs": "4.2",
+   "TotPEEP": "–"
+  },
+  "alarm": "Plateau 35.8: above 30 · Driving pressure 17.8: above 15"
+ },
+ {
+  "n": 6,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "30 minutes later",
+  "what": "PRVC VT 75 → VT 100 (10 mL/kg)",
+  "before": {
+   "SpO2": "88",
+   "HR": "167",
+   "BP": "88/50",
+   "pH": "7.30",
+   "PaCO2": "50",
+   "PaO2": "65",
+   "Plat": "26.2",
+   "dP": "19.2",
+   "Crs": "3.9",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "87",
+   "HR": "167",
+   "BP": "85/49",
+   "pH": "7.42",
+   "PaCO2": "38",
+   "PaO2": "62",
+   "Plat": "36.1",
+   "dP": "29.1",
+   "Crs": "3.4",
+   "TotPEEP": "–"
+  },
+  "alarm": "Plateau 36.1: above 30 · Driving pressure 29.1: above 15 · VT 100 mL: 10.0 mL/kg"
+ },
+ {
+  "n": 7,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "30 minutes later",
+  "what": "Rate 30 → 40",
+  "before": {
+   "SpO2": "88",
+   "HR": "167",
+   "BP": "88/50",
+   "pH": "7.30",
+   "PaCO2": "50",
+   "PaO2": "65",
+   "Plat": "26.2",
+   "dP": "19.2",
+   "Crs": "3.9",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "89",
+   "HR": "163",
+   "BP": "88/50",
+   "pH": "7.43",
+   "PaCO2": "37",
+   "PaO2": "70",
+   "Plat": "25.5",
+   "dP": "18.5",
+   "Crs": "4.1",
+   "TotPEEP": "–"
+  },
+  "alarm": "Driving pressure 18.5: above 15"
+ },
+ {
+  "n": 8,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "30 minutes later",
+  "what": "FiO₂ 1.0 → 0.6",
+  "before": {
+   "SpO2": "88",
+   "HR": "167",
+   "BP": "88/50",
+   "pH": "7.30",
+   "PaCO2": "50",
+   "PaO2": "65",
+   "Plat": "26.2",
+   "dP": "19.2",
+   "Crs": "3.9",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "81",
+   "HR": "177",
+   "BP": "86/50",
+   "pH": "7.30",
+   "PaCO2": "50",
+   "PaO2": "50",
+   "Plat": "26.2",
+   "dP": "19.2",
+   "Crs": "3.9",
+   "TotPEEP": "–"
+  },
+  "alarm": "Driving pressure 19.2: above 15"
+ },
+ {
+  "n": 9,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "30 minutes later",
+  "what": "PRVC → PC 30 above PEEP 5, rate 40",
+  "before": {
+   "SpO2": "88",
+   "HR": "167",
+   "BP": "88/50",
+   "pH": "7.30",
+   "PaCO2": "50",
+   "PaO2": "65",
+   "Plat": "26.2",
+   "dP": "19.2",
+   "Crs": "3.9",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "87",
+   "HR": "164",
+   "BP": "85/49",
+   "pH": "7.55",
+   "PaCO2": "28",
+   "PaO2": "62",
+   "Plat": "34.9",
+   "dP": "29.9",
+   "Crs": "3.4",
+   "TotPEEP": "–"
+  },
+  "alarm": "Plateau 34.9: above 30 · Driving pressure 29.9: above 15 · VT 100 mL: 10.0 mL/kg"
+ },
+ {
+  "n": 10,
+  "case": "1 · ARDS, 2 y, 10 kg",
+  "stage": "still on FiO₂ 1.0",
+  "what": "At PEEP 12: Ti 0.67 → 0.9 s (I:E about 1:1.2)",
+  "before": {
+   "SpO2": "91",
+   "HR": "130",
+   "BP": "88/50",
+   "pH": "7.32",
+   "PaCO2": "50",
+   "PaO2": "65",
+   "Plat": "25.9",
+   "dP": "13.9",
+   "Crs": "5.4",
+   "TotPEEP": "–"
+  },
+  "after": {
+   "SpO2": "92",
+   "HR": "130",
+   "BP": "88/50",
+   "pH": "7.32",
+   "PaCO2": "50",
+   "PaO2": "67",
+   "Plat": "25.5",
+   "dP": "13.5",
+   "Crs": "5.6",
+   "TotPEEP": "–"
+  },
+  "alarm": ""
+ },
+ {
+  "n": 11,
+  "case": "2 · asthma, 5 y, 20 kg",
+  "stage": "first settings",
+  "what": "VC VT 140, rate 14, PEEP 4 → VT 200, rate 25, PEEP 8",
+  "before": {
+   "SpO2": "90",
+   "HR": "147",
+   "BP": "106/64",
+   "pH": "7.21",
+   "PaCO2": "78",
+   "PaO2": "90",
+   "Plat": "28.5",
+   "dP": "20.5",
+   "Crs": "6.8",
+   "TotPEEP": "8"
+  },
+  "after": {
+   "SpO2": "65",
+   "HR": "218",
+   "BP": "46/34",
+   "pH": "6.96",
+   "PaCO2": "138",
+   "PaO2": "38",
+   "Plat": "74.5",
+   "dP": "38.8",
+   "Crs": "5.1",
+   "TotPEEP": "35.6"
+  },
+  "alarm": "Plateau 74.5: above 30 · Driving pressure 38.8: above 15 · High pressure alarm: peak 106.5 · Expiration does not finish: auto-PEEP 27.6 · VT 200 mL: 10.0 mL/kg · Cardiac output down 82%: venous return squeezed"
+ },
+ {
+  "n": 12,
+  "case": "2 · asthma, 5 y, 20 kg",
+  "stage": "first settings",
+  "what": "Rate 14 → 20",
+  "before": {
+   "SpO2": "90",
+   "HR": "147",
+   "BP": "106/64",
+   "pH": "7.21",
+   "PaCO2": "78",
+   "PaO2": "90",
+   "Plat": "28.5",
+   "dP": "20.5",
+   "Crs": "6.8",
+   "TotPEEP": "8"
+  },
+  "after": {
+   "SpO2": "80",
+   "HR": "195",
+   "BP": "68/47",
+   "pH": "6.90",
+   "PaCO2": "160",
+   "PaO2": "53",
+   "Plat": "41.8",
+   "dP": "25",
+   "Crs": "5.6",
+   "TotPEEP": "16.8"
+  },
+  "alarm": "Plateau 41.8: above 30 · Driving pressure 25: above 15 · High pressure alarm: peak 61.4 · Expiration does not finish: auto-PEEP 12.8 · Cardiac output down 52%: venous return squeezed"
+ },
+ {
+  "n": 13,
+  "case": "2 · asthma, 5 y, 20 kg",
+  "stage": "first settings",
+  "what": "Rate 14 → 10 (longer expiration)",
+  "before": {
+   "SpO2": "90",
+   "HR": "147",
+   "BP": "106/64",
+   "pH": "7.21",
+   "PaCO2": "78",
+   "PaO2": "90",
+   "Plat": "28.5",
+   "dP": "20.5",
+   "Crs": "6.8",
+   "TotPEEP": "8"
+  },
+  "after": {
+   "SpO2": "90",
+   "HR": "147",
+   "BP": "114/65",
+   "pH": "7.17",
+   "PaCO2": "86",
+   "PaO2": "94",
+   "Plat": "24.7",
+   "dP": "20.1",
+   "Crs": "7",
+   "TotPEEP": "–"
+  },
+  "alarm": "Driving pressure 20.1: above 15 · High pressure alarm: peak 43.4"
+ },
+ {
+  "n": 14,
+  "case": "2 · asthma, 5 y, 20 kg",
+  "stage": "first settings",
+  "what": "Ti 0.86 → 1.4 s (shorter expiration)",
+  "before": {
+   "SpO2": "90",
+   "HR": "147",
+   "BP": "106/64",
+   "pH": "7.21",
+   "PaCO2": "78",
+   "PaO2": "90",
+   "Plat": "28.5",
+   "dP": "20.5",
+   "Crs": "6.8",
+   "TotPEEP": "8"
+  },
+  "after": {
+   "SpO2": "88",
+   "HR": "161",
+   "BP": "91/59",
+   "pH": "7.09",
+   "PaCO2": "103",
+   "PaO2": "76",
+   "Plat": "32",
+   "dP": "21.4",
+   "Crs": "6.6",
+   "TotPEEP": "10.7"
+  },
+  "alarm": "Plateau 32: above 30 · Driving pressure 21.4: above 15 · High pressure alarm: peak 42.9 · Expiration does not finish: auto-PEEP 6.7"
+ },
+ {
+  "n": 15,
+  "case": "2 · asthma, 5 y, 20 kg",
+  "stage": "he starts to trigger",
+  "what": "Triggering, auto-PEEP about 8: PEEP 0 → 6",
+  "before": {
+   "SpO2": "95",
+   "HR": "140",
+   "BP": "98/60",
+   "pH": "7.40",
+   "PaCO2": "40",
+   "PaO2": "76",
+   "Plat": "30.9",
+   "dP": "22.9",
+   "Crs": "6.1",
+   "TotPEEP": "8"
+  },
+  "after": {
+   "SpO2": "97",
+   "HR": "139",
+   "BP": "99/60",
+   "pH": "7.40",
+   "PaCO2": "40",
+   "PaO2": "87",
+   "Plat": "30.7",
+   "dP": "22.7",
+   "Crs": "6.2",
+   "TotPEEP": "8"
+  },
+  "alarm": "Plateau 30.7: above 30 · Driving pressure 22.7: above 15 · High pressure alarm: peak 40.9"
+ },
+ {
+  "n": 16,
+  "case": "2 · asthma, 5 y, 20 kg",
+  "stage": "he starts to trigger",
+  "what": "Triggering: PEEP 0 → 12",
+  "before": {
+   "SpO2": "95",
+   "HR": "140",
+   "BP": "98/60",
+   "pH": "7.40",
+   "PaCO2": "40",
+   "PaO2": "76",
+   "Plat": "30.9",
+   "dP": "22.9",
+   "Crs": "6.1",
+   "TotPEEP": "8"
+  },
+  "after": {
+   "SpO2": "96",
+   "HR": "149",
+   "BP": "84/55",
+   "pH": "7.24",
+   "PaCO2": "58",
+   "PaO2": "81",
+   "Plat": "39",
+   "dP": "25.9",
+   "Crs": "5.4",
+   "TotPEEP": "13.1"
+  },
+  "alarm": "Plateau 39: above 30 · Driving pressure 25.9: above 15 · High pressure alarm: peak 49.2"
+ }
+]

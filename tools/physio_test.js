@@ -47,7 +47,8 @@ const dP = peeps.map(x => x.r.sup.pEnd - x.r.sup.peep - x.r.sup.auto), low = pee
 check('PEEP · ARDS', 'Driving pressure is lowest at the best-compliance PEEP', Math.abs(low.pe - best.pe) <= 2, 'lowest ΔP at PEEP ' + low.pe + ' (' + peeps.map((x, i) => x.pe + ':' + r1(dP[i])).join(' ') + ')');
 const pa = peeps.map(x => x.r.pa);
 check('PEEP · ARDS', 'PaO2 rises with PEEP from 5 to 12', pa[4] > pa[0] * 1.3, 'PaO2 ' + peeps.map(x => x.pe + ':' + Math.round(x.r.pa)).join(' '));
-check('PEEP · ARDS', 'PaO2 stops improving beyond best PEEP (overdistension)', pa[8] <= Math.max(...pa) * 1.02 && pa[8] < pa[6] * 1.1, 'PEEP 16: ' + Math.round(pa[6]) + ' · PEEP 20: ' + Math.round(pa[8]));
+const do2 = peeps.map(x => x.r.coRel * V.cont(x.r.pa, 9)), dBest = peeps[do2.indexOf(Math.max(...do2))].pe;
+check('PEEP · ARDS', 'O2 delivery peaks near best-compliance PEEP, while PaO2 may keep rising (Suter 1975)', Math.abs(dBest - best.pe) <= 2, 'best DO2 at PEEP ' + dBest + ' · best compliance at ' + best.pe + ' · PaO2 at PEEP 20: ' + Math.round(pa[8]));
 check('PEEP · ARDS', 'Cardiac output falls at high PEEP', peeps[8].r.coRel < 0.85 && peeps[4].r.coRel > peeps[8].r.coRel, 'CO PEEP 12: ' + Math.round(peeps[4].r.coRel * 100) + '% · PEEP 20: ' + Math.round(peeps[8].r.coRel * 100) + '% of baseline');
 check('PEEP · ARDS', 'Blood pressure falls at high PEEP', peeps[8].r.sys < peeps[4].r.sys - 5, 'systolic PEEP 12: ' + peeps[4].r.sys + ' · PEEP 20: ' + peeps[8].r.sys);
 
@@ -67,17 +68,22 @@ check('Asthma', 'Auto-PEEP rises with a bigger VT', vtBig.sup.auto > s20.sup.aut
 check('Asthma', 'Blood pressure falls with auto-PEEP', s28.sys < s12.sys - 10, 'systolic RR 12: ' + s12.sys + ' · RR 28: ' + s28.sys);
 check('Asthma', 'A faster rate does not clear CO2 once gas traps', s28.paco2 > s20.paco2 * 0.9, 'PaCO2 RR 20: ' + r1(s20.paco2) + ' · RR 28: ' + r1(s28.paco2));
 
+const S4 = LIVE.as4.phys, c4 = cal(S4), tot = pe => { const r = V.run(S4, c4, vent('VC', { vt: 140, pe, rr: 12, ti: 1, o: 50 })); return r.sup.peep + r.sup.auto; };
+const t0 = tot(0), t4 = tot(6), t12 = tot(14);
+check('Asthma', 'External PEEP below the auto-PEEP barely raises total PEEP (waterfall)', t4 - t0 < 1, 'auto-PEEP ' + r1(t0) + ' · total at PEEP 6: ' + r1(t4));
+check('Asthma', 'External PEEP above the auto-PEEP adds to it', t12 > t0 + 3, 'total at PEEP 14: ' + r1(t12));
+
 // 8 · heart–lung: PEEP costs more cardiac output in the dry child
 const dry = { ...A3, k: { pms: 9 } }, wet = { ...A3, k: { pms: 15 } };
 const coAt = (P, pe) => { const c = cal(P); return V.run(P, c, vent('PRVC', { vt: 60, pe, rr: 30, ti: 0.67, o: 100 })).coRel; };
 check('Heart–lung', 'PEEP 18 lowers cardiac output more when the child is dry', coAt(dry, 18) < coAt(wet, 18), 'CO at PEEP 18: dry ' + Math.round(coAt(dry, 18) * 100) + '% · filled ' + Math.round(coAt(wet, 18) * 100) + '%');
 
 // 9 · the case's own PEEP titration sheet (nurse's record, case 1): SpO2 within 2 and systolic within 8 at each step
-{ const sheet = [[6, 75, 90, 110], [8, 60, 92, 110], [10, 60, 94, 110], [12, 60, 96, 110], [14, 60, 96, 100]];
-  const P = { ...A3, anc: { ...A3.anc, set: vent('PRVC', { vt: 75, pe: 6, rr: 30, ti: 0.67 }), gas: { pH: 7.30, 'PaCO₂': 50 }, mon: [['SpO₂', '90'], ['BP', '110/70']] } };
+{ const sheet = [[6, 75, 90, 110, 3.1], [8, 60, 92, 110, 3.3], [10, 60, 94, 110, 3.8], [12, 60, 96, 110, 4.3], [14, 60, 96, 100, 3.8]];
+  const P = { ...A3, C: 75 / 24, anc: { ...A3.anc, set: vent('PRVC', { vt: 75, pe: 6, rr: 30, ti: 0.67 }), gas: { pH: 7.30, 'PaCO₂': 50 }, mon: [['SpO₂', '90'], ['BP', '110/70']] } };
   const c = cal(P);
-  for (const [pe, vt, sp, sys] of sheet) { const r = V.run(P, c, vent('PRVC', { vt, pe, rr: 30, ti: 0.67 }));
-    const m = Math.round(90 + r.dSat); check('Sheet · ARDS', 'PEEP ' + pe + ': SpO2 ' + sp + ', systolic ' + sys + ' on the sheet', Math.abs(m - sp) <= 2 && Math.abs(r.sys - sys) <= 8, 'model SpO2 ' + m + ', systolic ' + r.sys); } }
+  for (const [pe, vt, sp, sys, crs] of sheet) { const r = V.run(P, c, vent('PRVC', { vt, pe, rr: 30, ti: 0.67 }));
+    const m = Math.round(90 + r.dSat); check('Sheet · ARDS', 'PEEP ' + pe + ': SpO2 ' + sp + ', systolic ' + sys + ', Crs ' + crs + ' on the sheet', Math.abs(m - sp) <= 2 && Math.abs(r.sys - sys) <= 8 && Math.abs(r.C - crs) <= 0.6, 'model SpO2 ' + m + ', systolic ' + r.sys + ', Crs ' + r1(r.C)); } }
 
 // 9 · every scripted stage: its own settings give its own numbers back
 for (const [k, E] of Object.entries(LIVE)) { if (!/^(ar|as)\d+$/.test(k) || !E.phys) continue;
