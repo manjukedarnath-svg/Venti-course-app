@@ -90,8 +90,52 @@ function live(route, b) {
   }
   return [404, { error: 'not found' }];
 }
+// Live simulation rooms (sim.html): one facilitator panel, a ventilator screen and a patient monitor share a state.
+// Every change is appended to `hist` with the server's clock, so each screen computes the same patient from the same history.
+const SIMS = path.join(DATA, 'sims.json');
+let sims = {};
+try { sims = JSON.parse(fs.readFileSync(SIMS, 'utf8')) || {}; } catch (e) { sims = {}; }
+let simsDirty = null;
+const saveSims = () => { if (simsDirty) return; simsDirty = setTimeout(() => { simsDirty = null;
+  try { fs.writeFileSync(SIMS + '.tmp', JSON.stringify(sims)); fs.renameSync(SIMS + '.tmp', SIMS); } catch (e) {} }, 800); };
+function sim(route, b) {
+  const t = Date.now(); for (const k in sims) if (t - sims[k].at > 2 * 864e5) delete sims[k];
+  const code = String(b.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8), r = sims[code];
+  switch (route) {
+    case 'create': {
+      if (code.length < 3) return [400, { error: 'code' }];
+      if (r && !b.reset) { r.at = t; return [200, { room: code, key: r.key }]; }
+      const key = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      sims[code] = { key, at: t, v: 1, s: { case: null, stage: 0, set: null, mods: {}, reveals: [], hist: [] } }; saveSims();
+      return [200, { room: code, key }];
+    }
+    case 'get': {
+      if (!r) return [404, { error: 'no room' }];
+      if (b.v && +b.v === r.v) return [200, { same: true, v: r.v, now: t }];
+      return [200, { s: r.s, v: r.v, now: t }];
+    }
+    case 'act': {
+      if (!r) return [404, { error: 'no room' }];
+      const a = b.act || {}, ctl = b.key && b.key === r.key, S = r.s;
+      if (a.kind === 'set' || a.kind === 'hold') {           // the ventilator screen: settings and holds, no key needed
+        if (a.kind === 'set') { S.set = a.set; S.hist.push({ at: t, kind: 'set', set: a.set }); }
+        else S.hold = { type: a.type === 'exp' ? 'exp' : 'insp', at: t };
+      } else if (ctl) {                                        // the facilitator: case, stage, orders, events, results, story
+        const ent = { at: t, kind: String(a.kind || 'note').slice(0, 20) };
+        for (const k of ['case', 'stage', 'set', 'mods', 'reveals', 'story', 'note', 'label', 'debt']) if (a[k] !== undefined) { ent[k] = a[k]; if (k !== 'note' && k !== 'label') S[k] = a[k]; }
+        if (a.kind === 'reset') { r.s = { case: a.case || null, stage: 0, set: a.set || null, mods: {}, reveals: [], hist: [{ at: t, kind: 'reset', case: a.case, set: a.set }] }; }
+        else S.hist.push(ent);
+      } else return [403, { error: 'no' }];
+      if (r.s.hist.length > 3000) r.s.hist = r.s.hist.slice(-3000);
+      r.v++; r.at = t; saveSims();
+      return [200, { ok: true, v: r.v, now: t }];
+    }
+  }
+  return [404, { error: 'not found' }];
+}
 function api(route, b) {
   if (route.startsWith('live/')) return live(route.slice(5), b);
+  if (route.startsWith('sim/')) return sim(route.slice(4), b);
   switch (route) {
     case 'exists': return [200, { exists: !!users[String(b.u || '').trim().replace(/\s+/g, ' ').toLowerCase()] }];
     case 'register': {

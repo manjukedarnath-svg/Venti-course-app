@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VentCourse · Live simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="./vent-graphics.js"></script>
+<script src="./physio.js"></script>
+<script src="./sim-data.js"></script>
+</head>
+<body style="margin:0; background:#0B0D0F; color:#E8E4DC; font-family:'Hanken Grotesk', system-ui, sans-serif; -webkit-font-smoothing:antialiased;">
+<div id="app"></div>
+<script>
+/* VentCourse live simulation. One room, three screens (the role comes from the link):
+     sim.html#control-ROOM   the facilitator: case text, stages, orders, events, investigations, log and debrief
+     sim.html#vent-ROOM      the ventilator (or the oxygen / high-flow / NIV device): participants change the settings here
+     sim.html#monitor-ROOM   the patient monitor, with results (gas, X-ray, POCUS) when the facilitator releases them
+   Every change goes to the server with its time (/api/sim), and every screen computes the same patient from that history
+   with physio.js, calibrated to each stage of the script. Numbers settle over time after a change. */
+(() => {
+const $ = s => document.querySelector(s), app = $('#app');
+const MONO = "font-family:'IBM Plex Mono', monospace;";
+const [ROLE, ROOM] = (() => { const m = location.hash.slice(1).match(/^(control|vent|monitor)-([A-Za-z0-9]{3,8})$/); return m ? [m[1], m[2].toUpperCase()] : [null, null]; })();
+const CASES = (window.SIM_DATA || { cases: [] }).cases;
+const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const fmt = (x, d = 0) => (x === null || x === undefined || isNaN(x)) ? '––' : Number(x).toFixed(d);
+const post = (r, b) => fetch('/api/sim/' + r, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }).then(x => x.json().then(j => ({ ok: x.ok, j }))).catch(() => ({ ok: false, j: {} }));
+let S = null, VER = 0, OFF = 0, KEY = null, lastOk = 0;
+try { KEY = localStorage.getItem('vc-sim-key-' + ROOM); } catch (e) {}
+const now = () => Date.now() + OFF;
+const listeners = [];
+async function poll() {
+  if (!ROOM) return;
+  const r = await post('get', { room: ROOM, v: VER });
+  if (r.ok) { lastOk = Date.now(); OFF = r.j.now - Date.now(); if (!r.j.same) { S = r.j.s; VER = r.j.v; TCACHE.clear(); listeners.forEach(f => f()); } }
+}
+async function act(a) { const r = await post('act', { room: ROOM, key: KEY, act: a }); await poll(); return r; }
+
+// ── settings: the same encoding as the phones ("VENT:PRVC:vt=75,pe=7,…") ──
+const MODES = {
+  VENT: [['PRVC', 'PRVC'], ['VC', 'Volume control'], ['PC', 'Pressure control'], ['PS', 'Pressure support'], ['STBY', 'Standby']],
+  NIV: [['CPAP', 'CPAP'], ['ST', 'Bilevel ST']], HFNC: [['HFNC', 'High-flow']], MASK: [['Mask', 'Oxygen mask']]
+};
+const IFN = { VENT: 'Ventilator', NIV: 'NIV', HFNC: 'High-flow', MASK: 'Oxygen' };
+const KN = {
+  PRVC: [['vt', 'VT', 'mL', 10, 700, 5], ['rr', 'Rate', '/min', 4, 70, 1], ['ti', 'Ti', 's', 0.3, 2, 0.05], ['pe', 'PEEP', 'cmH₂O', 0, 25, 1], ['o', 'FiO₂', '%', 21, 100, 5]],
+  VC: [['vt', 'VT', 'mL', 10, 700, 5], ['rr', 'Rate', '/min', 4, 70, 1], ['ti', 'Ti', 's', 0.3, 2, 0.05], ['pe', 'PEEP', 'cmH₂O', 0, 25, 1], ['o', 'FiO₂', '%', 21, 100, 5]],
+  PC: [['pi', 'Pinsp', 'cmH₂O', 4, 40, 1], ['rr', 'Rate', '/min', 4, 70, 1], ['ti', 'Ti', 's', 0.3, 2, 0.05], ['pe', 'PEEP', 'cmH₂O', 0, 25, 1], ['o', 'FiO₂', '%', 21, 100, 5]],
+  PS: [['ps', 'PS', 'cmH₂O', 0, 30, 1], ['pe', 'PEEP', 'cmH₂O', 0, 25, 1], ['o', 'FiO₂', '%', 21, 100, 5]],
+  STBY: [],
+  CPAP: [['cp', 'CPAP', 'cmH₂O', 3, 15, 1], ['o', 'FiO₂', '%', 21, 100, 5]],
+  ST: [['ip', 'IPAP', 'cmH₂O', 4, 30, 1], ['ep', 'EPAP', 'cmH₂O', 3, 15, 1], ['br', 'Backup rate', '/min', 0, 60, 1], ['ti', 'Ti', 's', 0.3, 1.5, 0.05], ['o', 'FiO₂', '%', 21, 100, 5]],
+  HFNC: [['f', 'Flow', 'L/min', 1, 60, 1], ['o', 'FiO₂', '%', 21, 100, 5]],
+  Mask: [['l', 'O₂ flow', 'L/min', 0, 15, 1]]
+};
+const DEF = { vt: 100, rr: 20, ti: 0.7, pe: 5, o: 100, pi: 15, ps: 10, cp: 5, ip: 12, ep: 5, br: 20, f: 20, l: 10 };
+const parse = x => { if (!x) return null; if (typeof x === 'object') return { iface: x.iface, mode: x.mode, v: { ...(x.v || {}) } };
+  const [iface, mode, kv] = String(x).split(':'), v = {}; (kv || '').split(',').forEach(p => { const [k, y] = p.split('='); if (k) v[k] = +y; }); return { iface, mode, v }; };
+const enc = s => s.iface + ':' + s.mode + ':' + (KN[s.mode] || []).map(([k, , , , , st]) => k + '=' + (+(s.v[k] ?? DEF[k])).toFixed(st < 1 ? 2 : 0).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '')).join(',');
+const readSet = s => { if (!s) return 'Nothing set'; const k = KN[s.mode] || []; const m = ((MODES[s.iface] || []).find(x => x[0] === s.mode) || [0, s.mode])[1];
+  return (s.iface === 'VENT' ? '' : IFN[s.iface] + ' · ') + m + (k.length ? ' · ' + k.map(([kk, l]) => l + ' ' + (kk === 'o' ? ((s.v[kk] ?? DEF[kk]) / 100).toFixed(2) : (s.v[kk] ?? DEF[kk]))).join(' · ') : ''); };
+
+// ── the world at each moment, replayed from the history ──
+const caseOf = id => CASES.find(c => c.id === id);
+function worlds() {
+  const out = []; let w = { case: null, stage: 0, set: null, mods: {}, debt: 0 };
+  for (const h of (S && S.hist) || []) {
+    w = { ...w };
+    if (h.kind === 'reset') w = { case: h.case || w.case, stage: 0, set: h.set || null, mods: {}, debt: 0 };
+    if (h.case !== undefined) w.case = h.case; if (h.stage !== undefined) w.stage = h.stage; if (h.set !== undefined) w.set = h.set;
+    if (h.mods !== undefined) w.mods = h.mods; if (h.debt !== undefined) w.debt = h.debt;
+    out.push({ at: h.at, w, h });
+  }
+  return out;
+}
+const curWorld = () => { const W = worlds(); return W.length ? W[W.length - 1].w : null; };
+
+// severity of a support against the stage's safe ranges (the same grades as the live deck and the phones)
+const GL = { vt: 'VT', pe: 'PEEP', rr: 'Rate', ti: 'Ti', o: 'FiO₂', pi: 'Pinsp', cp: 'CPAP', ep: 'EPAP', ip: 'IPAP', ps: 'PS', te: 'Expiratory time' };
+function grade(rule, set) {
+  if (!rule || !set) return null; const v = { ...set.v };
+  let sev = rule.iface && rule.iface[set.iface] !== undefined ? rule.iface[set.iface] : 2; const why = [];
+  if (sev >= 2) why.push(IFN[set.iface] + ' is not the support for this child now');
+  if (set.iface === 'VENT' || set.iface === 'NIV') { const K = rule.knobs || {};
+    if (v.rr && v.ti && K.te) v.te = +(60 / v.rr - v.ti).toFixed(1);
+    for (const k in K) { if (v[k] === undefined) continue; const [lo, hi, blo, bhi] = K[k], x = v[k];
+      const g = x < blo || x > bhi ? 3 : x < lo || x > hi ? 2 : 0; if (g) { why.push((GL[k] || k) + ' ' + x + (x < lo ? ' too low' : ' too high') + ' (aim ' + lo + '–' + hi + ')'); sev = Math.max(sev, g); } } }
+  return { sev, why };
+}
+
+// ── the patient for one world: physio.js, calibrated to the stage, with orders and events on top ──
+const CAL = {}, TCACHE = new Map();
+function target(w) {
+  const k = JSON.stringify(w); if (TCACHE.has(k)) return TCACHE.get(k);
+  const C = caseOf(w.case); if (!C) return null;
+  const st = C.stages[clamp(w.stage, 0, C.stages.length - 1)], P0 = st.phys, m = w.mods || {}, V = window.VCPhysio;
+  const anc = P0 ? P0.anc : { mon: st.mon, gas: {} }, mon0 = anc.mon || [];
+  const mv = key => { const r = mon0.find(([x]) => x.replace(/₂/g, '2').startsWith(key)); return r ? parseFloat(r[1]) : NaN; };
+  const bp0 = ((mon0.find(([x]) => /BP/.test(x)) || [])[1] || '90/55').match(/(\d+)\s*\/\s*(\d+)/) || [0, 90, 55];
+  const base = { HR: mv('HR') || 140, SpO2: isNaN(mv('SpO2')) ? 92 : mv('SpO2'), sys: +bp0[1], dia: +bp0[2], RR: mv('RR') || 30, Temp: mv('Temp') || 37.5 };
+  const g0 = (anc.gas || {});
+  let set = parse(w.set);
+  const out = { stage: st, set, flags: [], mech: null, sc: null };
+  const debt = w.debt || 0, dS = [0, 0, -8, -18][debt] || 0, dH = [0, 0, 10, 25][debt] || 0;
+  const bagged = st.intub && (!set || set.iface !== 'VENT' || set.mode === 'STBY');
+  if (!P0 || !V || bagged) {   // no physiology for this stage, or the team is hand-bagging: the script's own numbers
+    Object.assign(out, { HR: base.HR + dH, SpO2: base.SpO2, sys: base.sys + dS, dia: base.dia + dS * 0.6, RR: base.RR, Temp: base.Temp,
+      pH: g0.pH ?? 7.3, PaCO2: g0['PaCO₂'] ?? 50, PaO2: g0['PaO₂'] ?? 65, EtCO2: (g0['PaCO₂'] ?? 50) - 8, bagged });
+    if (bagged) out.flags.push('Hand-bagging: the ventilator is on standby');
+    TCACHE.set(k, out); return out;
+  }
+  const ck = st.id; if (!CAL[ck]) CAL[ck] = V.calibrate(P0, { set: P0.anc.set, gas: P0.anc.gas, bp: bp0[1] + '/' + bp0[2], spo2: base.SpO2 });
+  const cal = CAL[ck];
+  // orders and events
+  let Rf = Math.pow(0.85, Math.min(4, m.bd || 0)) * (m.plug ? 1.8 : 1);
+  const Pm = { ...P0, R: P0.R * Rf, own: (m.para ? 0 : P0.own), trig: (m.para || m.sed) ? undefined : (m.fight ? Math.max(P0.trig || 0, 60) : P0.trig) };
+  const qx = cal.qx + 0.02 * debt + (m.prone ? -0.08 : 0) + (m.ino ? -0.04 : 0) + (m.ptx ? 0.12 : 0) + (C.kind === 'ards' ? 0.01 * Math.max(0, (m.fluid || 0) - 1) : 0);
+  const calm = { ...cal, qx, cUnit: cal.cUnit * (m.ptx ? 0.6 : 1), K: { ...cal.K, pms: cal.K.pms + 1.5 * (m.fluid || 0) + (m.ino_tr ? 2.5 : 0) - (m.ptx ? 5 : 0) - (m.dry ? 3 : 0) } };
+  if (!set) set = parse(P0.anc.set);
+  const off = m.off || m.dislodged;
+  const runSet = off ? { iface: 'MASK', mode: 'Mask', v: { l: m.dislodged ? 2 : 0 } } : set;
+  let r; try { r = V.run(Pm, calm, runSet); } catch (e) { r = null; }
+  if (!r) { TCACHE.set(k, out); return out; }
+  const spBase = base.SpO2, sp = clamp(spBase + r.dSat - (debt >= 2 ? 2 * (debt - 1) : 0), 30, 100);
+  const hr = clamp(base.HR * (1 + 0.35 * (1 - r.mapBp / r.mapBpA)) + 1.2 * Math.max(0, -r.dSat) - 0.5 * Math.max(0, r.dSat) + 0.25 * (r.paco2 - cal.ref.paco2) + dH - (m.sed || m.para ? 8 : 0) + (m.fight ? 25 : 0), 50, 230);
+  const s = r.sup, vt = s.vt || 0, apnoea = (s.rr || 0) < 1;
+  const et = (off || apnoea) ? 0 : clamp(r.paco2 * (1 - (r.vdAlv || 0) / Math.max(1, vt)) - (C.kind === 'asthma' ? 10 : 4), 0, 140);
+  Object.assign(out, { HR: hr, SpO2: sp, sys: r.sys + dS, dia: r.dia + dS * 0.6, RR: off && m.para ? 0 : s.rr, Temp: base.Temp, pH: r.ph, PaCO2: r.paco2, PaO2: r.pa, EtCO2: et, HCO3: 0.03 * cal.ref.paco2 * Math.pow(10, (g0.pH || 7.3) - 6.1),
+    coRel: r.coRel, oi: r.oi, pf: r.pf, qs: r.qs, sup: s, C: r.C, set: runSet, off });
+  // the breath on the ventilator screen
+  if (!off && (set.iface === 'VENT' || set.iface === 'NIV')) {
+    const v = set.v, R = Pm.R, tau = R * r.C / 1000;
+    let sc;
+    if (set.iface === 'NIV' || set.mode === 'PS') {
+      const pe = set.mode === 'CPAP' ? (v.cp ?? 5) : (v.ep ?? v.pe ?? 5), ps = set.mode === 'CPAP' ? 0 : set.mode === 'PS' ? (v.ps ?? 8) : Math.max(0, (v.ip ?? pe) - pe), rr = Math.max(1, s.rr);
+      sc = { mode: 'PS', ps, peep: pe, C: r.C, R, rr, window: +(3 * 60 / rr).toFixed(2), efforts: apnoea ? [] : [0, 1, 2].map(i => ({ t: +(0.22 + i * 60 / rr).toFixed(3), amp: 7, dur: Math.min(0.5, 25 / rr) })) };
+      if (apnoea) sc.breaths = [];
+    } else {
+      const rr = s.rr, ti = Math.min(v.ti ?? 0.7, 60 / rr - 0.15);
+      sc = { C: r.C, R, peep: v.pe ?? 0, rr, ti, window: +(3 * 60 / rr).toFixed(2) };
+      if (set.mode === 'PC') Object.assign(sc, { mode: 'PC', pinsp: v.pi ?? 15 });
+      else if (set.mode === 'VC') Object.assign(sc, { mode: 'VC', vt, pause: 0.1 });
+      else Object.assign(sc, { mode: 'PC', pinsp: clamp(vt / r.C / (1 - Math.exp(-ti / Math.max(0.02, tau))), 4, 38) });
+      if (C.kind === 'asthma') sc.efl = { k: 0.6, m: 5 };
+      if (Pm.trig && Pm.trig > rr - 1) sc.efforts = [0, 1, 2].map(i => ({ t: +(0.15 + i * 60 / rr).toFixed(3), amp: m.fight ? 9 : 4, dur: 0.4 }));
+    }
+    sc.scale = { v: Math.round(C.kg * 14) };
+    let stats = null; try { const sim = window.VentGraphics.simulate(sc); let mm = 0; for (let i = 0; i < sim.p.length; i++) mm += sim.p[i]; stats = { pip: sim.stats.pip, map: mm / sim.p.length, vt: sim.stats.vt }; } catch (e) {}
+    out.sc = sc;
+    out.mech = { peak: (stats ? stats.pip : s.pEnd) + (s.auto || 0) + (m.plug ? 8 : 0), plat: s.pEnd, peepSet: s.peep, peepTot: s.peep + (s.auto || 0), vte: s.limited ? vt : (stats ? stats.vt : vt), map: stats ? stats.map : s.mapAw,
+      rr: s.rr, mve: (s.rr * (s.limited ? vt : (stats ? stats.vt : vt))) / 1000, C: r.C, limited: s.limited };
+  }
+  // safety alarms the facilitator should see
+  if (out.mech) { if (out.mech.plat > 30) out.flags.push('Plateau ' + fmt(out.mech.plat, 0) + ' above 30'); if (out.mech.plat - out.mech.peepTot > 15) out.flags.push('Driving pressure ' + fmt(out.mech.plat - out.mech.peepTot, 0) + ' above 15'); if (s.auto > 5) out.flags.push('Auto-PEEP ' + fmt(s.auto, 0)); if (vt > 9 * C.kg) out.flags.push('VT ' + fmt(vt / C.kg, 1) + ' mL/kg'); }
+  if (r.coRel < 0.75) out.flags.push('Cardiac output down ' + Math.round((1 - r.coRel) * 100) + '%');
+  if (off) out.flags.push(m.dislodged ? 'Tube out: no ventilation' : 'Off the ventilator');
+  TCACHE.set(k, out); return out;
+}
+// what the monitor shows now: each number moves toward its new value with its own time constant (oxygen ~30 s, CO₂ ~90 s, circulation ~10 s)
+const TAU = { SpO2: 30, PaO2: 30, HR: 10, sys: 10, dia: 10, RR: 3, EtCO2: 60, PaCO2: 90, pH: 90 };
+function shown() {
+  const W = worlds(); if (!W.length) return null; const t = now(); let cur = null;
+  for (let i = 0; i < W.length; i++) {
+    const T = target(W[i].w); if (!T) continue;
+    if (!cur || W[i].h.kind === 'stage' || W[i].h.kind === 'reset') { cur = { ...T }; if (i + 1 < W.length || true) { /* time has passed between stages: start from the stage's own numbers */ } continue; }
+    const end = i + 1 < W.length ? W[i + 1].at : t, dt = Math.max(0, (end - W[i].at) / 1000);
+    const nx = { ...T };
+    for (const k in TAU) if (typeof T[k] === 'number' && typeof cur[k] === 'number') nx[k] = T[k] + (cur[k] - T[k]) * Math.exp(-dt / TAU[k]);
+    cur = nx;
+  }
+  if (W.length === 1 && cur) return cur;
+  return cur;
+}
+
+// ════════════════════════════ LANDING ════════════════════════════
+function landing() {
+  document.body.style.background = '#F3EDE3'; document.body.style.color = '#1B1A17';
+  app.innerHTML = `<main style="max-width:760px; margin:0 auto; padding:48px 20px; display:flex; flex-direction:column; gap:22px;">
+    <span style="${MONO} font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#6E6A63;">VentCourse · live simulation</span>
+    <h1 style="margin:0; font:400 54px/1 'Instrument Serif', serif;">Run a <em>simulation</em></h1>
+    <p style="margin:0; font-size:18px; line-height:1.6; color:#3B3A36;">Three screens share one room: the facilitator's panel (this laptop), the ventilator (a tablet or laptop the team touches) and the patient monitor (a screen the whole team can see). The team gets the case, sets the support and gives orders; the patient follows what they do.</p>
+    <label style="display:flex; flex-direction:column; gap:8px; font-size:15px;">Room code (3–8 letters or numbers)
+      <input id="rc" value="SIM1" style="font:500 22px 'IBM Plex Mono', monospace; padding:12px 14px; border:1px solid #D2C5B1; border-radius:4px; background:#fff; text-transform:uppercase; width:220px;"></label>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <button id="mk" style="font:500 17px 'Hanken Grotesk'; padding:14px 22px; border:0; border-radius:999px; background:#1B1A17; color:#F3EDE3; cursor:pointer;">Open the facilitator panel</button>
+      <button id="jv" style="font:500 17px 'Hanken Grotesk'; padding:14px 22px; border:1px solid #1B1A17; border-radius:999px; background:transparent; cursor:pointer;">This is the ventilator</button>
+      <button id="jm" style="font:500 17px 'Hanken Grotesk'; padding:14px 22px; border:1px solid #1B1A17; border-radius:999px; background:transparent; cursor:pointer;">This is the patient monitor</button>
+    </div>
+    <p style="margin:0; font-size:15px; line-height:1.6; color:#6E6A63;">Open the facilitator panel first. Then, on the other two devices, open sim.html, type the same code and choose their role (or use the links the panel shows).</p></main>`;
+  const code = () => ($('#rc').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  $('#mk').onclick = async () => { const c = code(); if (c.length < 3) return; const r = await post('create', { room: c }); if (r.ok) { try { localStorage.setItem('vc-sim-key-' + c, r.j.key); } catch (e) {} location.hash = 'control-' + c; location.reload(); } };
+  $('#jv').onclick = () => { const c = code(); if (c.length >= 3) { location.hash = 'vent-' + c; location.reload(); } };
+  $('#jm').onclick = () => { const c = code(); if (c.length >= 3) { location.hash = 'monitor-' + c; location.reload(); } };
+}
+
+// ════════════════════════════ PATIENT MONITOR ════════════════════════════
+function monitor() {
+  document.body.style.overflow = 'hidden';
+  app.innerHTML = `<div style="position:fixed; inset:0; display:flex; flex-direction:column; background:#050607;">
+    <div style="flex:none; display:flex; align-items:center; gap:20px; padding:8px 18px; ${MONO} font-size:14px; color:#9A968E; border-bottom:1px solid #1C1F22;">
+      <span id="mPt" style="color:#E8E4DC;">No patient</span><span id="mStage"></span><span style="flex:1"></span>
+      <span id="mAl" style="padding:4px 12px; border-radius:3px; font-weight:600; letter-spacing:.06em;"></span>
+      <button id="mSnd" style="${MONO} font-size:13px; background:#1C1F22; color:#E8E4DC; border:1px solid #33373B; border-radius:3px; padding:6px 10px; cursor:pointer;">Sound off</button>
+      <span id="mClock"></span></div>
+    <div style="flex:1; min-height:0; display:flex;">
+      <div style="flex:1; min-width:0; display:grid; grid-template-columns:minmax(0,1fr) 300px; grid-template-rows:repeat(4, minmax(0,1fr));" id="mGrid"></div>
+      <div id="mRes" style="flex:none; width:0; overflow:auto; border-left:1px solid #1C1F22; background:#0B0D0F; transition:width .3s;"></div>
+    </div>
+    <div id="mStory" style="display:none; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(900px, 90vw); background:#F3EDE3; color:#1B1A17; border-radius:6px; padding:36px 40px; font-size:26px; line-height:1.45; box-shadow:0 30px 80px rgba(0,0,0,.6);"></div>
+  </div>`;
+  const CH = [['ECG II', '#5FD07A', 'HR', 'bpm'], ['SpO₂', '#33C8D6', 'SpO2', '%'], ['CO₂', '#F0C24A', 'EtCO2', 'mmHg'], ['NIBP', '#F07A63', 'BP', 'mmHg']];
+  const grid = $('#mGrid'); const cv = [], val = {};
+  CH.forEach(([lab, col, k, unit], i) => {
+    const wave = document.createElement('div'); wave.style.cssText = `position:relative; border-bottom:1px solid #15181B; min-height:0;`;
+    if (i < 3) { wave.innerHTML = `<span style="position:absolute; left:12px; top:8px; ${MONO} font-size:14px; color:${col};">${lab}</span>`; const c = document.createElement('canvas'); c.style.cssText = 'position:absolute; inset:0; width:100%; height:100%;'; wave.appendChild(c); cv.push({ c, col, k }); }
+    else wave.innerHTML = `<div style="position:absolute; left:12px; top:8px; right:12px; bottom:8px; display:flex; flex-direction:column; justify-content:center; gap:6px;"><span style="${MONO} font-size:14px; color:${col};">RESP</span><span id="mResp" style="${MONO} font-size:56px; color:#E8E4DC;">––</span><span style="${MONO} font-size:13px; color:#6E6A63;">/min</span></div>`;
+    const num = document.createElement('div'); num.style.cssText = `border-left:1px solid #15181B; border-bottom:1px solid #15181B; padding:10px 18px; display:flex; flex-direction:column; justify-content:center; color:${col};`;
+    num.innerHTML = `<span style="${MONO} font-size:15px; display:flex; justify-content:space-between;"><span>${lab}</span><span style="color:#6E6A63;">${unit}</span></span><span id="mv${k}" style="${MONO} font-weight:500; font-size:${k === 'BP' ? 64 : 88}px; line-height:1;">––</span><span id="ms${k}" style="${MONO} font-size:14px; color:#9A968E;"></span>`;
+    grid.appendChild(wave); grid.appendChild(num);
+  });
+  // sound: a pulse tone whose pitch falls with the saturation, and an alarm when red
+  let ac = null, snd = false;
+  $('#mSnd').onclick = () => { snd = !snd; if (snd && !ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } $('#mSnd').textContent = snd ? 'Sound on' : 'Sound off'; };
+  const beep = (f, d, g = 0.08) => { if (!snd || !ac) return; const o = ac.createOscillator(), a = ac.createGain(); o.frequency.value = f; o.type = 'sine'; a.gain.value = g; o.connect(a); a.connect(ac.destination); o.start(); a.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + d); o.stop(ac.currentTime + d + 0.02); };
+  // sweeping traces
+  let cur = null, ph = { hr: 0, rr: 0 }, last = performance.now(), sweep = 0, nibp = null, nibpAt = 0, alarmT = 0;
+  const ecg = x => { const p = x % 1; return (p < 0.08 ? 0.12 * Math.sin(p / 0.08 * Math.PI) : 0) + (p > 0.14 && p < 0.16 ? -0.15 : 0) + (p >= 0.16 && p < 0.2 ? (1 - Math.abs((p - 0.18) / 0.02)) * 1.0 : 0) + (p >= 0.2 && p < 0.23 ? -0.25 : 0) + (p > 0.35 && p < 0.55 ? 0.25 * Math.sin((p - 0.35) / 0.2 * Math.PI) : 0); };
+  const pleth = x => { const p = x % 1; return p < 0.25 ? Math.sin(p / 0.25 * Math.PI / 2) : p < 0.45 ? 1 - (p - 0.25) * 2.2 : p < 0.55 ? 0.56 + 0.08 * Math.sin((p - 0.45) / 0.1 * Math.PI) : 0.56 * (1 - (p - 0.55) / 0.45); };
+  const capno = (x, obs) => { const p = x % 1; if (p < 0.38) return 0; if (p < 0.45) return obs ? 0.5 * (p - 0.38) / 0.07 : (p - 0.38) / 0.07; if (p < 0.92) return obs ? 0.5 + 0.5 * Math.sqrt((p - 0.45) / 0.47) : 1 + 0.04 * (p - 0.45); return Math.max(0, 1 - (p - 0.92) / 0.03); };
+  const hist = cv.map(() => []);
+  function frame(ts) {
+    const dt = Math.min(0.1, (ts - last) / 1000); last = ts;
+    if (cur) { ph.hr += dt * (cur.HR || 0) / 60; ph.rr += dt * (cur.RR || 0) / 60; }
+    sweep = (sweep + dt / 8) % 1;
+    cv.forEach((o, i) => {
+      const c = o.c, w = c.clientWidth, h = c.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+      if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); hist[i] = new Array(c.width).fill(null); }
+      const W = c.width, H = c.height, x = Math.floor(sweep * W), g = c.getContext('2d');
+      let y = null;
+      if (cur && !(i === 2 && cur.EtCO2 < 1)) {
+        if (i === 0) y = cur.HR > 0 ? 0.62 - 0.45 * ecg(ph.hr) : 0.62;
+        if (i === 1) y = cur.SpO2 > 40 ? 0.82 - 0.6 * pleth(ph.hr - 0.15) * clamp((cur.sys || 80) / 90, 0.3, 1.1) : 0.8;
+        if (i === 2) y = 0.88 - 0.7 * capno(ph.rr, cur.obs) * clamp(cur.EtCO2 / 60, 0.1, 1.2);
+      } else y = i === 2 ? 0.88 : 0.62;
+      const a = hist[i]; const span = Math.max(1, Math.round(W * dt / 8) + 1);
+      for (let k = 0; k < span; k++) { a[(x - k + W) % W] = y; }
+      for (let k = 1; k <= Math.round(W * 0.02); k++) a[(x + k) % W] = null;
+      g.clearRect(0, 0, W, H); g.strokeStyle = o.col; g.lineWidth = 2 * dpr; g.beginPath(); let pen = false;
+      for (let px = 0; px < W; px++) { const v = a[px]; if (v === null) { pen = false; continue; } const yy = 18 * dpr + v * (H - 30 * dpr); if (!pen) { g.moveTo(px, yy); pen = true; } else g.lineTo(px, yy); }
+      g.stroke();
+    });
+    // a pulse tone on each beat
+    if (cur && cur.HR > 0) { const b = Math.floor(ph.hr); if (b !== frame.b) { frame.b = b; beep(300 + clamp(cur.SpO2 - 70, 0, 30) * 18, 0.07, 0.05); } }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  function tick() {
+    const T = shown(); cur = T;
+    $('#mClock').textContent = new Date(now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const w = curWorld(), C = w && caseOf(w.case);
+    $('#mPt').textContent = C ? C.name : 'Waiting for the facilitator'; $('#mStage').textContent = C ? C.stages[w.stage].t : '';
+    if (!T || !C) { requestAnimationFrame(() => {}); return; }
+    cur.obs = C.kind === 'asthma' && !(w.mods || {}).off;
+    // NIBP: a new cuff reading every 60 s (or when the facilitator asks)
+    const askAt = ((S.hist || []).filter(h => h.label === 'BP cuff cycled').pop() || {}).at || 0; if (!nibp || now() - nibpAt > 60000 || askAt > nibpAt || (T.sys < nibp[0] - 20 && now() - nibpAt > 15000)) { nibp = [Math.round(T.sys), Math.round(T.dia)]; nibpAt = now(); }
+    const jit = (x, a) => x + (Math.random() - 0.5) * a;
+    const v = { HR: T.HR > 0 ? Math.round(jit(T.HR, 2)) : 0, SpO2: Math.round(clamp(T.SpO2, 0, 100)), EtCO2: Math.round(T.EtCO2), BP: nibp[0] + '/' + nibp[1] };
+    for (const k of ['HR', 'SpO2', 'EtCO2', 'BP']) { const el = $('#mv' + k); if (el) el.textContent = k === 'SpO2' && T.SpO2 < 40 ? '?' : v[k]; }
+    $('#msBP').textContent = 'MAP ' + Math.round(nibp[1] + (nibp[0] - nibp[1]) / 3) + ' · ' + Math.round((now() - nibpAt) / 1000) + ' s ago';
+    $('#msEtCO2').textContent = T.EtCO2 < 1 ? 'No CO₂ detected' : ''; $('#mResp').textContent = Math.round(T.RR || 0);
+    $('#msHR').textContent = 'Temp ' + fmt(T.Temp, 1) + ' °C';
+    // alarms
+    const red = [], yel = [];
+    if (T.SpO2 < 85) red.push('SpO₂ LOW'); else if (T.SpO2 < 90) yel.push('SpO₂ low');
+    if (T.HR > 200 || T.HR < 70) red.push('HR'); if (nibp[0] < (C.kind === 'ards' ? 70 : 80)) red.push('BP LOW');
+    if (T.EtCO2 < 1) red.push('NO CO₂'); if ((T.RR || 0) < 1) red.push('APNOEA');
+    const al = $('#mAl'); al.textContent = red.concat(yel).join('  ·  '); al.style.background = red.length ? '#B42318' : yel.length ? '#C27A12' : 'transparent'; al.style.color = '#fff';
+    if (red.length && now() - alarmT > 3000) { alarmT = now(); beep(880, 0.15, 0.12); setTimeout(() => beep(660, 0.15, 0.12), 180); setTimeout(() => beep(880, 0.15, 0.12), 360); }
+  }
+  setInterval(tick, 500);
+  // results and the case story, when the facilitator releases them
+  listeners.push(() => {
+    const R = (S && S.reveals) || [], box = $('#mRes');
+    box.style.width = R.length ? 'min(44vw, 640px)' : '0';
+    box.innerHTML = R.slice().reverse().map(x => resultCard(x)).join('');
+    box.querySelectorAll('video').forEach(v => { v.muted = true; v.play().catch(() => {}); });
+    const st = $('#mStory'), w = curWorld(), C = w && caseOf(w.case);
+    if (S && S.story && C) { st.style.display = 'block'; st.innerHTML = `<div style="${MONO} font-size:15px; letter-spacing:.14em; text-transform:uppercase; color:#B04428; margin-bottom:14px;">${esc(C.name)} · ${esc(C.stages[w.stage].t)}</div>${esc(C.stages[w.stage].story)}`; }
+    else st.style.display = 'none';
+  });
+}
+function resultCard(x) {
+  const head = `<div style="${MONO} font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:#9A968E; display:flex; justify-content:space-between;"><span>${esc(x.title)}</span><span>${new Date(x.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>`;
+  let body = '';
+  if (x.kv) body = `<div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:6px 20px; margin-top:10px;">${x.kv.map(([k, v]) => `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #1C1F22; padding:6px 0;"><span style="${MONO} font-size:15px; color:#9A968E;">${esc(k)}</span><span style="${MONO} font-size:24px; color:#E8E4DC;">${esc(v)}</span></div>`).join('')}</div>`;
+  if (x.img) body += `<img src="${esc(x.img)}" style="display:block; max-width:100%; max-height:42vh; margin:10px auto 0; border-radius:3px; background:#000;">`;
+  if (x.vid) body += `<video src="${esc(x.vid)}" autoplay muted loop playsinline style="display:block; max-width:100%; max-height:42vh; margin:10px auto 0; border-radius:3px; background:#000;"></video>`;
+  if (x.table) body += `<table style="width:100%; border-collapse:collapse; margin-top:10px; ${MONO} font-size:15px;"><tr>${x.table.head.map(h => `<th style="color:#9A968E; text-align:center; padding:4px; border-bottom:1px solid #33373B;">${esc(h)}</th>`).join('')}</tr>${x.table.rows.map(r => `<tr>${r.map(c => `<td style="text-align:center; padding:5px; border-bottom:1px solid #1C1F22;">${esc(c)}</td>`).join('')}</tr>`).join('')}</table>`;
+  if (x.text) body += `<p style="margin:10px 0 0; font-size:20px; line-height:1.45; color:#E8E4DC;">${esc(x.text)}</p>`;
+  return `<div style="padding:18px 20px; border-bottom:1px solid #1C1F22;">${head}${body}</div>`;
+}
+
+// ════════════════════════════ VENTILATOR ════════════════════════════
+function vent() {
+  document.body.style.overflow = 'hidden';
+  let draft = null, sel = null, holdUntil = 0, holdType = null, modeOpen = false;
+  app.innerHTML = `<div style="position:fixed; inset:0; display:flex; flex-direction:column; background:#14171A;">
+    <div style="flex:none; display:flex; align-items:center; gap:14px; padding:8px 16px; border-bottom:1px solid #262A2E; ${MONO} font-size:14px; color:#9A968E;">
+      <span style="color:#E8E4DC; font-weight:600;">VENTCOURSE ICU</span><span id="vPt"></span><span style="flex:1"></span><span id="vAl" style="padding:5px 12px; border-radius:3px; font-weight:600;"></span><span id="vMode" style="background:#E9B54A; color:#14171A; padding:5px 12px; border-radius:3px; font-weight:600;"></span></div>
+    <div style="flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 260px;">
+      <div id="vWave" style="position:relative; min-height:0; background:#0B0D0F;"></div>
+      <div id="vMeas" style="border-left:1px solid #262A2E; padding:12px 16px; display:flex; flex-direction:column; gap:10px; overflow:auto;"></div></div>
+    <div id="vKn" style="flex:none; border-top:1px solid #262A2E; padding:12px 16px; display:flex; gap:10px; align-items:stretch; flex-wrap:wrap;"></div>
+    <div id="vModes" style="display:none; position:absolute; left:16px; bottom:150px; background:#1C2024; border:1px solid #33373B; border-radius:6px; padding:12px; box-shadow:0 20px 50px rgba(0,0,0,.5);"></div>
+  </div>`;
+  const btn = (t, extra = '') => `style="${MONO} font-size:15px; background:#262A2E; color:#E8E4DC; border:1px solid #3A3F44; border-radius:4px; padding:10px 14px; cursor:pointer; min-height:48px; ${extra}"`;
+  let traceKey = null;
+  function draw() {
+    const w = curWorld(), C = w && caseOf(w.case); const T = w && target(w);
+    $('#vPt').textContent = C ? C.name + ' · ' + C.stages[w.stage].t : 'Waiting for the facilitator';
+    if (!C) return;
+    const st = C.stages[w.stage], applied = parse(w.set) || (st.phys ? parse(st.phys.anc.set) : null);
+    if (!draft) draft = applied ? { iface: applied.iface, mode: applied.mode, v: { ...applied.v } } : { iface: 'VENT', mode: 'STBY', v: {} };
+    const dirty = applied && enc(draft) !== enc(applied) || (!applied && draft.mode !== 'STBY');
+    const mm = ((MODES[draft.iface] || []).find(x => x[0] === draft.mode) || [0, draft.mode])[1];
+    $('#vMode').textContent = (draft.iface === 'VENT' ? '' : IFN[draft.iface] + ' · ') + mm;
+    // waveforms
+    const wv = $('#vWave'), off = T && T.off;
+    const sc = T && T.sc && !dirty ? T.sc : null;
+    if (applied && applied.iface === 'HFNC' || applied && applied.iface === 'MASK') {
+      wv.innerHTML = `<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; ${MONO}; color:#9A968E;"><span style="font-size:18px; letter-spacing:.14em;">${applied.iface === 'HFNC' ? 'HIGH-FLOW' : 'OXYGEN FLOWMETER'}</span><span style="font-size:96px; color:#E9B54A;">${applied.iface === 'HFNC' ? (applied.v.f ?? 20) + ' L/min' : (applied.v.l ?? 10) + ' L/min'}</span>${applied.iface === 'HFNC' ? `<span style="font-size:40px; color:#E8E4DC;">FiO₂ ${((applied.v.o ?? 60) / 100).toFixed(2)}</span>` : ''}</div>`; traceKey = null;
+    } else if (sc && !off) {
+      const key = 'sim-' + JSON.stringify(sc).length + '-' + Math.abs([...JSON.stringify(sc)].reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)).toString(36);
+      if (key !== traceKey) { window.VentGraphics.SCENARIOS[key] = sc; traceKey = key; wv.innerHTML = `<vent-trace scenario="${key}" lanes="pfv" theme="night" font="13" lw="2" marks="off" style="position:absolute; inset:10px 12px;"></vent-trace>`; }
+    } else { traceKey = null; wv.innerHTML = `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; ${MONO} font-size:28px; letter-spacing:.14em; color:${off ? '#F07A63' : '#9A968E'};">${off ? (w.mods.dislodged ? 'NO EXPIRED VOLUME · CHECK THE PATIENT' : 'DISCONNECTED') : dirty ? 'CONFIRM TO APPLY' : 'STANDBY'}</div>`; }
+    // measured values
+    const M = T && T.mech, hold = now() < holdUntil;
+    const row = (l, v, u, hl) => `<div style="display:flex; flex-direction:column; border-bottom:1px solid #262A2E; padding-bottom:6px;"><span style="${MONO} font-size:12px; letter-spacing:.1em; color:#9A968E;">${l}</span><span style="${MONO} font-size:30px; color:${hl ? '#E9B54A' : '#6FD3DE'};">${v}<span style="font-size:13px; color:#6E6A63;"> ${u}</span></span></div>`;
+    $('#vMeas').innerHTML = M && !off ? [row('PPEAK', fmt(M.peak), 'cmH₂O'), row('PMEAN', fmt(M.map), 'cmH₂O'), row('PEEP', fmt(M.peepSet), 'cmH₂O'),
+      hold && holdType === 'insp' ? row('PPLAT · HOLD', fmt(M.plat, 1), 'cmH₂O', 1) : '', hold && holdType === 'exp' ? row('PEEP TOTAL · HOLD', fmt(M.peepTot, 1), 'cmH₂O', 1) : '',
+      row('VTe', fmt(M.vte), 'mL'), row('MVe', fmt(M.mve, 2), 'L/min'), row('fTOTAL', fmt(M.rr), '/min'), hold && holdType === 'insp' ? row('Cstat', fmt(M.C, 1), 'mL/cmH₂O', 1) : '',
+      `<div style="display:flex; gap:8px; margin-top:6px;"><button id="hI" ${btn('', 'flex:1; font-size:13px;')}>Insp hold</button><button id="hE" ${btn('', 'flex:1; font-size:13px;')}>Exp hold</button></div>`].join('')
+      : `<span style="${MONO} font-size:13px; color:#6E6A63;">No measurements</span>`;
+    if ($('#hI')) { $('#hI').onclick = () => { holdType = 'insp'; holdUntil = now() + 15000; act({ kind: 'hold', type: 'insp' }); draw(); }; $('#hE').onclick = () => { holdType = 'exp'; holdUntil = now() + 15000; act({ kind: 'hold', type: 'exp' }); draw(); }; }
+    // alarms from the machine's point of view
+    const al = [];
+    if (M && !off) { if (M.limited) al.push('PRESSURE LIMITED'); else if (M.peak > 35) al.push('HIGH PRESSURE'); if (M.vte < 4 * C.kg) al.push('LOW VTe'); if (M.rr > 60) al.push('HIGH RATE'); if (M.rr < 1) al.push('APNOEA'); }
+    if (off) al.push(w.mods.dislodged ? 'LOW EXPIRED VOLUME' : 'DISCONNECTION');
+    const a = $('#vAl'); a.textContent = al.join(' · '); a.style.background = al.length ? '#B42318' : 'transparent'; a.style.color = '#fff';
+    // knobs
+    const kn = KN[draft.mode] || [];
+    $('#vKn').innerHTML = `<button id="mB" ${btn('', 'min-width:120px;')}>Modes</button>` + kn.map(([k, l, u, mn, mx, s]) => { const v = draft.v[k] ?? DEF[k], ch = !applied || (applied.v[k] ?? DEF[k]) !== v || applied.mode !== draft.mode;
+      return `<div data-k="${k}" style="min-width:120px; flex:1; background:${sel === k ? '#3A3F44' : '#1C2024'}; border:1px solid ${ch ? '#E9B54A' : '#33373B'}; border-radius:6px; padding:8px 12px; cursor:pointer; display:flex; flex-direction:column; gap:2px;"><span style="${MONO} font-size:12px; color:#9A968E;">${l}</span><span style="${MONO} font-size:32px; color:${ch ? '#E9B54A' : '#E8E4DC'};">${k === 'o' ? (v / 100).toFixed(2) : s < 1 ? (+v).toFixed(2) : v}</span><span style="${MONO} font-size:11px; color:#6E6A63;">${k === 'o' ? '' : u}</span></div>`; }).join('')
+      + `<div style="display:flex; flex-direction:column; gap:6px; min-width:110px;"><button id="kM" ${btn('', 'font-size:22px;')}>−</button><button id="kP" ${btn('', 'font-size:22px;')}>+</button></div>`
+      + `<button id="kOk" ${btn('', `min-width:140px; background:${dirty ? '#E9B54A' : '#262A2E'}; color:${dirty ? '#14171A' : '#6E6A63'}; font-weight:600;`)}>Confirm</button>`;
+    $('#vKn').querySelectorAll('[data-k]').forEach(d => d.onclick = () => { sel = d.dataset.k; draw(); });
+    const step = dir => { if (!sel) return; const d = kn.find(x => x[0] === sel); if (!d) return; const [k, , , mn, mx, s] = d; let v = +(draft.v[k] ?? DEF[k]); const st2 = k === 'vt' && v < 100 ? 1 : s; draft.v[k] = clamp(+(v + dir * st2).toFixed(2), mn, mx); draw(); };
+    $('#kM').onclick = () => step(-1); $('#kP').onclick = () => step(1);
+    $('#kOk').onclick = () => { if (!dirty) return; act({ kind: 'set', set: enc(draft) }); };
+    $('#mB').onclick = () => { modeOpen = !modeOpen; draw(); };
+    const md = $('#vModes'); md.style.display = modeOpen ? 'block' : 'none';
+    md.innerHTML = (st.ifaces || ['VENT']).map(i => `<div style="${MONO} font-size:12px; color:#9A968E; margin:6px 0;">${IFN[i]}</div><div style="display:flex; gap:8px; flex-wrap:wrap;">${MODES[i].map(([k, l]) => `<button data-m="${i}:${k}" ${btn('', `background:${draft.iface === i && draft.mode === k ? '#E9B54A' : '#262A2E'}; color:${draft.iface === i && draft.mode === k ? '#14171A' : '#E8E4DC'};`)}>${l}</button>`).join('')}</div>`).join('');
+    md.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const [i, k] = b.dataset.m.split(':'); const keep = draft.v; draft = { iface: i, mode: k, v: {} }; (KN[k] || []).forEach(([kk]) => { if (keep[kk] !== undefined) draft.v[kk] = keep[kk]; }); sel = null; modeOpen = false; draw(); });
+  }
+  let lastApplied = null;   // keep the knobs someone is turning; only a new applied setting (or a new stage) resets them
+  listeners.push(() => { const w = curWorld(); const key = w ? (w.case + '|' + w.stage + '|' + (w.set || '')) : null; if (w && key !== lastApplied) { const ap = parse(w.set); draft = ap ? { iface: ap.iface, mode: ap.mode, v: { ...ap.v } } : null; lastApplied = key; } draw(); });
+  setInterval(() => { if (now() > holdUntil && holdType) { holdType = null; draw(); } }, 1000);
+}
+
+// ════════════════════════════ FACILITATOR ════════════════════════════
+function control() {
+  document.body.style.background = '#F3EDE3'; document.body.style.color = '#1B1A17';
+  if (!KEY) { app.innerHTML = `<main style="padding:40px; font-size:18px;">This browser does not hold the key for room ${esc(ROOM)}. <button id="ck" style="font-size:17px; padding:10px 18px;">Take over the room</button></main>`; $('#ck').onclick = async () => { const r = await post('create', { room: ROOM }); if (r.ok) { KEY = r.j.key; try { localStorage.setItem('vc-sim-key-' + ROOM, KEY); } catch (e) {} location.reload(); } }; return; }
+  const base = location.origin + location.pathname;
+  const B = (id, t, tone) => `<button data-a="${id}" style="font:500 14px 'Hanken Grotesk'; padding:9px 12px; border-radius:4px; cursor:pointer; border:1px solid ${tone === 'red' ? '#B42318' : tone === 'dark' ? '#1B1A17' : '#D2C5B1'}; background:${tone === 'dark' ? '#1B1A17' : '#fff'}; color:${tone === 'dark' ? '#F3EDE3' : tone === 'red' ? '#B42318' : '#1B1A17'}; min-height:40px;">${t}</button>`;
+  const lab = t => `<div style="${MONO} font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6E6A63; margin:14px 0 6px;">${t}</div>`;
+  let tab = 'run';
+  function render() {
+    const w = curWorld(), C = w && caseOf(w.case);
+    if (!C) { app.innerHTML = `<main style="max-width:900px; margin:0 auto; padding:40px 20px; display:flex; flex-direction:column; gap:16px;">
+      <span style="${MONO} font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#6E6A63;">Room ${esc(ROOM)} · facilitator</span>
+      <h1 style="margin:0; font:400 46px/1 'Instrument Serif', serif;">Choose the <em>case</em></h1>
+      ${CASES.map(c => `<button data-case="${c.id}" style="text-align:left; padding:20px 24px; border:1px solid #D2C5B1; border-radius:6px; background:#fff; cursor:pointer; font-size:20px;">${esc(c.title)} · ${esc(c.name)}<br><span style="font-size:15px; color:#6E6A63;">${c.stages.length} stages · ${esc(c.setting || '')}</span></button>`).join('')}
+      ${links()}</main>`;
+      app.querySelectorAll('[data-case]').forEach(b => b.onclick = () => { const c = caseOf(b.dataset.case); act({ kind: 'reset', case: c.id, set: enc(parse(c.stages[0].phys.anc.set)) }); });
+      return; }
+    const st = C.stages[w.stage], T = shown(), Tt = target(w), m = w.mods || {}, set = parse(w.set), g = grade(st.rule, set);
+    const sevW = ['better', 'no change', 'worse', 'life-threatening'], sevC = ['#3E7D4F', '#6E6A63', '#C27A12', '#B42318'];
+    const phySev = T ? Math.max(T.SpO2 < 75 || T.sys < 55 || T.pH < 7.0 ? 3 : T.SpO2 < 85 || T.sys < 65 || T.pH < 7.15 ? 2 : 0, g ? g.sev : 0) : 0;
+    const num = (l, v, t) => `<div style="display:flex; flex-direction:column; padding:8px 10px; background:#fff; border:1px solid #E4DACB; border-radius:4px; min-width:84px;"><span style="${MONO} font-size:11px; color:#6E6A63;">${l}</span><span style="${MONO} font-size:22px;">${v}</span>${t !== undefined ? `<span style="${MONO} font-size:11px; color:#9A968E;">→ ${t}</span>` : ''}</div>`;
+    const opts = st.opts.map(([l, ok, resp, sev]) => `<div style="border-left:4px solid ${sevC[sev]}; padding:6px 10px; margin:6px 0; background:#fff;"><div style="font-weight:600; font-size:14px;">${ok ? 'Expected · ' : ''}${esc(l)} <span style="${MONO} font-size:11px; color:${sevC[sev]};">${sevW[sev]}</span></div><div style="font-size:13px; line-height:1.45; color:#3B3A36;">${esc(resp)}</div></div>`).join('');
+    const ord = [['fluid10', 'Fluid 10 mL/kg'], ['sed', m.sed ? 'Sedation ✓' : 'Sedation / analgesia'], ['para', m.para ? 'Paralysed ✓' : 'Neuromuscular blocker'], ['bd', 'Bronchodilator' + (m.bd ? ' ×' + m.bd : '')],
+      ['ino_tr', m.ino_tr ? 'Inotrope ✓' : 'Inotrope / adrenaline'], ['prone', m.prone ? 'Prone ✓' : 'Prone'], ['ino', m.ino ? 'iNO ✓' : 'Inhaled NO'], ['suction', 'Suction / clear the tube'], ['off', m.off ? 'Reconnect' : 'Disconnect the circuit'], ['needle', 'Needle the chest'], ['reint', 'Re-intubate']];
+    const evs = [['ev_plug', m.plug ? 'Plug ✓' : 'Secretions / plug'], ['ev_dis', m.dislodged ? 'Tube out ✓' : 'Tube dislodged'], ['ev_ptx', m.ptx ? 'Pneumothorax ✓' : 'Pneumothorax'], ['ev_fight', m.fight ? 'Fighting ✓' : 'Fighting the ventilator'], ['ev_dry', m.dry ? 'Under-filled ✓' : 'Under-filled']];
+    const inv = [['abg', 'Arterial gas'], ['vbg', 'Venous gas'], ['cxr', 'Chest X-ray'], ['heart', 'POCUS · heart'], ['ivc', 'POCUS · IVC'], ['sub', 'POCUS · subcostal'], ['lung', 'Lung ultrasound'], ['exam', 'Examination'], ...(st.table ? [['table', 'Titration sheet']] : []), ['clear', 'Clear the results']];
+    app.innerHTML = `<div style="display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) 300px; gap:18px; padding:16px 18px; min-height:100vh; box-sizing:border-box;">
+     <div style="min-width:0;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="${MONO} font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#6E6A63;">Room ${esc(ROOM)} · ${esc(C.title)}</span><span id="cClock" style="${MONO} font-size:13px;"></span></div>
+      <h1 style="margin:6px 0 4px; font:400 38px/1.05 'Instrument Serif', serif;">${esc(st.t)}</h1>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">${C.stages.map((s, i) => `<button data-stage="${i}" style="font:500 12px 'IBM Plex Mono'; padding:6px 8px; border-radius:3px; border:1px solid ${i === w.stage ? '#B04428' : '#D2C5B1'}; background:${i === w.stage ? '#B04428' : '#fff'}; color:${i === w.stage ? '#fff' : '#1B1A17'}; cursor:pointer;" title="${esc(s.t)}">${i + 1}</button>`).join('')}
+        ${B('next', 'Next stage →', 'dark')} ${B('story', S.story ? 'Hide the story on the monitor' : 'Show the story on the monitor')}</div>
+      ${lab('Read to the team')}<div style="font-size:18px; line-height:1.5; background:#fff; padding:12px 14px; border-radius:4px;">${esc(st.story)}</div>
+      ${st.exam.length ? lab('If they examine') + `<ul style="margin:0; padding-left:20px; font-size:15px; line-height:1.5;">${st.exam.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      ${lab('The script for this stage')}<div style="font-size:13px; line-height:1.5; color:#3B3A36;">${st.vit.map(([k, v]) => esc(k + ' ' + v)).join(' · ')}${st.vent ? '<br>Ventilator: ' + esc(st.vent) : ''}${st.abg.length ? '<br>Gas: ' + st.abg.map(([k, v]) => esc(k + ' ' + v)).join(' · ') : ''}</div>
+      ${lab('What the team should do · and what each choice does')}<div style="font-size:14px; font-weight:600; margin-bottom:4px;">${esc(st.q)}</div>${opts}
+      ${st.teach ? lab('Teaching point') + `<div style="font-size:14px; line-height:1.5;">${esc(st.teach)}</div>` : ''}
+     </div>
+     <div style="min-width:0;">
+      ${lab('The patient now · → where it is heading')}
+      <div id="cNums" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+      ${lab('Support the team has set')}<div style="font-size:16px; ${MONO} background:#fff; padding:10px 12px; border-radius:4px;">${esc(readSet(set))}</div>
+      ${Tt && Tt.mech ? `<div style="${MONO} font-size:13px; color:#3B3A36; margin-top:6px;">Peak ${fmt(Tt.mech.peak)} · plateau ${fmt(Tt.mech.plat, 1)} · total PEEP ${fmt(Tt.mech.peepTot, 1)} · VTe ${fmt(Tt.mech.vte)} mL (${fmt(Tt.mech.vte / C.kg, 1)} mL/kg) · Crs ${fmt(Tt.mech.C, 1)} · OI ${fmt(Tt.oi, 1)}</div>` : ''}
+      <div style="margin-top:10px; padding:10px 12px; border-radius:4px; background:${sevC[phySev]}; color:#fff; font-size:15px;">This patient is <b>${sevW[phySev]}</b>${g && g.why.length ? ': ' + esc(g.why.join('; ')) : ''}${Tt && Tt.flags.length ? '<br>' + esc(Tt.flags.join(' · ')) : ''}</div>
+      ${lab('Orders the team gives (tap when they say it)')}<div style="display:flex; gap:6px; flex-wrap:wrap;">${ord.map(([k, t]) => B(k, t)).join('')}</div>
+      ${lab('Events (you trigger)')}<div style="display:flex; gap:6px; flex-wrap:wrap;">${evs.map(([k, t]) => B(k, t, 'red')).join('')}</div>
+      ${lab('Results on the monitor (when they ask)')}<div style="display:flex; gap:6px; flex-wrap:wrap;">${inv.map(([k, t]) => B(k, t)).join('')} ${B('nibp', 'Cycle the BP cuff')}</div>
+      ${lab('Script settings')}<div>${st.phys ? B('scriptset', 'Put the script\'s settings on the ventilator') : ''}</div>
+     </div>
+     <div style="min-width:0; display:flex; flex-direction:column;">
+      <div style="display:flex; gap:6px;">${B('tab_run', 'Log', tab === 'run' ? 'dark' : '')}${B('tab_deb', 'Debrief', tab === 'deb' ? 'dark' : '')}${B('tab_links', 'Screens', tab === 'links' ? 'dark' : '')}</div>
+      <div id="cSide" style="flex:1; overflow:auto; margin-top:10px; font-size:13px;"></div>
+      ${B('reset', 'Restart this case', 'red')}
+     </div></div>`;
+    // side panel
+    const side = $('#cSide'), W = worlds(), t0 = W.length ? W[0].at : now();
+    const tm = at => { const s = Math.round((at - t0) / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+    const descr = h => h.label || (h.kind === 'set' ? 'Set ' + readSet(parse(h.set)) : h.kind === 'stage' ? 'Stage ' + (h.stage + 1) + ' · ' + C.stages[h.stage].t : h.kind === 'reset' ? 'Case started' : h.kind);
+    if (tab === 'run') side.innerHTML = W.slice().reverse().map(({ at, h }) => `<div style="padding:6px 0; border-bottom:1px solid #E4DACB;"><span style="${MONO} color:#6E6A63;">${tm(at)}</span> ${esc(descr(h))}</div>`).join('');
+    if (tab === 'links') side.innerHTML = links();
+    if (tab === 'deb') {
+      const rows = W.filter(x => x.h.kind !== 'hold').map(({ at, w: ww, h }) => { const T2 = target(ww) || {}; return [tm(at), C.stages[ww.stage].t, descr(h), fmt(T2.SpO2), fmt(T2.sys) + '/' + fmt(T2.dia), fmt(T2.pH, 2), fmt(T2.PaCO2), T2.mech ? fmt(T2.mech.plat, 0) : '·']; });
+      side.innerHTML = `<p style="margin:0 0 8px; font-size:13px; color:#3B3A36;">Every decision, with where it was taking the patient (after settling).</p><table style="width:100%; border-collapse:collapse; font-size:12px;"><tr>${['Time', 'Stage', 'Decision', 'SpO₂', 'BP', 'pH', 'CO₂', 'Pplat'].map(x => `<th style="text-align:left; ${MONO} font-size:10px; color:#6E6A63; border-bottom:1px solid #D2C5B1;">${x}</th>`).join('')}</tr>${rows.map(r => `<tr>${r.map(c => `<td style="padding:3px 2px; border-bottom:1px solid #EFE6D8;">${esc(c)}</td>`).join('')}</tr>`).join('')}</table>
+      ${lab('Take-aways')}<ol style="padding-left:18px; margin:0;">${C.debrief.map(x => `<li style="margin-bottom:4px;">${esc(x)}</li>`).join('')}</ol>
+      <button id="csv" style="margin-top:10px; padding:8px 12px;">Download the log (CSV)</button>`;
+      $('#csv').onclick = () => { const csv = [['Time', 'Stage', 'Decision', 'SpO2', 'BP', 'pH', 'PaCO2', 'Pplat'], ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'simulation-log-' + ROOM + '.csv'; a.click(); };
+    }
+    // buttons
+    app.querySelectorAll('[data-stage]').forEach(b => b.onclick = () => goStage(+b.dataset.stage));
+    app.querySelectorAll('[data-a]').forEach(b => b.onclick = () => onAct(b.dataset.a));
+    nums();
+  }
+  function links() {
+    return `<div style="display:flex; flex-direction:column; gap:10px; font-size:14px;">${lab('Open these on the other two screens')}
+      <div>Ventilator: <a href="${base}#vent-${ROOM}" target="_blank">${base}#vent-${ROOM}</a></div>
+      <div>Patient monitor: <a href="${base}#monitor-${ROOM}" target="_blank">${base}#monitor-${ROOM}</a></div>
+      <div style="color:#6E6A63;">Or open sim.html on each device, type ${esc(ROOM)} and choose the role. On the monitor, tap “Sound off” once to switch the tones on.</div></div>`;
+  }
+  function nums() {
+    const T = shown(), w = curWorld(); if (!T || !w) return; const Tt = target(w);
+    const el = $('#cNums'); if (!el) return;
+    const n = (l, v, t) => `<div style="display:flex; flex-direction:column; padding:8px 10px; background:#fff; border:1px solid #E4DACB; border-radius:4px; min-width:76px;"><span style="${MONO} font-size:11px; color:#6E6A63;">${l}</span><span style="${MONO} font-size:22px;">${v}</span><span style="${MONO} font-size:11px; color:#9A968E;">→ ${t}</span></div>`;
+    el.innerHTML = [n('HR', fmt(T.HR), fmt(Tt.HR)), n('SpO₂', fmt(T.SpO2), fmt(Tt.SpO2)), n('BP', fmt(T.sys) + '/' + fmt(T.dia), fmt(Tt.sys) + '/' + fmt(Tt.dia)), n('RR', fmt(T.RR), fmt(Tt.RR)), n('EtCO₂', fmt(T.EtCO2), fmt(Tt.EtCO2)), n('pH', fmt(T.pH, 2), fmt(Tt.pH, 2)), n('PaCO₂', fmt(T.PaCO2), fmt(Tt.PaCO2)), n('PaO₂', fmt(T.PaO2), fmt(Tt.PaO2))].join('');
+    const ck = $('#cClock'); if (ck) { const W = worlds(); const s = Math.round((now() - (W.length ? W[0].at : now())) / 1000); ck.textContent = 'Running ' + String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+  }
+  async function goStage(i) {
+    const w = curWorld(), C = caseOf(w.case), T = shown(), set = parse(w.set), g = grade(C.stages[w.stage].rule, set);
+    // the patient carries into the next stage how badly the last one went
+    const sev = T ? Math.max(T.SpO2 < 75 || T.sys < 55 || (T.pH || 7.3) < 7.0 ? 3 : T.SpO2 < 85 || T.sys < 65 || (T.pH || 7.3) < 7.15 ? 2 : 0, g ? g.sev : 0) : 0;
+    const next = C.stages[i]; let nset = w.set;
+    if (next.intub && (!set || set.iface !== 'VENT')) nset = 'VENT:STBY:';
+    else if (next.phys && parse(next.phys.anc.set).iface === 'VENT' && (!set || set.iface !== 'VENT')) nset = enc(parse(next.phys.anc.set));   // jumped past the intubation: the script's ventilator
+    const mods = { ...(w.mods || {}) }; delete mods.plug; delete mods.dislodged; delete mods.ptx; delete mods.off;
+    await act({ kind: 'stage', stage: i, set: nset, mods, debt: i > w.stage ? (sev >= 2 ? sev : 0) : 0, label: 'Stage ' + (i + 1) + ' · ' + next.t + (sev >= 2 && i > w.stage ? ' (carries a ' + ['', '', 'worse', 'life-threatening'][sev] + ' patient)' : '') });
+  }
+  async function onAct(a) {
+    const w = curWorld(), C = w && caseOf(w.case); if (!C) return; const st = C.stages[w.stage], m = { ...(w.mods || {}) }, T = shown();
+    const mod = (patch, label) => act({ kind: 'order', mods: { ...m, ...patch }, label });
+    const reveal = (x, label) => act({ kind: 'reveal', reveals: [...(S.reveals || []), { ...x, at: now() }], label });
+    const lastImg = () => { for (let i = w.stage; i >= 0; i--) if (C.stages[i].img) return [C.stages[i].img, C.stages[i].imgCap]; return [null, null]; };
+    switch (a) {
+      case 'next': return w.stage + 1 < C.stages.length ? goStage(w.stage + 1) : null;
+      case 'story': return act({ kind: 'note', story: !S.story, label: S.story ? 'Story hidden' : 'Story shown on the monitor' });
+      case 'reset': if (confirm('Restart the case from stage 1?')) return act({ kind: 'reset', case: C.id, set: enc(parse(C.stages[0].phys.anc.set)) }); return;
+      case 'tab_run': tab = 'run'; return render(); case 'tab_deb': tab = 'deb'; return render(); case 'tab_links': tab = 'links'; return render();
+      case 'scriptset': return act({ kind: 'set', set: enc(parse(st.phys.anc.set)), label: 'Script settings applied: ' + readSet(parse(st.phys.anc.set)) });
+      case 'fluid10': return mod({ fluid: (m.fluid || 0) + 1 }, 'Fluid bolus 10 mL/kg (total ' + ((m.fluid || 0) + 1) * 10 + ' mL/kg)');
+      case 'sed': return mod({ sed: !m.sed, fight: m.sed ? m.fight : false }, m.sed ? 'Sedation stopped' : 'Sedation and analgesia');
+      case 'para': return mod({ para: !m.para, fight: false }, m.para ? 'Blocker stopped' : 'Neuromuscular blocker');
+      case 'bd': return mod({ bd: (m.bd || 0) + 1 }, 'Bronchodilator dose ' + ((m.bd || 0) + 1));
+      case 'ino_tr': return mod({ ino_tr: !m.ino_tr }, m.ino_tr ? 'Inotrope stopped' : 'Inotrope / adrenaline infusion');
+      case 'prone': return mod({ prone: !m.prone }, m.prone ? 'Turned supine' : 'Proned');
+      case 'ino': return mod({ ino: !m.ino }, m.ino ? 'iNO stopped' : 'Inhaled nitric oxide');
+      case 'suction': return mod({ plug: false }, 'Suctioned the tube');
+      case 'off': return mod({ off: !m.off }, m.off ? 'Reconnected to the ventilator' : 'Disconnected from the ventilator');
+      case 'needle': return mod({ ptx: false }, 'Needle decompression' + (m.ptx ? '' : ' (no pneumothorax)'));
+      case 'reint': return mod({ dislodged: false }, 'Re-intubated');
+      case 'ev_plug': return mod({ plug: !m.plug }, m.plug ? 'Plug cleared' : 'Event: secretions / plugged tube');
+      case 'ev_dis': return mod({ dislodged: !m.dislodged }, m.dislodged ? 'Tube back in' : 'Event: tube dislodged');
+      case 'ev_ptx': return mod({ ptx: !m.ptx }, m.ptx ? 'Pneumothorax resolved' : 'Event: tension pneumothorax');
+      case 'ev_fight': return mod({ fight: !m.fight }, m.fight ? 'Settled' : 'Event: fighting the ventilator');
+      case 'ev_dry': return mod({ dry: !m.dry }, m.dry ? 'Filled' : 'Event: under-filled');
+      case 'nibp': return act({ kind: 'note', label: 'BP cuff cycled' }).then(() => {});
+      case 'abg': case 'vbg': { const v = a === 'vbg'; const kv = [['pH', fmt(T.pH - (v ? 0.03 : 0), 2)], ['PCO₂', fmt(T.PaCO2 + (v ? 6 : 0))], ['PO₂', fmt(v ? 40 : T.PaO2)], ['HCO₃', fmt(T.HCO3 || 24, 1)], ['BE', fmt(((T.HCO3 || 24) - 24) * 1.2, 1)], ['Lactate', fmt(T.sys < 70 ? 3.5 : 1.2, 1)], ...(v ? [] : [['SaO₂', fmt(T.SpO2)], ['FiO₂', ((T.set && T.set.v && T.set.v.o) || 21) / 100]])];
+        return reveal({ title: v ? 'Venous blood gas' : 'Arterial blood gas', kv }, (v ? 'VBG' : 'ABG') + ' released: pH ' + kv[0][1] + ', PCO₂ ' + kv[1][1] + ', PO₂ ' + kv[2][1]); }
+      case 'cxr': { const [img, cap] = lastImg(); return reveal(img ? { title: 'Chest X-ray', img, text: cap } : { title: 'Chest X-ray', text: 'No new film at this stage.' }, 'Chest X-ray released'); }
+      case 'heart': return reveal({ title: 'POCUS · heart', vid: C.pocus.heart[0], text: C.pocus.heart[1] }, 'POCUS heart released');
+      case 'ivc': return reveal({ title: 'POCUS · IVC', vid: C.pocus.ivc[0], text: m.dry ? 'IVC small and collapsing with each breath.' : C.pocus.ivc[1] }, 'POCUS IVC released');
+      case 'sub': return reveal({ title: 'POCUS · subcostal', vid: C.pocus.subcostal[0], text: C.pocus.subcostal[1] }, 'POCUS subcostal released');
+      case 'lung': return reveal({ title: 'Lung ultrasound', vid: C.pocus.lung[0], text: m.ptx ? 'No lung sliding on one side; lung point found: pneumothorax.' : C.pocus.lung[1] }, 'Lung ultrasound released');
+      case 'exam': return reveal({ title: 'Examination', text: st.exam.length ? st.exam.join('. ') + '.' : 'As before.' }, 'Examination released');
+      case 'table': return reveal({ title: 'PEEP titration sheet', table: st.table, text: st.table.note }, 'Titration sheet released');
+      case 'clear': return act({ kind: 'note', reveals: [], label: 'Results cleared' });
+    }
+  }
+  listeners.push(render);
+  setInterval(nums, 1000);
+}
+
+// ── start ──
+if (!ROLE) landing(); else { ({ control, vent, monitor })[ROLE](); poll(); setInterval(poll, 1000); }
+window.addEventListener('hashchange', () => location.reload());
+})();
+</script>
+</body>
+</html>
