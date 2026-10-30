@@ -21,11 +21,11 @@ POCUS = {
     'sc-ards': {'heart': ['assets/pocus/a4c-normal.mp4', 'Apical four-chamber: normal size and squeeze; no effusion.'],
                 'ivc': ['assets/pocus/ivc-normal.mp4', 'IVC normal size, varies with the breath.'],
                 'subcostal': ['assets/pocus/subcostal-normal.mp4', 'Subcostal: no pericardial effusion.'],
-                'lung': [None, 'Bilateral B-lines; posterior consolidation with air bronchograms; lung sliding present both sides.']},
+                'lung': [['assets/pocus/lung-blines.mp4', 'Anterior: bilateral coalescent B-lines; lung sliding present.'], ['assets/pocus/lung-consolidation.mp4', 'Posterior: consolidation with a small effusion.']]},
     'sc-asthma': {'heart': ['assets/pocus/a4c-normal.mp4', 'Apical four-chamber: normal function; small, underfilled ventricles.'],
                   'ivc': ['assets/pocus/ivc-normal.mp4', 'IVC normal size.'],
                   'subcostal': ['assets/pocus/subcostal-normal.mp4', 'Subcostal: no pericardial effusion.'],
-                  'lung': [None, 'A-lines with lung sliding on both sides: no pneumothorax.']},
+                  'lung': [['assets/pocus/lung-normal-sliding.mp4', 'Pleural line with lung sliding and A-lines on both sides: no pneumothorax.']]},
 }
 
 

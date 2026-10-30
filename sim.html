@@ -499,7 +499,9 @@ function control() {
       case 'heart': return reveal({ title: 'POCUS · heart', vid: C.pocus.heart[0], text: C.pocus.heart[1] }, 'POCUS heart released');
       case 'ivc': return reveal({ title: 'POCUS · IVC', vid: C.pocus.ivc[0], text: m.dry ? 'IVC small and collapsing with each breath.' : C.pocus.ivc[1] }, 'POCUS IVC released');
       case 'sub': return reveal({ title: 'POCUS · subcostal', vid: C.pocus.subcostal[0], text: C.pocus.subcostal[1] }, 'POCUS subcostal released');
-      case 'lung': return reveal({ title: 'Lung ultrasound', vid: C.pocus.lung[0], text: m.ptx ? 'No lung sliding on one side; lung point found: pneumothorax.' : C.pocus.lung[1] }, 'Lung ultrasound released');
+      case 'lung': { const views = m.ptx ? [{ title: 'Lung ultrasound', text: 'No lung sliding on one side, barcode sign on M-mode, lung point found: pneumothorax. The other side slides.' }]
+          : C.pocus.lung.map(([vid, text], j) => ({ title: 'Lung ultrasound' + (C.pocus.lung.length > 1 ? ' · view ' + (j + 1) : ''), vid, text, at: now() + j }));
+        return act({ kind: 'reveal', reveals: [...(S.reveals || []), ...views.map(v => ({ at: now(), ...v }))], label: 'Lung ultrasound released' }); }
       case 'exam': return reveal({ title: 'Examination', text: st.exam.length ? st.exam.join('. ') + '.' : 'As before.' }, 'Examination released');
       case 'table': return reveal({ title: 'PEEP titration sheet', table: st.table, text: st.table.note }, 'Titration sheet released');
       case 'clear': return act({ kind: 'note', reveals: [], label: 'Results cleared' });
