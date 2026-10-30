@@ -377,7 +377,20 @@ function control() {
   const base = location.origin + location.pathname;
   const B = (id, t, tone) => `<button data-a="${id}" style="font:500 14px 'Hanken Grotesk'; padding:9px 12px; border-radius:4px; cursor:pointer; border:1px solid ${tone === 'red' ? '#B42318' : tone === 'dark' ? '#1B1A17' : '#D2C5B1'}; background:${tone === 'dark' ? '#1B1A17' : '#fff'}; color:${tone === 'dark' ? '#F3EDE3' : tone === 'red' ? '#B42318' : '#1B1A17'}; min-height:40px;">${t}</button>`;
   const lab = t => `<div style="${MONO} font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#6E6A63; margin:14px 0 6px;">${t}</div>`;
-  let tab = 'run';
+  let tab = 'run', firing = false;
+  const mmss = x => { x = Math.max(0, Math.floor(x)); return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); };
+  const elapsed = () => { const c = S && S.clock; return c ? ((c.paused || now()) - c.start) / 1000 : null; };
+  async function tickClock() {
+    const c = S && S.clock, w = curWorld(), C = w && caseOf(w.case); if (!c || c.paused || c.stopped || !C || firing) return;
+    const el = elapsed(), i = C.clock.items.findIndex((it, j) => it.at <= el && !(c.done || []).includes(j)); if (i < 0) return;
+    const it = C.clock.items[i], clock = { ...c, done: [...(c.done || []), i] }; firing = true;
+    try {
+      if (it.stop) await act({ kind: 'clock', clock: { ...clock, paused: now(), stopped: true }, label: '⏱ ' + mmss(it.at) + ' Hard stop. Pens down.' });
+      else if (it.stage !== undefined) await goStage(it.stage, { clock, mods: it.mods, tag: '⏱ ' + mmss(it.at) + ' ' });
+      else if (it.say) await act({ kind: 'clock', clock, label: '⏱ ' + mmss(it.at) + ' ' + it.say[0] + ': “' + it.say[1] + '” (' + it.say[2] + ')' });
+      else await act({ kind: 'clock', clock, label: '⏱ ' + mmss(it.at) + ' ' + it.title });
+    } finally { firing = false; }
+  }
   function render() {
     const w = curWorld(), C = w && caseOf(w.case);
     if (!C) { app.innerHTML = `<main style="max-width:900px; margin:0 auto; padding:40px 20px; display:flex; flex-direction:column; gap:16px;">
@@ -402,6 +415,11 @@ function control() {
       <h1 style="margin:6px 0 4px; font:400 38px/1.05 'Instrument Serif', serif;">${esc(st.t)}</h1>
       <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">${C.stages.map((s, i) => `<button data-stage="${i}" style="font:500 12px 'IBM Plex Mono'; padding:6px 8px; border-radius:3px; border:1px solid ${i === w.stage ? '#B04428' : '#D2C5B1'}; background:${i === w.stage ? '#B04428' : '#fff'}; color:${i === w.stage ? '#fff' : '#1B1A17'}; cursor:pointer;" title="${esc(s.t)}">${i + 1}</button>`).join('')}
         ${B('next', 'Next stage →', 'dark')} ${B('story', S.story ? 'Hide the story on the monitor' : 'Show the story on the monitor')}</div>
+      <div id="cClk" style="margin:6px 0 4px; padding:10px 12px; border-radius:4px; background:#1B1A17; color:#F3EDE3; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+        ${!S.clock ? `<span style="font-size:14px; flex:1; min-width:220px;">Timed run: every stage and scripted event fires on the clock (${mmss(C.clock.stop)} hard stop), whatever the team does. Their settings and orders decide how sick the child is.</span>${B('clk_go', 'Start the clock', 'red')}`
+          : `<span id="cClkT" style="${MONO} font-size:30px; min-width:150px;"></span><span id="cClkN" style="font-size:14px; flex:1; min-width:200px; color:#D2C5B1;"></span>${S.clock.stopped ? '' : B('clk_pause', S.clock.paused ? 'Resume' : 'Pause')}${B('clk_off', 'Clock off')}`}
+      </div>
+      <div id="cSay"></div>
       ${lab('Read to the team')}<div style="font-size:18px; line-height:1.5; background:#fff; padding:12px 14px; border-radius:4px;">${esc(st.story)}</div>
       ${st.exam.length ? lab('If they examine') + `<ul style="margin:0; padding-left:20px; font-size:15px; line-height:1.5;">${st.exam.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${lab('The script for this stage')}<div style="font-size:13px; line-height:1.5; color:#3B3A36;">${st.vit.map(([k, v]) => esc(k + ' ' + v)).join(' · ')}${st.vent ? '<br>Ventilator: ' + esc(st.vent) : ''}${st.abg.length ? '<br>Gas: ' + st.abg.map(([k, v]) => esc(k + ' ' + v)).join(' · ') : ''}</div>
@@ -453,17 +471,24 @@ function control() {
     const el = $('#cNums'); if (!el) return;
     const n = (l, v, t) => `<div style="display:flex; flex-direction:column; padding:8px 10px; background:#fff; border:1px solid #E4DACB; border-radius:4px; min-width:76px;"><span style="${MONO} font-size:11px; color:#6E6A63;">${l}</span><span style="${MONO} font-size:22px;">${v}</span><span style="${MONO} font-size:11px; color:#9A968E;">→ ${t}</span></div>`;
     el.innerHTML = [n('HR', fmt(T.HR), fmt(Tt.HR)), n('SpO₂', fmt(T.SpO2), fmt(Tt.SpO2)), n('BP', fmt(T.sys) + '/' + fmt(T.dia), fmt(Tt.sys) + '/' + fmt(Tt.dia)), n('RR', fmt(T.RR), fmt(Tt.RR)), n('EtCO₂', fmt(T.EtCO2), fmt(Tt.EtCO2)), n('pH', fmt(T.pH, 2), fmt(Tt.pH, 2)), n('PaCO₂', fmt(T.PaCO2), fmt(Tt.PaCO2)), n('PaO₂', fmt(T.PaO2), fmt(Tt.PaO2))].join('');
-    const ck = $('#cClock'); if (ck) { const W = worlds(); const s = Math.round((now() - (W.length ? W[0].at : now())) / 1000); ck.textContent = 'Running ' + String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+    const C = caseOf(w.case), elp = elapsed(), ct = $('#cClkT');
+    if (ct && C && elp !== null) { const c = S.clock, stop = C.clock.stop; ct.textContent = mmss(Math.min(elp, stop)) + ' / ' + mmss(stop); ct.style.color = c.stopped ? '#F07C6C' : elp > stop - 60 ? '#F2C14E' : '#F3EDE3';
+      const nx = C.clock.items.find((it, j) => !(c.done || []).includes(j) && it.at > elp - 1);
+      $('#cClkN').textContent = c.stopped ? 'Time. Pens down: the scenario has ended.' : (c.paused ? 'Paused. ' : '') + (nx ? 'Next at ' + mmss(nx.at) + ' · ' + (nx.say ? nx.say[0] + ' speaks' : nx.title || '') + ' (in ' + mmss(nx.at - elp) + ')' : '');
+      const say = C.clock.items.filter(it => it.say && it.at <= elp && elp < it.at + 45);
+      const sb = $('#cSay'); if (sb) sb.innerHTML = say.map(it => `<div style="margin:6px 0; padding:10px 12px; border-left:4px solid #B04428; background:#fff; font-size:16px;"><span style="${MONO} font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#B04428;">Say now · ${esc(it.say[0])} · ${esc(it.say[2])}</span><br>“${esc(it.say[1])}”</div>`).join('');
+      tickClock(); }
+    const ck = $('#cClock'); if (ck) { const W = worlds(); const s = Math.round((now() - (W.length ? W[0].at : now())) / 1000); ck.textContent = 'Case open ' + String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
   }
-  async function goStage(i) {
+  async function goStage(i, o = {}) {
     const w = curWorld(), C = caseOf(w.case), T = shown(), set = parse(w.set), g = grade(C.stages[w.stage].rule, set);
     // the patient carries into the next stage how badly the last one went
     const sev = T ? Math.max(T.SpO2 < 75 || T.sys < 55 || (T.pH || 7.3) < 7.0 ? 3 : T.SpO2 < 85 || T.sys < 65 || (T.pH || 7.3) < 7.15 ? 2 : 0, g ? g.sev : 0) : 0;
     const next = C.stages[i]; let nset = w.set;
     if (next.intub && (!set || set.iface !== 'VENT')) nset = 'VENT:STBY:';
     else if (next.phys && parse(next.phys.anc.set).iface === 'VENT' && (!set || set.iface !== 'VENT')) nset = enc(parse(next.phys.anc.set));   // jumped past the intubation: the script's ventilator
-    const mods = { ...(w.mods || {}) }; delete mods.plug; delete mods.dislodged; delete mods.ptx; delete mods.off;
-    await act({ kind: 'stage', stage: i, set: nset, mods, debt: i > w.stage ? (sev >= 2 ? sev : 0) : 0, label: 'Stage ' + (i + 1) + ' · ' + next.t + (sev >= 2 && i > w.stage ? ' (carries a ' + ['', '', 'worse', 'life-threatening'][sev] + ' patient)' : '') });
+    const mods = { ...(w.mods || {}) }; delete mods.plug; delete mods.dislodged; delete mods.ptx; delete mods.off; Object.assign(mods, o.mods || {});
+    await act({ kind: 'stage', stage: i, set: nset, mods, debt: i > w.stage ? (sev >= 2 ? sev : 0) : 0, ...(o.clock ? { clock: o.clock } : {}), label: (o.tag || '') + 'Stage ' + (i + 1) + ' · ' + next.t + (sev >= 2 && i > w.stage ? ' (carries a ' + ['', '', 'worse', 'life-threatening'][sev] + ' patient)' : '') });
   }
   async function onAct(a) {
     const w = curWorld(), C = w && caseOf(w.case); if (!C) return; const st = C.stages[w.stage], m = { ...(w.mods || {}) }, T = shown();
@@ -471,6 +496,9 @@ function control() {
     const reveal = (x, label) => act({ kind: 'reveal', reveals: [...(S.reveals || []), { ...x, at: now() }], label });
     const lastImg = () => { for (let i = w.stage; i >= 0; i--) if (C.stages[i].img) return [C.stages[i].img, C.stages[i].imgCap]; return [null, null]; };
     switch (a) {
+      case 'clk_go': return act({ kind: 'clock', clock: { start: now(), done: [] }, label: '⏱ Clock started' });
+      case 'clk_pause': { const c = S.clock; return act({ kind: 'clock', clock: c.paused ? { ...c, start: c.start + (now() - c.paused), paused: null } : { ...c, paused: now() }, label: c.paused ? '⏱ Clock resumed at ' + mmss(elapsed()) : '⏱ Clock paused at ' + mmss(elapsed()) }); }
+      case 'clk_off': if (confirm('Switch the clock off? Stages will then move only when you press them.')) return act({ kind: 'clock', clock: null, label: '⏱ Clock off' }); return;
       case 'next': return w.stage + 1 < C.stages.length ? goStage(w.stage + 1) : null;
       case 'story': return act({ kind: 'note', story: !S.story, label: S.story ? 'Story hidden' : 'Story shown on the monitor' });
       case 'reset': if (confirm('Restart the case from stage 1?')) return act({ kind: 'reset', case: C.id, set: enc(parse(C.stages[0].phys.anc.set)) }); return;

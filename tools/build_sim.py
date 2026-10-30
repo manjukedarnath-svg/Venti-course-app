@@ -39,6 +39,41 @@ EVENT_POCUS = {
 for k in POCUS: POCUS[k]['ev'] = EVENT_POCUS
 
 
+# the timed version (SimWars format): every stage and scripted event fires on the clock, whatever the team does;
+# their settings and orders decide how sick the child is when it fires (severity, resolution), never whether it fires.
+# at = seconds from Start; stage = stage id; mods = scripted change to the patient; say = [who, line, condition]
+CLOCK = {
+    'sc-ards': {'stop': 900, 'items': [
+        {'at': 0, 'stage': 'ar0', 'title': 'Arrival in the ER'},
+        {'at': 45, 'say': ['Nurse', 'Doctor, what support do you want me to set up for her?', 'only if no support decision yet']},
+        {'at': 120, 'say': ['Nurse', 'Shall I send a gas?', 'only if no gas sent']},
+        {'at': 180, 'stage': 'ar1', 'title': 'NIV failing (the clock compresses two hours)'},
+        {'at': 240, 'say': ['Mother', 'She is so tired. Is she going to need a breathing tube?', 'arrives at the bedside']},
+        {'at': 300, 'stage': 'ar2', 'title': 'Tube in · ventilator on standby'},
+        {'at': 330, 'say': ['Nurse', 'The ventilator is on standby. What settings do you want?', 'only if no settings yet']},
+        {'at': 420, 'stage': 'ar3', 'title': 'First ventilator gas'},
+        {'at': 510, 'stage': 'ar4', 'title': 'PEEP titration window'},
+        {'at': 630, 'stage': 'ar6', 'mods': {'sed': False, 'para': False, 'fight': True}, 'title': 'Acute event: fighting the ventilator', 'event': True},
+        {'at': 720, 'say': ['Mother', 'Why is it beeping all the time? Is she in pain?', 'if not yet spoken to']},
+        {'at': 780, 'stage': 'ar8', 'title': 'Endgame: OI 26 · rescue and handover'},
+        {'at': 900, 'stop': True, 'title': 'Hard stop'}]},
+    'sc-asthma': {'stop': 900, 'items': [
+        {'at': 0, 'stage': 'as0', 'title': 'Arrival in the ER'},
+        {'at': 45, 'say': ['Nurse', 'Shall I set up another nebuliser?', 'only if no airway decision yet']},
+        {'at': 120, 'say': ['Mother', 'He always gets better with the nebuliser. Why is it not working this time?', 'arrives at the bedside']},
+        {'at': 150, 'stage': 'as1', 'title': 'Induction and the tube'},
+        {'at': 240, 'stage': 'as2', 'title': 'Tube in · ventilator on standby'},
+        {'at': 270, 'say': ['Nurse', 'He is on the ventilator on standby. What settings do you want?', 'only if no settings yet']},
+        {'at': 390, 'stage': 'as3', 'title': 'First ventilator gas'},
+        {'at': 420, 'say': ['Nurse', 'The CO\u2082 is 78. Do you want to change anything?', 'only if the gas has not been discussed']},
+        {'at': 540, 'stage': 'as4', 'mods': {'para': False}, 'title': 'Paralysis wears off · he starts to trigger'},
+        {'at': 660, 'stage': 'as5', 'title': 'Acute event: sudden desaturation', 'event': True},
+        {'at': 720, 'say': ['Mother', 'What is happening? Why are all the alarms going?', 'if not yet spoken to']},
+        {'at': 780, 'title': 'Endgame: plan and handover. If the team disconnected and restarted with a lower rate, move to stage 7 now; otherwise stay.', 'endgame': 'as6'},
+        {'at': 900, 'stop': True, 'title': 'Hard stop'}]},
+}
+
+
 def build(C, prefix):
     z = SCB[C['id']]
     stages = [s for s in z['stages'] if s.get('opts')]
@@ -61,7 +96,9 @@ def build(C, prefix):
         })
     deb = (z['stages'][-1].get('debrief') or [])
     return {'id': C['id'], 'name': C['name'], 'kg': C['kg'], 'kind': 'ards' if prefix == 'ar' else 'asthma', 'title': z['title'],
-            'setting': z.get('setting', ''), 'stages': out, 'debrief': deb, 'pocus': POCUS[C['id']]}
+            'setting': z.get('setting', ''), 'stages': out, 'debrief': deb, 'pocus': POCUS[C['id']],
+            'clock': {**CLOCK[C['id']], 'items': [{**it, **({'stage': [o['id'] for o in out].index(it['stage'])} if 'stage' in it else {}),
+                                                    **({'endgame': [o['id'] for o in out].index(it['endgame'])} if 'endgame' in it else {})} for it in CLOCK[C['id']]['items']]}}
 
 
 data = {'cases': [build(ARDS, 'ar'), build(ASTHMA, 'as')]}

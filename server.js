@@ -122,7 +122,7 @@ function sim(route, b) {
         else S.hold = { type: a.type === 'exp' ? 'exp' : 'insp', at: t };
       } else if (ctl) {                                        // the facilitator: case, stage, orders, events, results, story
         const ent = { at: t, kind: String(a.kind || 'note').slice(0, 20) };
-        for (const k of ['case', 'stage', 'set', 'mods', 'reveals', 'story', 'note', 'label', 'debt']) if (a[k] !== undefined) { ent[k] = a[k]; if (k !== 'note' && k !== 'label') S[k] = a[k]; }
+        for (const k of ['case', 'stage', 'set', 'mods', 'reveals', 'story', 'note', 'label', 'debt', 'clock']) if (a[k] !== undefined) { ent[k] = a[k]; if (k !== 'note' && k !== 'label') S[k] = a[k]; }
         if (a.kind === 'reset') { r.s = { case: a.case || null, stage: 0, set: a.set || null, mods: {}, reveals: [], hist: [{ at: t, kind: 'reset', case: a.case, set: a.set }] }; }
         else S.hist.push(ent);
       } else return [403, { error: 'no' }];
