@@ -21,12 +21,22 @@ POCUS = {
     'sc-ards': {'heart': ['assets/pocus/a4c-normal.mp4', 'Apical four-chamber: normal size and squeeze; no effusion.'],
                 'ivc': ['assets/pocus/ivc-normal.mp4', 'IVC normal size, varies with the breath.'],
                 'subcostal': ['assets/pocus/subcostal-normal.mp4', 'Subcostal: no pericardial effusion.'],
-                'lung': [['assets/pocus/lung-blines.mp4', 'Anterior: bilateral coalescent B-lines; lung sliding present.'], ['assets/pocus/lung-consolidation.mp4', 'Posterior: consolidation with a small effusion.']]},
+                'lung': [['assets/pocus/lung-ards-anterior.mp4', 'Anterior: multiple B-lines, irregular pleural line; lung sliding present.'],
+                         ['assets/pocus/lung-ards-lateral.mp4', 'Lateral: coalescent B-lines ("white lung").'],
+                         ['assets/pocus/lung-ards-posterior.mp4', 'Posterior (dependent): consolidation with a shred sign.']]},
     'sc-asthma': {'heart': ['assets/pocus/a4c-normal.mp4', 'Apical four-chamber: normal function; small, underfilled ventricles.'],
                   'ivc': ['assets/pocus/ivc-normal.mp4', 'IVC normal size.'],
                   'subcostal': ['assets/pocus/subcostal-normal.mp4', 'Subcostal: no pericardial effusion.'],
-                  'lung': [['assets/pocus/lung-normal-sliding.mp4', 'Pleural line with lung sliding and A-lines on both sides: no pneumothorax.']]},
+                  'lung': [['assets/pocus/lung-asthma-sliding.mp4', 'Pleural line with lung sliding and A-lines on both sides: no pneumothorax.']]},
 }
+# event findings, shared by both cases (sim.html picks these when the facilitator has fired the event)
+EVENT_POCUS = {
+    'ptx': [['assets/pocus/lung-ptx-absent-sliding.mp4', 'Affected side: no lung sliding, A-lines only.'],
+            ['assets/pocus/lung-ptx-barcode.mp4', 'M-mode on the same side: barcode (stratosphere) sign. The other side slides: pneumothorax.']],
+    'dry': ['assets/pocus/ivc-collapsing.mp4', 'IVC small and collapsing with each breath.'],
+    'full': ['assets/pocus/ivc-plethoric.mp4', 'IVC plethoric, little change with the breath.'],
+}
+for k in POCUS: POCUS[k]['ev'] = EVENT_POCUS
 
 
 def build(C, prefix):
