@@ -214,6 +214,19 @@ def video_slide(label, h, tag, src, cap, lines, notes):
     return _sec(label, head(h, tag) + f'<div style="flex:1; min-height:0; display:flex; gap:72px; align-items:stretch;">{vid}{col}</div>', notes)
 
 
+def photo_slide(label, h, tag, items, notes):
+    """Photos from the BPICC manual, each with a caption and two short lines."""
+    cols = ''
+    for src, cap, lines in items:
+        cols += (f'<div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:22px;">'
+                 f'<div style="height:440px; border-radius:8px; overflow:hidden; background:#FFFFFF; border:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:center;">'
+                 f'<img src="../{src}" alt="{e(cap)}" style="max-width:100%; max-height:100%; object-fit:contain;"></div>'
+                 f'<span style="{MONO} font-size:22px; color:var(--text-accent);">{e(cap)}</span>'
+                 + ''.join(f'<span style="font-size:32px; line-height:1.3; text-wrap:balance;">{x}</span>' for x in lines) + '</div>')
+    from talkkit import _sec
+    return _sec(label, head(h, tag) + f'<div style="flex:1; min-height:0; display:flex; gap:48px; align-items:flex-start; padding-top:40px;">{cols}</div>', notes)
+
+
 # ------------------------------------------------------------------ the full talk -----------------------------------------
 def full_talk():
     T = ''
@@ -335,6 +348,11 @@ def full_talk():
                'The interfaces. Nasal masks and prongs suit infants, who breathe through the nose, and long-term use. The oronasal mask is the first choice in acute failure, because breathless patients mouth-breathe: in one trial intolerance was 34 per cent with a nasal mask against 12 per cent with a full-face mask, and mouth leaks occur in up to 94 per cent of hypercapnic patients on NIV. Helmets are tolerated longest but are noisy and clear CO2 less well. PEMVECC makes no recommendation on the best paediatric interface: use the one with the least leak.', widths=['340px', '640px', None], size=30)
     T += figure('Interface gallery', 'Eight <em>interfaces</em>', 'Cammarota 2022 · Tobin ch. 18 · BPICC', NF.gallery(NF.DECK),
                 'The interfaces you will meet. Nasal mask: infants and long-term use, the child can talk, but the mouth leaks. Nasal pillows: small and least claustrophobic. Oronasal mask: the first choice in acute failure. Total face mask: for odd anatomy or a sore bridge. Helmet: tolerated longest, noisy, clears CO2 less well. Then the three nasal interfaces for infants: the high-flow cannula, which must leak; the RAM cannula, which part-fills the nostril; and binasal CPAP prongs, which seal.')
+    T += photo_slide('BPICC interfaces', 'The interfaces at the <em>bedside</em>', 'BPICC ch. 6, pp. 32–39',
+                     [('assets/niv/bpicc-masks.jpg', 'Masks on the ventilator', ['Oronasal and full-face masks', 'M146700 adapter: paediatric circuit']),
+                      ('assets/niv/bpicc-nasal-cpap.jpg', 'Nasal CPAP, infant', ['Nasal mask on bonnet headgear', 'Tubing parallel to the face']),
+                      ('assets/niv/bpicc-cannula-fit.jpg', 'Fitting the high-flow cannula', ['Prongs in, a gap at the septum', 'Adhesive strips on the cheeks'])],
+                     'The interfaces from the BPICC manual. On the left, masks for CPAP or bilevel on the Draeger ventilator: the M146700 adapter connects the mask to the paediatric circuit; size the mask and headgear with the sizing guide. In the middle, nasal CPAP on an infant: the mask sits on the nose, held by bonnet headgear sized to the head circumference, with the tubing parallel to the face, supported by the grey sponges. On the right, fitting the Optiflow Junior cannula: prongs into the nostrils with about a two millimetre gap from the base of the prongs to the septum, then the adhesive strips on the cheeks.')
     T += cards('Fit the mask', 'Fit the <em>mask</em>', 'Chang ch. 7 · Tobin ch. 18 · Cammarota',
                [('Size', ['Use the gauge', 'Too big is the usual error']), ('Tension', ['Least that controls the leak', 'Two fingers under the straps']), ('Skin', ['Cushion the bridge', 'Rotate interfaces', 'Check every 4 h']), ('Safety', ['Anti-asphyxia valve', 'Alarms on'])],
                'Fitting. Use the sizing gauge; the commonest error is a mask that is too big. Use the least strap tension that controls the leak: too loose and there is leak, asynchrony, eye irritation and noise; too tight and there are pressure ulcers. Cushion the bridge, rotate between interfaces, and check the skin every four hours. Any oronasal mask needs an anti-asphyxia valve that opens to room air if the machine or the gas fails. Keep a bag of different masks at the bedside.', size=34)
@@ -531,7 +549,7 @@ def build_cases():
 
 
 SHORT_PRIMER = ['The ladder', 'EPAP and IPAP', 'ICEMAN', 'Contraindications']
-SHORT_THEORY = {'nb1': ['High-flow', 'Humidity and the nose'], 'nb2': ['Nebulising'], 'np1': ['Vented or non-vented'], 'np2': ['The one-hour review'], 'nx1': ['Fitting each interface'], 'nx2': []}
+SHORT_THEORY = {'nb1': ['High-flow', 'Humidity and the nose'], 'nb2': ['Nebulising'], 'np1': ['Vented or non-vented'], 'np2': ['The one-hour review'], 'nx1': ['BPICC interfaces', 'Fitting each interface'], 'nx2': []}
 
 
 def build_short():

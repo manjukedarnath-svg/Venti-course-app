@@ -48,7 +48,7 @@ NIV_CASES = [
     after=S(mode='ST', modeLong='Bilevel ST · paediatric oronasal mask', set=[['IPAP', '14'], ['EPAP', '6'], ['Backup', '20'], ['Ti', '1.2'], ['FiO₂', '0.4']], meas=[['VTe', '115 mL'], ['Leak', '18 L/min'], ['RR', '40']], wave='niv-x1f',
             mon=[['HR', '140'], ['SpO₂', '94'], ['RR', '40']], happen='Paediatric oronasal mask sized to fit, NG on free drainage, her mother at the bedside',
             why='Most failing NIV is interface failure.'),
-    theory=['Interface gallery', 'Interfaces', 'Fitting each interface', 'Fit the mask']),
+    theory=['Interface gallery', 'BPICC interfaces', 'Interfaces', 'Fitting each interface', 'Fit the mask']),
   S(id='nx2', head='Sealed, but out of <em>step</em>', eyebrow='Case 3 · four hours after extubation', fig='toddler', sup='niv',
     scr=S(mode='ST', modeLong='Bilevel ST · oronasal mask', set=[['IPAP', '14'], ['EPAP', '6'], ['Backup', '20'], ['Ti', '1.2'], ['FiO₂', '0.4']], meas=[['Her RR', '40'], ['Machine Ti', '1.2 s'], ['Missed', '1 in 4']], wave='niv-x1f',
           mon=[['HR', '146'], ['SpO₂', '92'], ['RR', '40']], note='Exhaling against the machine; some efforts get no breath'),
