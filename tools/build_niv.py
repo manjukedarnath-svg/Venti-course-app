@@ -530,6 +530,37 @@ def build_cases():
     return bd.shell('Non-invasive ventilation · three cases', out, code)
 
 
+SHORT_PRIMER = ['The ladder', 'EPAP and IPAP', 'ICEMAN', 'Contraindications']
+SHORT_THEORY = {'nb1': ['High-flow', 'Humidity and the nose'], 'nb2': ['Nebulising'], 'np1': ['Vented or non-vented'], 'np2': ['The one-hour review'], 'nx1': ['Fitting each interface'], 'nx2': []}
+
+
+def build_short():
+    """High-flow and NIV in 30 minutes: four primer slides, then the three cases with one or two theory slides each."""
+    code = 'N30'
+    out = bd.title_slide('VentCourse · Module 09 · High-flow and NIV · 30 min', 'Pressure without a <em>tube</em>',
+                         'High-flow, CPAP and bilevel in three children',
+                         'Thirty minutes on high-flow and non-invasive ventilation. Four slides of essentials, then three children we are trying not to intubate: an infant with bronchiolitis, a boy with pneumonia, a girl just extubated. You set the support on your phone and choose the order; the child answers.')
+    out += bd.join_slide(code, 'Scan the code with your phone camera to join; no account needed. Or open the app, tap Live session and type N30.')
+    for t in SHORT_PRIMER:
+        out += bd.reuse('niv.html', t)
+    for d in NIV_CASES:
+        sid = d['id']
+        if sid in OPENERS:
+            key, name, lines, age, sup, notes = OPENERS[sid]
+            out += opener_fig(key, f'Case {CASE_NO[sid]} of 3', name, lines, age, sup, notes)
+        out += bd.stage_slides(d, code)
+        for t in SHORT_THEORY[sid]:
+            out += bd.reuse('niv.html', t)
+        if sid in DEBRIEF:
+            lab, eb, h, cs, notes = DEBRIEF[sid]
+            out += bd.cards_slide(lab, eb, h, cs, notes)
+    out += bd.reuse('niv.html', 'Takeaways')
+    out += bd.close_slide('Fit the mask to the <em>child</em>', 'All three children are in the app: Cases · Sim scenarios 13, 14 and 15. The full theory is Learn · Module 09.',
+                          'Fit the mask to the child, then set the pressures, then watch the hour. Anaya, Ishaan and Zara are simulator scenarios thirteen to fifteen in the app, and the rest of the theory is in Module 09. Thank you.', 'N30')
+    out += bd.appendix('niv.html', 'Part 1', 'Takeaways', drop=('Title', 'Plan', 'Try it', 'Thank you', 'Part 1', 'Part 2', 'Part 3', 'Part 4', 'Part 5'))
+    return bd.shell('High-flow and NIV · 30 minutes', out, code)
+
+
 def ltv_body(code):
     """The five long-term ventilation cases, as in talks/ltv-cases.html, with the LTV theory woven in."""
     out = ''
@@ -636,12 +667,15 @@ if __name__ == '__main__':
     bd.USED.clear(); cases = build_cases()
     open(os.path.join(talks, 'niv-cases.html'), 'w').write(cases)
     print('niv-cases.html', len(cases), cases.count('<section '), 'slides')
+    bd.USED.clear(); short = build_short()
+    open(os.path.join(talks, 'niv-30.html'), 'w').write(short)
+    print('niv-30.html', len(short), short.count('<section '), 'slides')
     bd.USED.clear(); joint = build_joint()
     open(os.path.join(talks, 'niv-ltv.html'), 'w').write(joint)
     print('niv-ltv.html', len(joint), joint.count('<section '), 'slides')
     bd.USED.clear(); merged = build_merged()
     open(os.path.join(talks, 'hfnc-niv-ltv.html'), 'w').write(merged)
     print('hfnc-niv-ltv.html', len(merged), merged.count('<section '), 'slides')
-    keep = {k: v for k, v in bd.LIVE_OUT.items() if k[:3] in ('nb1', 'nb2', 'np1', 'np2', 'nx1', 'nx2') or k in ('anaya_case', 'ishaan_case', 'zara_case') or re.match(r'x(nivt|niv|nlv|hnl)\d+$', k)}
+    keep = {k: v for k, v in bd.LIVE_OUT.items() if k[:3] in ('nb1', 'nb2', 'np1', 'np2', 'nx1', 'nx2') or k in ('anaya_case', 'ishaan_case', 'zara_case') or re.match(r'x(nivt|niv|nlv|hnl|n30)\d+$', k)}
     write_live(keep)
     print('LIVE entries added', len(keep))
