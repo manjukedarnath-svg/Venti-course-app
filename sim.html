@@ -191,7 +191,10 @@ function landing() {
     </div>
     <p style="margin:0; font-size:15px; line-height:1.6; color:#6E6A63;">Open the facilitator panel first. Then, on the other two devices, open sim.html, type the same code and choose their role (or use the links the panel shows).</p></main>`;
   const code = () => ($('#rc').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-  $('#mk').onclick = async () => { const c = code(); if (c.length < 3) return; const r = await post('create', { room: c }); if (r.ok) { try { localStorage.setItem('vc-sim-key-' + c, r.j.key); } catch (e) {} location.hash = 'control-' + c; location.reload(); } };
+  $('#mk').onclick = async () => { const c = code(); if (c.length < 3) return;
+    const g = await post('get', { room: c }), old = g.ok && g.j.s && g.j.s.case ? caseOf(g.j.s.case) : null;
+    const fresh = !old || confirm('Room ' + c + ' already has a session running (' + old.name + ', stage ' + (g.j.s.stage + 1) + ').\n\nOK = start a NEW session (clears it)\nCancel = continue the old one');
+    const r = await post('create', { room: c, reset: !!(old && fresh) }); if (r.ok) { try { localStorage.setItem('vc-sim-key-' + c, r.j.key); } catch (e) {} location.hash = 'control-' + c; location.reload(); } };
   $('#jv').onclick = () => { const c = code(); if (c.length >= 3) { location.hash = 'vent-' + c; location.reload(); } };
   $('#jm').onclick = () => { const c = code(); if (c.length >= 3) { location.hash = 'monitor-' + c; location.reload(); } };
 }
@@ -440,7 +443,7 @@ function control() {
      <div style="min-width:0; display:flex; flex-direction:column;">
       <div style="display:flex; gap:6px;">${B('tab_run', 'Log', tab === 'run' ? 'dark' : '')}${B('tab_deb', 'Debrief', tab === 'deb' ? 'dark' : '')}${B('tab_links', 'Screens', tab === 'links' ? 'dark' : '')}</div>
       <div id="cSide" style="flex:1; overflow:auto; margin-top:10px; font-size:13px;"></div>
-      ${B('reset', 'Restart this case', 'red')}
+      <div style="display:flex; gap:6px;">${B('newsess', 'New session', 'red')}${B('reset', 'Restart this case', 'red')}</div>
      </div></div>`;
     // side panel
     const side = $('#cSide'), W = worlds(), t0 = W.length ? W[0].at : now();
@@ -501,6 +504,7 @@ function control() {
       case 'clk_off': if (confirm('Switch the clock off? Stages will then move only when you press them.')) return act({ kind: 'clock', clock: null, label: '⏱ Clock off' }); return;
       case 'next': return w.stage + 1 < C.stages.length ? goStage(w.stage + 1) : null;
       case 'story': return act({ kind: 'note', story: !S.story, label: S.story ? 'Story hidden' : 'Story shown on the monitor' });
+      case 'newsess': if (confirm('Start a new session in room ' + ROOM + '? This clears the case, the clock, the results and the log, and takes you back to choosing the case. The ventilator and monitor stay connected.')) return act({ kind: 'reset', case: null, set: null }); return;
       case 'reset': if (confirm('Restart the case from stage 1?')) return act({ kind: 'reset', case: C.id, set: enc(parse(C.stages[0].phys.anc.set)) }); return;
       case 'tab_run': tab = 'run'; return render(); case 'tab_deb': tab = 'deb'; return render(); case 'tab_links': tab = 'links'; return render();
       case 'scriptset': return act({ kind: 'set', set: enc(parse(st.phys.anc.set)), label: 'Script settings applied: ' + readSet(parse(st.phys.anc.set)) });
