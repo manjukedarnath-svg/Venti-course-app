@@ -2604,7 +2604,9 @@ Object.assign(PATIENTS, {
   cpBoySbt: { label: '4-year-old · breathing trial', C: 8, R: 25, eff: 9, rrOwn: 50, ibw: 16, hidden: true, defs: D_CP },
   cpSureshMask: { label: 'Suresh · on the mask', C: 13, R: 20, eff: 10, rrOwn: 36, ibw: 24, hidden: true, defs: D_CP },
   cpSuresh: { label: 'Suresh · intubated', C: 13, R: 20, ibw: 24, hidden: true, defs: D_CP },
-  cpSureshWet: { label: 'Suresh · pulmonary oedema', C: 12, R: 20, ibw: 24, hidden: true, defs: D_CP }
+  cpSureshWet: { label: 'Suresh · pulmonary oedema', C: 12, R: 20, ibw: 24, hidden: true, defs: D_CP },
+  cpP4Mask: { label: '6-year-old · pneumonia, on the mask', C: 12, R: 30, eff: 10, rrOwn: 40, ibw: 20, hidden: true, defs: D_CP },
+  cpP4: { label: '6-year-old · intubated', C: 12, R: 30, ibw: 20, hidden: true, defs: D_CP }
 });
 SIM_SCEN.push(
   { id: 'maya', eyebrow: 'Sim scenario 08', title: 'Maya · 3-year-old girl · 15 kg', chord: 'night', setting: 'Septic shock · the physiologically difficult airway',
@@ -2621,7 +2623,10 @@ SIM_SCEN.push(
     review: '', stages: ['bo1', 'bo2', 'bo3', 'bo4'] },
   { id: 'suresh', eyebrow: 'Sim scenario 12', title: 'Suresh · 8-year-old boy · 24 kg', chord: 'ember', setting: 'Acute myocarditis · cardiogenic shock · KarPediCon Station D',
     blurb: 'EF 15%, moderate MR, BP 68/40 after a bolus. Support the heart before the tube, set the ventilator before the drugs, protect preload after the tube, match his minute ventilation, then use PEEP for the LV.',
-    review: '', stages: ['su1', 'su2', 'su3', 'su4'] }
+    review: '', stages: ['su1', 'su2', 'su3', 'su4'] },
+  { id: 'p4', eyebrow: 'Sim scenario 26', title: '6-year-old girl · 20 kg', chord: 'dusk', setting: 'Septic shock with pneumonia · the four Ps before the tube',
+    blurb: 'Shock index 2.1, SpO₂ 86%, pH 7.05 with a PaCO₂ of 22. She is tiring and will need a tube, and has no reserve to survive one. Resuscitate first, pre-oxygenate on CPAP, set the ventilator before the drugs, then survive the fall in pressure after the tube.',
+    review: '', stages: ['p41', 'p42', 'p43'] }
 );
 SIM_STAGES.push(
   // ---------- Maya ----------
@@ -3294,6 +3299,114 @@ SIM_STAGES.push(
         ['PEEP up in steps of 1–2 to 8 while watching the arterial line; wean FiO₂; escalation trigger written', 1, 'At PEEP 8: plateau 21, ΔP 13, SpO₂ 95%, no fall on the arterial line. The MR may lessen as the LV unloads.'],
         ['20 mL/kg to fill the LV before more PEEP', 0, 'Preload was protected; more fluid goes into the lung.'],
         ['Rate 35 to bring the PaCO₂ to 25', 0, 'His acidosis is matched now; a faster rate risks trapping and mean airway pressure for no gain.']] } }
+);
+// ---------- Sim scenario 26 · the four Ps (Module 10): septic shock, hypoxia, acidosis, then the tube ----------
+// Built from the KIMS PICU intubation SOP: resuscitate before you intubate (titrated fluid 10–20 mL/kg by shock index, inotrope 0.05 mcg/kg/min,
+// MAP between the 5th and 50th centile), preoxygenate on NIV, ketamine 0.5 mg/kg titrated + rocuronium 1.5 mg/kg flushed in one go, ventilator set first.
+const P4_SI = (hr, sbp) => (hr / sbp).toFixed(1);
+SIM_STAGES.push(
+  { id: 'p41', scen: 'p4', stage: 1, niv: true, fig: 'mask', t: 'Before the drugs · resuscitate before you intubate', eyebrow: 'Sim scenario 26 · stage 1 of 3', title: '6-year-old girl · 20 kg', chord: 'dusk', ibw: 20, setting: 'PICU · arrival in septic shock',
+    story: 'Five days of fever and cough, two days of fast breathing, now drowsy. HR 165, BP 78/40, SpO₂ 86% on a 10 L/min face mask, RR 40, CRT 5 s, cold hands. Right lower lobe consolidation on the film. One working 22G cannula. Gas: pH 7.05, PaCO₂ 22, HCO₃ 6, lactate 9. She is tiring and will need a tube, but not yet.',
+    event: 'Run the four Ps before any drug. Pressure: shock index 165 ÷ 78 = 2.1, far above the age threshold; the mean arterial pressure is 53 against a 5th-centile goal of 40 + 1.5 × 6 = 49 and a 50th-centile goal of 55 + 1.5 × 6 = 64, so she is compensating on a knife edge. Fluid is titrated, 10 to 20 mL/kg guided by the shock index, with an inotrope at 0.05 mcg/kg/min before induction. Pre-ox: shunt through a consolidated lobe, so NIV or CPAP at 5–6 recruits and extends her safe apnoea time. pH: PaCO₂ 22 for a HCO₃ of 6 is her whole defence; apnoea will take it away. Intubating now, at a BP of 78/40 on a mask, is a cardiac arrest.',
+    dx: 'Septic shock with pneumonia and severe metabolic acidosis: resuscitate first, titrated fluid, inotrope, CPAP/NIV pre-ox, then the tube.', learn: [2, 'Pre-ox and pressure in children', '10'],
+    assess: { vit: [['HR', '165'], ['BP', '78/40'], ['SpO₂', 'live'], ['RR', '40'], ['CRT', '5 s']], exam: ['Drowsy, rousable, working hard', 'Cold hands and feet, CRT 5 s', 'Reduced air entry right base, crackles'], cxrAns: 'lung', ettAns: 'unseen', cxr: 'Right lower lobe consolidation. No tube.', abg: [['pH', '7.05'], ['PaCO₂', '22'], ['PaO₂', '48'], ['HCO₃', '6'], ['Lactate', '9']], vent: '10 L/min face mask. Option: CPAP 5–6 by mask while you prepare.' },
+    patient: 'cpP4Mask', start: { mode: 'PS', ps: 0, peep: 0, eff: 10, rr: 40, ti: 0.7, fio2: 100 },
+    brief: 'Do the four Ps in order. Fluid in 10 mL/kg steps, reassess the shock index after each. Adrenaline 0.05 mcg/kg/min through the cannula, a second access, arrest-dose adrenaline ready. CPAP 5–6 by mask, FiO₂ 1.0. Do not intubate yet.',
+    actions: [
+      { id: 'map', label: 'Work out the MAP goal: 5th to 50th centile for age', fb: '40 + 1.5 × 6 = 49 to 55 + 1.5 × 6 = 64 mmHg. Her MAP is 53: low, on the edge.' },
+      { id: 'access', label: 'Second IV or IO line', fb: 'Second line in (IO if needed). Two working accesses before any induction.' },
+      { id: 'f1', label: '10 mL/kg isotonic fluid over 10 minutes, then reassess', fb: '200 mL in. HR 155, BP 84/44: shock index 1.8. Better, still above the threshold; no crackles yet.' },
+      { id: 'ino', label: 'Adrenaline 0.05 mcg/kg/min peripherally', fb: 'Running at 0.05 through the cannula. BP 92/50, HR 150 at 3 minutes.' },
+      { id: 'f2', label: 'A second 10 mL/kg, only because the shock index is still high', fb: 'Second 200 mL, reassessed: HR 148, BP 94/52. No crackles, liver not bigger. Stop at 20 mL/kg unless she is still dry.', needs: 'f1', needsFb: 'Give the first 10 mL/kg and reassess before a second.' },
+      { id: 'arrest', label: 'Arrest-dose adrenaline and push-dose adrenaline ready', fb: 'Drawn up and labelled, a named person to push. Fluid bolus ready too.' },
+      { id: 'bolus40', label: '40 mL/kg rapid bolus for the BP', fb: 'Fluid into an inflamed lung: crackles to both apices, SpO₂ 78%. Not given.', bad: true },
+      { id: 'tubenow', label: 'Intubate now: she is tiring', fb: 'Induction at BP 78/40 on a mask: the pressure falls to 50/20 and she arrests. Not done.', bad: true },
+      { id: 'prop', label: 'Propofol for a smooth induction', fb: 'Propofol vasodilates a child in shock. Not given.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ o2: 1 + 0.08 * Math.min(8, m.totalPeep), co2: softCo2(m, m0) }),
+    vitals: (m, a, s) => { const hr = a.f2 ? 148 : a.ino ? 150 : a.f1 ? 155 : 165, bp = a.bolus40 ? 72 : a.f2 ? 94 : a.ino ? 92 : a.f1 ? 84 : 78;
+      return [['HR', String(hr)], ['BP', bp + '/' + (bp > 90 ? 52 : bp > 80 ? 46 : 40)], ['SpO₂', 'live'], ['SI', P4_SI(hr, bp)]]; },
+    goals: (m, a, s) => [
+      ['MAP goal worked out (49–64)', !!a.map],
+      ['Second access', !!a.access],
+      ['Fluid in steps of 10 mL/kg, reassessed', !!a.f1 && !a.bolus40],
+      ['Inotrope 0.05 mcg/kg/min running', !!a.ino],
+      ['Arrest-dose and push-dose adrenaline ready', !!a.arrest],
+      ['CPAP or EPAP 5–6 by mask', isMaskNiv(s) && epapOf(s) >= 5 && epapOf(s) <= 6],
+      ['FiO₂ 1.0', m.fio2 >= 95],
+      ['Not intubated yet, no propofol', !a.tubenow && !a.prop]],
+    live: { q: 'HR 165, BP 78/40, SpO₂ 86% on a mask, pH 7.05, PaCO₂ 22. She is tiring. What first?',
+      opts: [['Intubate now before she tires further', 0, 'At BP 78/40 on a mask: the pressure falls to 50/20 and she arrests.'],
+        ['10 mL/kg and reassess, adrenaline 0.05 mcg/kg/min, second line, CPAP 5–6, arrest drugs ready; then the tube', 1, 'BP 92/50, HR 150, shock index 1.6, SpO₂ 92% on CPAP.'],
+        ['40 mL/kg rapid bolus', 0, 'Crackles to both apices; SpO₂ 78%.'], ['Propofol and suxamethonium for a quick tube', 0, 'Propofol vasodilates a child in shock: cardiac arrest on induction.']] } },
+  { id: 'p42', scen: 'p4', stage: 2, illus: '', t: 'Induction · the ventilator is set before the drugs', eyebrow: 'Sim scenario 26 · stage 2 of 3', title: '6-year-old girl · 20 kg', chord: 'dusk', ibw: 20, setting: 'PICU · the tube is next',
+    story: 'On adrenaline 0.05 mcg/kg/min and 20 mL/kg in, BP 92/50, HR 150, SpO₂ 94% on CPAP 6 with FiO₂ 1.0. She is now exhausted, GCS 10, RR 44 with a PaCO₂ of 22. The senior is at the head end. The ventilator is not set.',
+    task1: 'She is on the mask and the tube goes in next. Set up the ventilator for after the tube.',
+    event: 'Set the ventilator before the drugs, to the child she is, not a textbook child: PaCO₂ 22 is a minute ventilation of about 4 L/min in a 20 kg child, so volume control, VT 7 mL/kg (140 mL), rate 28–34, PEEP 6, Ti 0.7, FiO₂ 1.0, to mimic the compensation the tube is about to remove. Preoxygenate 3 to 5 minutes (SpO₂ above 95%). Ketamine 0.5 mg/kg, titrated by 0.5 mg/kg steps to a maximum of 2 mg/kg, then rocuronium 1.5 mg/kg and a flush, all in one go, by the most experienced operator; gentle mask ventilation through the onset; cuffed 5.0 (age ÷ 4 + 3.5); one size either side in the kit; a second operator ready; EtCO₂ and five-point auscultation to confirm. Propofol vasodilates; a rate of 16 is the lung-protective instinct that kills an acidotic child.',
+    dx: 'Ventilator first: VC VT 140, rate 30, PEEP 6, Ti 0.7, FiO₂ 1.0; ketamine 0.5 mg/kg titrated, rocuronium 1.5 mg/kg, one flush.', learn: [3, 'pH, pump and the child who is not a small adult', '10'],
+    assess: { vit: [['HR', '150'], ['BP', '92/50'], ['SpO₂', '94%'], ['GCS', '10']], exam: ['Exhausted, rousable to voice', 'Adrenaline running, two lines', 'Right basal crackles'], cxrAns: 'lung', ettAns: 'unseen', cxr: 'Right lower lobe consolidation. No tube.', abg: [['pH', '7.08'], ['PaCO₂', '24'], ['PaO₂', '62'], ['HCO₃', '7']], vent: 'CPAP 6, FiO₂ 1.0. Preoxygenating.' },
+    patient: 'cpP4', start: { mode: 'VC', vt: 140, rr: 30, peep: 6, ti: 0.7, fio2: 100 },
+    brief: 'Volume control: VT 7 mL/kg = 140, rate 28–34, PEEP 5–8, Ti 0.6–0.8, FiO₂ 1.0. Then preoxygenate, a second operator, cuffed 5.0, ketamine 0.5 mg/kg titrated and rocuronium 1.5 mg/kg flushed together.',
+    actions: [
+      { id: 'pre', label: 'Preoxygenate 3–5 minutes to SpO₂ above 95%', fb: 'Five minutes on CPAP at FiO₂ 1.0: SpO₂ 97%. Spontaneous breathing kept until everything is ready.' },
+      { id: 'team', label: 'Most experienced operator at the head, a second airway person ready', fb: 'Senior at the head, second operator briefed, drugs nurse, two assistants, a monitoring nurse. Plan B (i-gel) said aloud.' },
+      { id: 'cuff', label: 'Cuffed 5.0, one size above and below in the kit', fb: 'Cuffed 5.0 (6 ÷ 4 + 3.5), a 4.5 and a 5.5 beside it, stylet, bougie, 10 mL syringe for the cuff.' },
+      { id: 'ket', label: 'Ketamine 0.5 mg/kg titrated, rocuronium 1.5 mg/kg, flush: all in one go', fb: 'Ketamine 10 mg, rocuronium 30 mg, flush. Gentle mask breaths through the onset. First-pass tube; BP 86/46.' },
+      { id: 'ketfull', label: 'Ketamine 2 mg/kg in one dose', fb: 'A full dose on a catecholamine-depleted child drops the pressure to 66/34 before the tube is in.', bad: 1 },
+      { id: 'propofol', label: 'Propofol 2 mg/kg', fb: 'Propofol vasodilates and depresses the myocardium: BP 55/28. Not given.', bad: true },
+      { id: 'bag', label: 'Hand-bag fast through the whole onset', fb: 'Fast bagging traps gas and fills the stomach: pressure falls and the saturation does not improve.', bad: true }
+    ],
+    gas: () => ({ o2: 1 }),
+    vitals: (m, a, s) => [['HR', '150'], ['BP', a.ketfull ? '66/34' : a.propofol ? '55/28' : a.ket ? '86/46' : '92/50'], ['SpO₂', a.pre ? '97%' : '94%'], ['GCS', '10']],
+    goals: (m, a, s) => [
+      ['Volume control or PRVC', vcMode(s)],
+      ['VT 7 mL/kg (120–160 mL)', m.vte >= 118 && m.vte <= 162],
+      ['Rate 28–34 to match her own', m.rr >= 28 && m.rr <= 34],
+      ['PEEP 5–8', s.peep >= 4.5 && s.peep <= 8.5],
+      ['Ti 0.6–0.8', s.ti >= 0.6 && s.ti <= 0.8],
+      ['FiO₂ 1.0', m.fio2 >= 95],
+      ['Preoxygenated 3–5 min', !!a.pre],
+      ['Team and plan B ready', !!a.team],
+      ['Cuffed tube, one size either side', !!a.cuff],
+      ['Ketamine titrated, rocuronium, one flush', !!a.ket && !a.ketfull && !a.propofol]],
+    live: { q: 'BP 92/50 on adrenaline, SpO₂ 94% on CPAP, GCS 10, PaCO₂ 22. Ventilator and induction?',
+      opts: [['VC 140 mL, rate 30, PEEP 6; preoxygenate; ketamine 0.5 mg/kg titrated, rocuronium 1.5 mg/kg, one flush', 1, 'Tube in at first pass. BP 86/46, SpO₂ 95%, EtCO₂ 30.'],
+        ['Rate 16 to protect the lung; propofol', 0, 'BP 55/28; the PaCO₂ climbs and the pH falls towards 6.9.'], ['Ketamine 2 mg/kg stat', 0, 'BP 66/34 before the tube is in.'], ['Hand-bag fast, then set the machine', 0, 'Trapping, a full stomach and a falling pressure.']] } },
+  { id: 'p43', scen: 'p4', stage: 3, keep: true, t: 'Minute 5 after the tube · the pressure falls', eyebrow: 'Sim scenario 26 · stage 3 of 3', title: '6-year-old girl · 20 kg', chord: 'dusk', ibw: 20, setting: 'PICU · just after the tube',
+    story: 'Intubated at first pass, tube at 14 cm at the lip. BP now 64/32 (MAP 43), HR 160, SpO₂ 95%. EtCO₂ and the chest are being watched. Adrenaline is still at 0.05 mcg/kg/min and she has had 20 mL/kg.',
+    event: 'Positive pressure cut her venous return and the induction took the last of her sympathetic tone: this is the post-intubation hypotension that the first stage was preparing for. MAP 43 is under the 5th-centile goal of 49. Preload first, 10 mL/kg, reassessed, because 20 mL/kg is in and the lung is inflamed; push-dose adrenaline for the minutes it takes the infusion to rise, then the adrenaline up. Keep the rate: the acidosis has not gone, and a lung-protective rate of 16 now would let the CO₂ and the acidosis climb and blunt the catecholamines. PEEP stays at 5–8; a PEEP of 12 on an empty child drops the pressure further. After the pressure is back: chest film for the tube and the lobe, a gas at 30 to 60 minutes, analgesia-first sedation.',
+    dx: 'Post-intubation hypotension: push-dose adrenaline, 10 mL/kg cautiously, infusion up, keep the rate and PEEP 5–8; film and gas.', learn: [4, 'Positive pressure changes everything', '10'],
+    assess: { vit: [['HR', '160'], ['BP', '64/32'], ['SpO₂', 'live'], ['EtCO₂', '32']], exam: ['Chest rising equally', 'Tube at 14 cm, EtCO₂ trace present', 'Cold, CRT 5 s'], cxrAns: 'lung', ettAns: 'ok', cxr: 'Tube tip at T2. Right lower lobe consolidation.', abg: [['pH', '7.10'], ['PaCO₂', '30'], ['PaO₂', '90'], ['HCO₃', '8']], vent: 'Your settings carry over.' },
+    patient: 'cpP4', start: { mode: 'VC', vt: 140, rr: 30, peep: 6, ti: 0.7, fio2: 100 },
+    brief: 'Push-dose adrenaline now. 10 mL/kg cautiously, adrenaline up to 0.1. Keep the rate at 28–34 and PEEP 5–8. Then the film, the gas at 30–60 minutes and analgesia first.',
+    actions: [
+      { id: 'push', label: 'Push-dose adrenaline', fb: 'Push-dose given: BP 76/40 within a minute, a bridge while the infusion rises.' },
+      { id: 'bolus10', label: '10 mL/kg cautiously, then reassess', fb: '200 mL over ten minutes. BP creeps up; no new crackles.' },
+      { id: 'adrup', label: 'Adrenaline up to 0.1 mcg/kg/min', fb: 'Infusion at 0.1: the pressure holds at 84/44 by ten minutes.' },
+      { id: 'cxr', label: 'Chest X-ray for the tube and the lobe', fb: 'Tip at T2, lobar consolidation unchanged, no pneumothorax.' },
+      { id: 'gas', label: 'Blood gas at 30 to 60 minutes, adjust the ventilator', fb: 'Set for 45 minutes: gas will guide the rate. EtCO₂ to PaCO₂ gap noted.' },
+      { id: 'sed', label: 'Analgesia first, then a light sedative', fb: 'Fentanyl infusion first, midazolam only if needed. No deep boluses while the pressure is low.' },
+      { id: 'bolus40', label: '40 mL/kg to fill the tank', fb: 'Into an inflamed lung that has already had 20 mL/kg: SpO₂ 86%, oedema. Not given.', bad: true },
+      { id: 'peep12', label: 'PEEP 12 to help the oxygen', fb: 'High PEEP on an empty child drops the venous return: BP 52/26. Turned back.', bad: true },
+      { id: 'deep', label: 'Deep sedation boluses to stop her fighting', fb: 'Midazolam and fentanyl boluses on a MAP of 43: the pressure falls to 50/24. Not given.', bad: true }
+    ],
+    gas: (m, a, s, m0) => ({ co2: Math.pow(m.mv / m0.mv, 0.5) }),
+    vitals: (m, a, s) => { const rec = a.bolus10 && (a.adrup || a.push); return [['HR', rec ? '148' : '160'], ['BP', s.peep >= 10 ? '52/26' : a.deep ? '50/24' : rec ? '86/46' : a.push ? '76/40' : a.bolus10 || a.adrup ? '72/36' : '64/32'], ['SpO₂', 'live'], ['EtCO₂', '32']]; },
+    goals: (m, a, s) => [
+      ['Push-dose adrenaline', !!a.push],
+      ['10 mL/kg cautiously, not 40', !!a.bolus10 && !a.bolus40],
+      ['Adrenaline infusion up', !!a.adrup],
+      ['Rate kept at 28–34 (not 16)', m.rr >= 28 && m.rr <= 34],
+      ['PEEP 5–8', s.peep >= 4.5 && s.peep <= 8.5],
+      ['Expiration complete: auto-PEEP ≤ 1', m.auto <= 1],
+      ['VT 7 mL/kg (120–160 mL)', m.vte >= 118 && m.vte <= 162],
+      ['Film and gas planned', !!a.cxr && !!a.gas],
+      ['Analgesia first, no deep boluses', !!a.sed && !a.deep]],
+    debrief: ['Four Ps before any drug: Pressure (shock index, MAP between the 5th and 50th centile: 40 + 1.5 × age to 55 + 1.5 × age), Pre-ox (CPAP or NIV first), pH (keep the child\'s own minute ventilation), Pump (here, a healthy right ventricle).', 'Resuscitate before you intubate: fluid in steps of 10 mL/kg guided by the shock index, an inotrope at 0.05 mcg/kg/min, two accesses, arrest-dose adrenaline ready.', 'Set the ventilator before the drugs: the child was breathing at a PaCO₂ of 22 and the tube removes that. Rate 28–34, not 16.', 'Ketamine 0.5 mg/kg titrated (the dose matters more than the drug), rocuronium 1.5 mg/kg, flush, one go, by the most experienced operator; gentle mask breaths through the onset; cuffed 5.0 by age ÷ 4 + 3.5; a second operator and plan B.', 'After the tube the pressure falls: push-dose adrenaline, 10 mL/kg cautiously, infusion up. Keep the rate and PEEP 5–8.', 'Film for the tube, gas at 30 to 60 minutes, analgesia first, and record the dose weight, tube depth and the view.'],
+    live: { q: 'Tube in, BP 64/32, HR 160, EtCO₂ 32 on rate 30. What now?',
+      opts: [['Push-dose adrenaline, 10 mL/kg cautiously, adrenaline up; keep the rate and PEEP 5–8', 1, 'BP 86/46 by ten minutes; EtCO₂ 32 and the pH improves.'],
+        ['Drop the rate to 16 to protect the lung', 0, 'The CO₂ climbs and the pH falls towards 6.95; the adrenaline works less well.'],
+        ['PEEP 12 for the oxygen', 0, 'The venous return falls: BP 52/26.'], ['Deep sedation boluses to settle her', 0, 'MAP 43 falls further: BP 50/24.']] } }
 );
 // ---------- Acute NIV in the PICU: sim scenarios 13–15 (Module 09 · the NIV talk and the NIV + long-term ventilation talk) ----------
 // Bronchiolitis on high-flow that needs CPAP; pneumonia/PARDS on bilevel that fails; a high-risk extubation onto bilevel with leak and asynchrony.
