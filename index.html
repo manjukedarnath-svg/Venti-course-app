@@ -240,7 +240,7 @@
             <x-import component-from-global-scope="SolsticeDesignSystem_a0f434.IconButton" icon="search" label="Search" hint-size="40px,40px"></x-import>
           </div>
           <div style="display:flex; flex-direction:column; gap:10px;">
-            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Course · 9 modules · 84 lessons</span>
+            <span style="font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary);">Course · 10 modules · 98 lessons</span>
             <h1 style="margin:0; font-family:var(--font-display); font-weight:400; font-size:46px; line-height:.98; letter-spacing:-.02em;">Every breath, <em>explained</em></h1>
             <p style="margin:0; font-weight:300; font-size:16px; line-height:1.55; color:var(--text-secondary); text-wrap:pretty;">Physiology first, then the machine. Each lesson ends at the bedside of a simulated patient.</p>
           </div>
@@ -4751,6 +4751,730 @@ const MIG09 = q => { const o = {}, m4 = { 6: 1, 5: 2, 3: 3, 7: 5, 8: 6, 9: 7, 10
   for (const [k, v] of Object.entries(q || {})) { const [mod, i] = k.split(':'), n = +i;
     if (mod === '04' && n >= 3) { if (m4[n] != null) o['09:' + m4[n]] = v; } else if (mod === '09') o['09:' + (n + 9)] = v; else o[k] = v; }
   return o; };
+// Module 10 · Airway and RSI (KIMS PICU intubation SOP + the physiologically difficult airway)
+LESSON_SETS['10'] = [
+ {
+  "h": [
+   "The airway that anatomy does not ",
+   "predict",
+   ""
+  ],
+  "lede": "A Mallampati 1 child in septic shock is more dangerous to intubate than a Mallampati 4 child having elective surgery. The tube goes in easily; the child collapses.",
+  "body": [
+   "A physiologically difficult airway is one where the child's physiology raises the risk of cardiovascular collapse or death during intubation and the move to positive-pressure ventilation. The causes are acute illness, existing disease, the induction drugs and positive pressure itself.",
+   "Difficulty has four parts: the patient (anatomy and physiology), the environment and equipment, the provider, and the team. There is no fixed 'difficult airway': it is a basic airway or an advanced airway.",
+   "INTUBE, 2,964 critically ill adults in 29 countries: at least one major event in 45.2%, cardiovascular instability in 42.6%, severe hypoxaemia in 9.3%, cardiac arrest in 3.1%. These are adult figures. NAP4 found death or brain injury in 61% of ICU airway episodes against 14% in theatre. First-pass success lowers complications.",
+   "The directive in this module is: resuscitate before you intubate. The unit SOP treats every child as a full stomach and a difficult intubation, and uses a modified rapid sequence induction or delayed sequence intubation."
+  ],
+  "nums": [
+   [
+    "42.6%",
+    "Cardiovascular instability (adults)"
+   ],
+   [
+    "9.3%",
+    "Severe hypoxaemia (adults)"
+   ],
+   [
+    "3.1%",
+    "Cardiac arrest (adults)"
+   ]
+  ],
+  "peds": "Children desaturate faster and collapse faster than the adults in these studies. Expect the figures to be worse, not better, in a sick infant.",
+  "src": "Myatra, Divatia, Brewster, Curr Opin Anaesthesiol 2022 · Russotto, JAMA 2021 (INTUBE) · NAP4, Cook, Br J Anaesth 2011 · KIMS PICU Intubation SOP",
+  "q": "Which child is the more dangerous intubation?",
+  "ans": "C",
+  "opts": [
+   [
+    "A",
+    "Mallampati 4, elective surgery, well"
+   ],
+   [
+    "B",
+    "Equal: the airway is the same"
+   ],
+   [
+    "C",
+    "Mallampati 1, septic shock, SpO₂ 88%"
+   ],
+   [
+    "D",
+    "Neither: both have a tube planned"
+   ]
+  ],
+  "fb": "The child in shock with low saturation. Easy anatomy does not protect you from the collapse that induction and positive pressure can cause."
+ },
+ {
+  "h": [
+   "The four ",
+   "Ps",
+   ""
+  ],
+  "lede": "Four questions, asked in this order, before any drug is drawn up: Pressure, Pre-ox, pH, Pump.",
+  "body": [
+   "Pressure: is the shock index high or the blood pressure low? Resuscitate first. Have an inotrope or vasopressor running and a gentle induction dose.",
+   "Pre-ox: is the child hypoxaemic or shunting? Use NIV, then high-flow, or delayed sequence induction, so the child is saturated before the tube.",
+   "pH: is there severe metabolic acidosis? The child is surviving by hyperventilating, and apnoea removes that defence. Keep the apnoea short and the minute volume high afterwards.",
+   "Pump: is the right ventricle failing, or is the pulmonary pressure high? Keep the mean arterial pressure above the mean pulmonary pressure and avoid hypoxia, hypercarbia and high airway pressure.",
+   "Then the paediatric modifier: scaled equipment, a cuffed tube, and readiness for fast desaturation and bradycardia."
+  ],
+  "nums": [
+   [
+    "P",
+    "Pressure"
+   ],
+   [
+    "P",
+    "Pre-ox"
+   ],
+   [
+    "pH · P",
+    "pH and Pump"
+   ]
+  ],
+  "peds": "In the youngest children every one of the four moves faster. Do the check before you pick up the laryngoscope, not after.",
+  "src": "Myatra 2022 · Reddy, The Difficult Airway Revisited, UKZN 2023 · Kedarnath, Critical Airway Physiology deck",
+  "q": "Which P covers a child with pulmonary hypertension?",
+  "ans": "D",
+  "opts": [
+   [
+    "A",
+    "Pressure"
+   ],
+   [
+    "B",
+    "Pre-ox"
+   ],
+   [
+    "C",
+    "pH"
+   ],
+   [
+    "D",
+    "Pump"
+   ]
+  ],
+  "fb": "Pump. A failing right ventricle does not tolerate rising pulmonary vascular resistance or lost preload. Protect the mean arterial pressure and avoid hypoxia, hypercarbia and high airway pressure."
+ },
+ {
+  "h": [
+   "Pre-ox and ",
+   "pressure",
+   " in children"
+  ],
+  "lede": "Oxygen before drugs. Resuscitation before induction. Both are done in the minutes before the laryngoscope comes out.",
+  "body": [
+   "Hypoxaemia in sick children comes from shunt and V/Q mismatch, so more oxygen alone does little when the alveoli are flooded. Safe apnoea time is short: roughly 8 minutes or more for a healthy adult, about 4 for a 10 kg child, and less if the child is ill.",
+   "Strategy: NIV first (APL valve at 5 to 10 cmH₂O, or CPAP) to recruit and raise the FRC. High-flow during induction and apnoea. Delayed sequence induction with ketamine or dexmedetomidine for the agitated child who will not tolerate a mask. In the unit SOP: high-flow 2 L/kg at FiO₂ 95%, or a non-rebreather at 10 L/min, for 3 to 5 minutes.",
+   "Pressure: shock index is heart rate divided by systolic pressure. A rising index is an early sign of compensated shock even when the pressure looks normal, and predicts post-intubation hypotension. Judge it against the age-adjusted threshold (SIPA) for the child's age.",
+   "Fluid is titrated: 10 to 20 mL/kg, guided by the shock index and SIPA, not given routinely. Start a peripheral inotrope or vasopressor, adrenaline or noradrenaline at 0.05 micrograms/kg/min, before induction. Arrest-dose adrenaline ready.",
+   "Blood-pressure goal: a mean arterial pressure between the 5th and 50th centile, 40 + 1.5 × age (years) to 55 + 1.5 × age. A 5-year-old: about 48 to 63 mmHg.",
+   "Induce with ketamine 0.5 mg/kg in shock, increasing by 0.5 mg/kg up to three times to 2 mg/kg. The dose matters more than the drug. Rocuronium 1.5 mg/kg. Give ketamine, then rocuronium, then flush, in one go."
+  ],
+  "nums": [
+   [
+    "HR ÷ SBP",
+    "Shock index"
+   ],
+   [
+    "10–20 mL/kg",
+    "Titrated fluid"
+   ],
+   [
+    "0.05",
+    "Inotrope, mcg/kg/min"
+   ]
+  ],
+  "peds": "Do not disconnect a child on full-face NIV. Remove the straps, hold the mask in place, switch to PCV with FiO₂ 100%.",
+  "src": "KIMS PICU Intubation SOP · Myatra 2022 · Kedarnath, Critical Airway Physiology deck",
+  "q": "A 5-year-old in shock needs intubation. What do you do first?",
+  "ans": "B",
+  "opts": [
+   [
+    "A",
+    "Induce at once with ketamine 2 mg/kg"
+   ],
+   [
+    "B",
+    "Resuscitate: inotrope running, titrated fluid, preoxygenate on NIV or high-flow, then ketamine 0.5 mg/kg titrated"
+   ],
+   [
+    "C",
+    "Give propofol to reduce airway reflexes"
+   ],
+   [
+    "D",
+    "Wait until the blood pressure is above the 50th centile"
+   ]
+  ],
+  "fb": "Resuscitate before you intubate: an inotrope running, fluid titrated to the shock index, preoxygenation, then a small, titrated ketamine dose and rocuronium 1.5 mg/kg flushed in one go."
+ },
+ {
+  "h": [
+   "pH, pump and the child who is not a ",
+   "small adult",
+   ""
+  ],
+  "lede": "A child with severe acidosis or a failing right heart has little reserve for the tube. Know what removing the compensation costs.",
+  "body": [
+   "pH. A child in sepsis, DKA or a metabolic crisis survives by hyperventilating. Intubation removes that defence. Even a short apnoea raises the PaCO₂ and adds respiratory acidosis to the metabolic acidosis, and can precipitate arrhythmia or arrest.",
+   "Plan: keep the catecholamines (avoid propofol; ketamine for induction), give a full dose of rocuronium (SOP: 1 mg/kg, 1.5 mg/kg in shock) and keep the interval to the tube short with a well-prepared, experienced first operator, ventilating gently by mask through the onset (modified RSI). Afterwards set a high minute volume to mimic the child's own compensation. You may not match the pre-intubation PaCO₂; expect to need a vasopressor.",
+   "Pump. The right ventricle tolerates volume but not afterload. Hypoxia, hypercarbia and high airway pressure raise pulmonary vascular resistance, and positive pressure cuts preload. Keep the mean arterial pressure above the mean pulmonary pressure. Optimise preload carefully, support contractility (dobutamine, milrinone), use noradrenaline for pressure, and consider inhaled pulmonary vasodilators. This is Leo in Module 08.",
+   "The paediatric modifier. Low FRC and an oxygen consumption about double an adult's mean fast desaturation, worst under two years. High vagal tone gives bradycardia with hypoxia. A low circulating volume makes drugs act fast and perfusion fall fast.",
+   "The infant cricoid is an ellipse, not a funnel: two narrow points, the cords and the cricoid. A cuffed tube seals better, lowers aspiration, holds PEEP and needs fewer changes. Prolonged bag-mask ventilation distends the stomach."
+  ],
+  "nums": [
+   [
+    "↑ CO₂",
+    "Apnoea in acidosis"
+   ],
+   [
+    "MAP > mPAP",
+    "Right ventricle"
+   ],
+   [
+    "× 2",
+    "Child's O₂ use"
+   ]
+  ],
+  "peds": "Hyperventilating after the tube is right for the acidotic child. For a failing left heart the emphasis is PEEP (Module 08). Separate the children by physiology.",
+  "src": "Myatra 2022 · Kedarnath, Critical Airway Physiology deck · KIMS PICU Intubation SOP",
+  "q": "Why do you set a high minute volume after intubating a child with severe metabolic acidosis?",
+  "ans": "C",
+  "opts": [
+   [
+    "A",
+    "To lower the PaO₂"
+   ],
+   [
+    "B",
+    "To raise the pH with CO₂"
+   ],
+   [
+    "C",
+    "To mimic the child's own respiratory compensation"
+   ],
+   [
+    "D",
+    "It is not needed: lung-protective settings always come first"
+   ]
+  ],
+  "fb": "The child was breathing fast to buffer the acid. The ventilator has to do the same work, or the pH falls and the heart suffers."
+ },
+ {
+  "h": [
+   "Positive pressure changes ",
+   "everything",
+   ""
+  ],
+  "lede": "The chest is a sealed pressure chamber. Every breath changes intrathoracic pressure, which either pulls blood into the right heart or pushes it out of the left. Intubation flips the lever.",
+  "body": [
+   "Spontaneous breathing is a suction pump. Negative pressure sucks venous return in (right ventricular preload up) and resists left ventricular ejection (afterload up). Positive pressure is a pressure pump. It squeezes the vena cava (preload down) and helps the left ventricle empty (afterload down).",
+   "In one line: spontaneous breathing taxes the left heart, and positive pressure starves the right heart. Module 08 teaches this in full.",
+   "A failing left ventricle gains: positive pressure acts like a ventricular assist device and removes the oxygen cost of breathing, so early NIV or intubation helps (Suresh, Module 08). A failing right ventricle or high pulmonary pressure loses: keep mean airway pressure low and avoid hypoxia and hyperinflation (Leo). A Fontan circulation depends on negative pressure: extubate early. A hypovolaemic child needs volume before positive pressure.",
+   "The induction 'domino': vasodilation, so have push-dose vasopressor ready. The apnoeic interval, so use apnoeic oxygenation. The sympathetic surge of laryngoscopy, so consider fentanyl. The switch to positive pressure, so optimise volume beforehand.",
+   "Pulse-pressure variation (PPV) is not a go/no-go in children. The adult rule of 15% is not validated: paediatric studies report cutoffs from about 8% to 30%, mostly 13 to 19%, in small post-surgical groups, and several found PPV did not predict fluid response. It needs an arterial line, controlled ventilation, no spontaneous breathing and a regular rhythm, so it cannot guide the decision before the tube. A large swing makes preload dependence likely; a small one does not rule it out."
+  ],
+  "nums": [
+   [
+    "↓ preload",
+    "Positive pressure, RV"
+   ],
+   [
+    "↓ afterload",
+    "Positive pressure, LV"
+   ],
+   [
+    "13–19%",
+    "Paediatric PPV, mostly"
+   ]
+  ],
+  "peds": "Children's arteries are more compliant, which may blunt the swing in pressure that PPV relies on.",
+  "src": "Kedarnath, Critical Airway Physiology deck · Frontiers Pediatr 2022;10:1010600 · Frontiers Anesthesiol 2024;3:1430430 · Module 08",
+  "q": "A child with a failing right ventricle is intubated and placed on high PEEP. What happens?",
+  "ans": "B",
+  "opts": [
+   [
+    "A",
+    "Right ventricular preload rises"
+   ],
+   [
+    "B",
+    "Preload and afterload both worsen and the output falls"
+   ],
+   [
+    "C",
+    "Nothing changes"
+   ],
+   [
+    "D",
+    "Contractility rises"
+   ]
+  ],
+  "fb": "High positive pressure cuts venous return and raises pulmonary vascular resistance, so the failing right ventricle faces less filling and more resistance. Keep the mean airway pressure low."
+ },
+ {
+  "h": [
+   "Every child is a full stomach and a ",
+   "difficult",
+   " airway"
+  ],
+  "lede": "The aim is intubation without difficulty while keeping the child oxygenated throughout.",
+  "body": [
+   "The unit treats every child as a full stomach and as a difficult intubation. It uses a modified rapid sequence induction, or delayed sequence intubation when the child will not tolerate preoxygenation.",
+   "Identify the child who needs the tube early. Sit the head up 30° until every preparation is complete.",
+   "Do not rush a child who can be supported while you prepare. Use the checklist every time."
+  ],
+  "nums": [
+   [
+    "30°",
+    "Head up"
+   ],
+   [
+    "2",
+    "IV lines"
+   ],
+   [
+    "3–5",
+    "Team members"
+   ]
+  ],
+  "peds": "A well-prepared team takes more minutes to assemble than the child's oxygen reserve allows if you start late. Decide early.",
+  "src": "KIMS PICU Intubation SOP",
+  "q": "Which approach does the unit follow for every child?",
+  "ans": "B",
+  "opts": [
+   [
+    "A",
+    "Standard RSI only in stable children"
+   ],
+   [
+    "B",
+    "Modified RSI or delayed sequence intubation"
+   ],
+   [
+    "C",
+    "Awake intubation"
+   ],
+   [
+    "D",
+    "Inhalational induction"
+   ]
+  ],
+  "fb": "Every child is treated as a full stomach and a difficult intubation, with a modified RSI, or DSI if the child cannot be preoxygenated."
+ },
+ {
+  "h": [
+   "Pre-oxygenate before you touch the ",
+   "airway",
+   ""
+  ],
+  "lede": "Oxygen first, drugs second. An agitated child can be sedated first, delayed sequence, so that preoxygenation actually works.",
+  "body": [
+   "Choose the device: nasal cannula 15 L/min, or high-flow 2 L/kg at FiO₂ 95%, or a non-rebreather at 10 L/min. Use two together if SpO₂ stays under 95%.",
+   "Preoxygenate for at least 3 to 5 minutes. SpO₂ above 95%: bag and mask without PEEP (do not press the PEEP valve). Below 95%: bag and mask with PEEP.",
+   "A child already on a full-face NIV mask: do not disconnect. Remove the straps, hold the mask in place, switch to PCV and give FiO₂ 100%.",
+   "Place a nasogastric tube and aspirate before induction."
+  ],
+  "nums": [
+   [
+    "3–5 min",
+    "Preoxygenation"
+   ],
+   [
+    "2 L/kg",
+    "High-flow"
+   ],
+   [
+    "95%",
+    "SpO₂ threshold"
+   ]
+  ],
+  "peds": "In infants gastric distension from forceful bagging splints the diaphragm. Use gentle breaths and decompress the stomach.",
+  "src": "KIMS PICU Intubation SOP",
+  "q": "A child on full-face NIV needs intubating. What do you do with the mask?",
+  "ans": "C",
+  "opts": [
+   [
+    "A",
+    "Remove it and bag at once"
+   ],
+   [
+    "B",
+    "Switch to nasal cannula"
+   ],
+   [
+    "C",
+    "Keep it on, take off the straps, hold it in place, PCV with FiO₂ 100%"
+   ],
+   [
+    "D",
+    "Sedate and remove it"
+   ]
+  ],
+  "fb": "Do not disconnect: removing the mask drops the oxygen reserve. Hold the mask on the face and use PCV with FiO₂ 100% while you prepare."
+ },
+ {
+  "h": [
+   "The checklist, the kit and the ",
+   "team",
+   ""
+  ],
+  "lede": "The tube goes in smoothly when everything is checked before the drugs and everyone knows their job.",
+  "body": [
+   "Suction: one working port and two catheters, a wide-bore (Yankauer) and one sized to the tube. Oxygen devices and a correct mask with a Bain circuit (preferred) or Ambu bag. A laryngoscope with the blade held next to the face: it should reach from the lips to the larynx. Choose a blade about 1 cm too long rather than too short.",
+   "Tube: the size from the tape or formula, plus one size above and one below, cuffed and uncuffed. Check the cuff with a 10 mL syringe and lubricate the tip with lignocaine jelly. Stylet and bougie (age-appropriate). LMA or i-gel (size is on the device). Oral airway (earlobe to tip of nose). Nasopharyngeal airway (tip of nose to angle of jaw).",
+   "Sizes (PALS length-based tape): cuffed tube 3.0 mm up to 9 kg, 3.5 at 10 to 11 kg, 4.0 at 12 to 18 kg, 5.0 at 19 to 23 kg, 5.5 at 24 to 29 kg, 6.0 at 30 to 36 kg. Uncuffed is 0.5 mm larger up to 23 kg. Lip-to-tip depth is about 9 to 10.5 cm at 3 to 5 kg, 11 to 12 cm at 10 to 11 kg, 14 to 15 cm at 15 to 18 kg, 18.5 to 19.5 cm at 30 to 36 kg. Formula, 2 to 10 years: cuffed = age ÷ 4 + 3.5, uncuffed = age ÷ 4 + 4. Cuff pressure below 20 to 25 cmH₂O.",
+   "Fluid bolus and arrest-dose adrenaline always ready (adrenaline 0.01 mg/kg, 0.1 mL/kg of 0.1 mg/mL, maximum 1 mg). Atropine only when you expect copious secretions: 0.02 mg/kg, minimum 0.1 mg, maximum 0.5 mg. Two working IV lines before intubation, except in cardiac arrest. Check ECG, NIBP, SpO₂ and EtCO₂, and have the ventilator set up and ready.",
+   "Position: sniffing position, with a roll under the shoulders in infants or under the neck in children, plus a small pillow under the head: the tragus and sternal notch in one line.",
+   "Team of 3 to 5. The doctor at the head end leads, with a second airway-trained person always available. One nurse gives the drugs. Two assistants: one handles suction, optional cricoid pressure (not mandatory) and fixing the tube; the other hands the tube, inflates the cuff and does five-point auscultation. One nurse or resident monitors the child and sets up the ventilator."
+  ],
+  "nums": [
+   [
+    "+1 / −1",
+    "Tube sizes in the kit"
+   ],
+   [
+    "3–5",
+    "Team members"
+   ],
+   [
+    "20–25",
+    "Cuff, cmH₂O"
+   ]
+  ],
+  "peds": "Cuffed tubes are the better first choice at every age, but check the tape for the child's zone before you open the pack.",
+  "src": "KIMS PICU Intubation SOP · PALS pocket guide, AHA 2020 (colour-coded length-based tape)",
+  "q": "How many airway-trained people must be available for the intubation?",
+  "ans": "B",
+  "opts": [
+   [
+    "A",
+    "One"
+   ],
+   [
+    "B",
+    "Two"
+   ],
+   [
+    "C",
+    "Three"
+   ],
+   [
+    "D",
+    "Five"
+   ]
+  ],
+  "fb": "Two: if the first operator fails, the second takes over without waiting. The minimum team is three and the maximum five."
+ },
+ {
+  "h": [
+   "Drugs by ",
+   "physiology",
+   ""
+  ],
+  "lede": "The dose matters more than the drug. Choose the pathway from the child's physiology before you draw anything up.",
+  "body": [
+   "No hypotension: ketamine 1 mg/kg, repeat up to 2 mg/kg. Fentanyl 1 microgram/kg, repeat up to 2 micrograms/kg. Then rocuronium 1 mg/kg, preferably with a senior present. Dilute ketamine and fentanyl 1 mL in 4 mL of saline. Use propofol and rocuronium undiluted.",
+   "Hypotension: resuscitate before intubation. Preoxygenate on NIV or high-flow. Titrate fluid 10 to 20 mL/kg by shock index and SIPA. Start a peripheral inotrope or vasopressor, adrenaline or noradrenaline at 0.05 micrograms/kg/min. Arrest-dose adrenaline ready. Allow spontaneous breathing until all is ready and the child has had 5 minutes of preoxygenation with SpO₂ above 95%. The most experienced person intubates. Ketamine 0.5 mg/kg, increasing by 0.5 mg/kg up to three times, to 2 mg/kg. Rocuronium 1.5 mg/kg. Give ketamine, then rocuronium, then flush, all in one go.",
+   "Raised intracranial pressure: keep the head up by lowering the height of the bed. Give 3% saline 3 mL/kg if not already given, and hyperventilate before induction. Ketamine 1 mg/kg, then propofol 1 mg/kg, repeated to 2 mg/kg: the child must be deeply sedated before paralysis. Thiopentone 2 mg/kg if available. Rocuronium 1 mg/kg.",
+   "With no IV access, give intramuscular doses: ketamine 4 mg/kg, fentanyl 4 micrograms/kg, rocuronium 2 mg/kg.",
+   "Premedicate with atropine only when you expect copious secretions."
+  ],
+  "nums": [
+   [
+    "1 mg/kg",
+    "Ketamine, no shock"
+   ],
+   [
+    "0.5 mg/kg",
+    "Ketamine, shock"
+   ],
+   [
+    "1 → 1.5",
+    "Rocuronium, mg/kg"
+   ]
+  ],
+  "peds": "Neonates and infants have high vagal tone: have atropine ready, 0.02 mg/kg (minimum 0.1 mg).",
+  "src": "KIMS PICU Intubation SOP · PALS pocket guide, AHA 2020",
+  "q": "A child in shock needs intubation. Which plan is right?",
+  "ans": "D",
+  "opts": [
+   [
+    "A",
+    "Ketamine 2 mg/kg and rocuronium 1 mg/kg at once"
+   ],
+   [
+    "B",
+    "Propofol 2 mg/kg for smooth induction"
+   ],
+   [
+    "C",
+    "No induction agent, relaxant only"
+   ],
+   [
+    "D",
+    "Resuscitate first, titrate ketamine from 0.5 mg/kg, rocuronium 1.5 mg/kg, flush in one go"
+   ]
+  ],
+  "fb": "In shock the induction drug is titrated from a low dose while the child is resuscitated, and the relaxant dose is raised. Ketamine, rocuronium and the flush go in one go."
+ },
+ {
+  "h": [
+   "Intubate: two people, two ",
+   "attempts",
+   ""
+  ],
+  "lede": "Two operators, two attempts each, and never longer than the child can hold their oxygen.",
+  "body": [
+   "Give the agent from the pathway, then the relaxant, and wait for the relaxant to work before the laryngoscope goes in.",
+   "No more than two attempts by one person, or 90 seconds, whichever is shorter. Then the second airway person takes over. Reoxygenate with the bag and mask between attempts.",
+   "Confirm with the EtCO₂ trace and five-point auscultation. Inflate the cuff after you confirm. Secure the tube with tape or a tube holder.",
+   "Connect the tube to the ventilator and check the chest lifts."
+  ],
+  "nums": [
+   [
+    "2",
+    "Attempts per person"
+   ],
+   [
+    "90 s",
+    "Maximum"
+   ],
+   [
+    "5",
+    "Auscultation points"
+   ]
+  ],
+  "peds": "In infants a few seconds of delay costs a lot of oxygen. Stop early if the saturation or heart rate falls, whatever the clock says.",
+  "src": "KIMS PICU Intubation SOP",
+  "q": "The first operator has failed once and 90 seconds have passed. What happens?",
+  "ans": "A",
+  "opts": [
+   [
+    "A",
+    "The second airway person takes over after reoxygenation"
+   ],
+   [
+    "B",
+    "One more attempt by the first operator"
+   ],
+   [
+    "C",
+    "Switch to a surgical airway"
+   ],
+   [
+    "D",
+    "Wait for anaesthetic help before any further attempt"
+   ]
+  ],
+  "fb": "The attempt limit is two per person or 90 seconds, whichever is shorter. Reoxygenate, then hand over to the second operator."
+ },
+ {
+  "h": [
+   "Failed airway: ",
+   "oxygen",
+   " first"
+  ],
+  "lede": "A failed airway is a failure to oxygenate. The next step is always oxygen, then help, then another way.",
+  "body": [
+   "If you cannot intubate, go back to bag-mask ventilation with an oral airway and a two-person technique. Reoxygenate before any new attempt.",
+   "If you cannot ventilate, place the LMA or i-gel from the kit: its size is written on the device.",
+   "Call for senior and anaesthetic help early, and say 'difficult airway' aloud so the whole team hears it. Change something before the next attempt: the operator, the blade, the position or the device.",
+   "Special situations need a senior and a plan before drugs: croup or epiglottitis with upper-airway obstruction, a foreign body, an anterior mediastinal mass, and a cervical spine injury."
+  ],
+  "nums": [
+   [
+    "O₂",
+    "First"
+   ],
+   [
+    "2",
+    "Operators"
+   ],
+   [
+    "LMA",
+    "If you cannot ventilate"
+   ]
+  ],
+  "peds": "Do not let a third attempt happen by default. The child who fails twice needs a different plan, not a third try.",
+  "src": "KIMS PICU Intubation SOP (kit and attempt limits); the rest is teaching content for course review",
+  "q": "Two attempts have failed and the SpO₂ is 80%. What is the first step?",
+  "ans": "C",
+  "opts": [
+   [
+    "A",
+    "A third attempt by the same operator"
+   ],
+   [
+    "B",
+    "Give more ketamine"
+   ],
+   [
+    "C",
+    "Stop, ventilate with bag and mask with PEEP, call for help, and use the LMA or i-gel if you cannot ventilate"
+   ],
+   [
+    "D",
+    "Wait for the oxygen to recover on its own"
+   ]
+  ],
+  "fb": "Return to oxygenation: bag and mask with PEEP and an adjunct, help called, and a supraglottic device if you cannot ventilate. Do not try again before the child is oxygenated."
+ },
+ {
+  "h": [
+   "Straight after the ",
+   "tube",
+   ""
+  ],
+  "lede": "The minutes after the tube are when the child crashes. Set up, check, and be ready for the drop in pressure.",
+  "body": [
+   "Give a 30 to 45° head-up elevation. Place an oro- or nasogastric tube and a urinary catheter at the time of intubation. Ask for a chest X-ray to confirm the tube, any central line and the gastric tube, and act on the film.",
+   "Initial ventilator settings. Dial them in this order. FiO₂: start at 1.0 and titrate within minutes, target SpO₂ 92 to 97% (88 to 92% if severe), below 0.6 as soon as you can. PEEP next. Rate and inspiratory time by age, then pathology: neonate 30 to 40 (Ti 0.3 to 0.4 s), infant 25 to 30 (0.5 to 0.6), child 20 to 25 (0.7 to 0.9), adolescent 12 to 20 (1.0). Stiff lungs faster, obstructed airways 8 to 15. Check I:E is at least 1:2 and the expiratory flow reaches zero.",
+   "Pressure control starts 12 to 15 above PEEP: judge by chest rise and exhaled volume, VTe 4 to 8 mL/kg by pathology. Plateau at most 28 and driving pressure at most 15, rechecked hourly. Pressure support is set 2 below the control pressure, then the rise time and flow-cycle percentage.",
+   "Match the settings to the disease: a slow rate and long expiration for an asthmatic child, and a high minute volume for severe acidosis.",
+   "Take a blood gas 30 minutes to 1 hour after intubation and adjust the ventilator. If the pressure falls after the tube, think of lost sympathetic drive plus positive pressure on preload: fluid, a vasopressor, and check for trapping. If the child deteriorates, go through DOPES: Displaced, Obstructed, Pneumothorax, Equipment, Stacked breaths."
+  ],
+  "nums": [
+   [
+    "30–45°",
+    "Head up"
+   ],
+   [
+    "4–8 mL/kg",
+    "VTe"
+   ],
+   [
+    "30–60 min",
+    "First gas"
+   ]
+  ],
+  "peds": "Rate and inspiratory time follow age. The same rate that suits an adolescent traps gas in an infant.",
+  "src": "KIMS PICU Intubation SOP · Kedarnath, Basics of ventilation: the first settings",
+  "q": "When do you take the first blood gas after intubation?",
+  "ans": "B",
+  "opts": [
+   [
+    "A",
+    "Immediately"
+   ],
+   [
+    "B",
+    "30 minutes to 1 hour"
+   ],
+   [
+    "C",
+    "After 6 hours"
+   ],
+   [
+    "D",
+    "The next morning"
+   ]
+  ],
+  "fb": "Take it 30 minutes to 1 hour after intubation, then adjust the ventilator from the result."
+ },
+ {
+  "h": [
+   "Document ",
+   "it",
+   ""
+  ],
+  "lede": "The record is part of the procedure.",
+  "body": [
+   "Write the indication, the tube size, the position of fixation, the laryngoscope used and the Cormack–Lehane view grade. Record any difficulty and any event during the intubation.",
+   "Record the drugs and doses used and the initial ventilator settings. Write the target SpO₂ and EtCO₂ for the nurses to follow.",
+   "Add any specific instructions to the case sheet and the nursing chart."
+  ],
+  "nums": [
+   [
+    "CL",
+    "View grade"
+   ],
+   [
+    "SpO₂",
+    "Target"
+   ],
+   [
+    "EtCO₂",
+    "Target"
+   ]
+  ],
+  "peds": "Record the weight used for dosing: a wrong weight is one of the commonest dosing errors in children.",
+  "src": "KIMS PICU Intubation SOP",
+  "q": "Which item is not part of the intubation record?",
+  "ans": "D",
+  "opts": [
+   [
+    "A",
+    "Cormack–Lehane grade"
+   ],
+   [
+    "B",
+    "Target SpO₂ and EtCO₂"
+   ],
+   [
+    "C",
+    "Tube size and fixation position"
+   ],
+   [
+    "D",
+    "The child's blood group"
+   ]
+  ],
+  "fb": "The record covers the indication, tube size and fixation, laryngoscope and view grade, difficulty, events, drugs, and the targets for SpO₂ and EtCO₂."
+ },
+ {
+  "h": [
+   "The operator is the point of ",
+   "failure",
+   ""
+  ],
+  "lede": "A team of experts is not an expert team. Most harm outside the operating theatre comes from planning, equipment and human factors.",
+  "body": [
+   "Cognitive overload under stress, alarms and a crowded room blocks new information. Closed-loop communication lowers it: say the order, hear it back, confirm it done.",
+   "Anchoring: you keep mask-ventilating or retrying the same way after three failures. Omission: you hesitate to start CPR or push a vasopressor. Sunk cost: you persist with a plan because you have already set it up.",
+   "Name the error aloud and change the plan: 'Plan A has failed, moving to plan B.'",
+   "The master sequence: first clear the environment (equipment checked, roles assigned, closed-loop communication), then optimise the physiology (the four Ps), then apply the paediatric modifier (scaled equipment, a cuffed tube, readiness for fast desaturation and bradycardia). Protect the physiology. Check the psychology. Secure the airway."
+  ],
+  "nums": [
+   [
+    "Anchoring",
+    "Same plan, again"
+   ],
+   [
+    "Omission",
+    "Fear of acting"
+   ],
+   [
+    "Sunk cost",
+    "Plan A at all costs"
+   ]
+  ],
+  "peds": "Juniors defer to seniors. Give everyone permission to say 'stop' when the saturation falls.",
+  "src": "Kedarnath, Critical Airway Physiology deck · Reddy 2023 · Myatra 2022 · NAP4",
+  "q": "After three failed attempts, you keep trying the same laryngoscope. Which error is this?",
+  "ans": "A",
+  "opts": [
+   [
+    "A",
+    "Anchoring or sunk cost"
+   ],
+   [
+    "B",
+    "Omission bias"
+   ],
+   [
+    "C",
+    "Good practice"
+   ],
+   [
+    "D",
+    "Closed-loop communication"
+   ]
+  ],
+  "fb": "Persisting with a failing plan because it is already set up is anchoring or sunk cost. Stop, say so, and move to plan B."
+ }
+];
 const MODULES = [
   { no: '01', title: 'Basics of ventilation and mechanical ventilation', total: 12, lessons: B_LESSONS.map(l => l.h.join('').trim()) },
   { no: '02', title: 'How machines work', total: 6, screen: 'machines', lessons: ['The ventilator as a black box', 'Inputs, compressors and blowers', 'Inside the gas path', 'Effects of the patient circuit', 'ICU vs standalone NIV', 'Machines on your unit'] },
@@ -4760,7 +5484,8 @@ const MODULES = [
   { no: '06', title: 'Ventilator graphics', total: 5, lessons: LESSON_SETS['06'].map(l => l.h.join('').trim()) },
   { no: '07', title: 'Disease-specific ventilation', total: 6, lessons: LESSON_SETS['07'].map(l => l.h.join('').trim()) },
   { no: '08', title: 'Cardiopulmonary interactions', total: 13, lessons: LESSON_SETS['08'].map(l => l.h.join('').trim()) },
-  { no: '09', title: 'High-flow, NIV and long-term ventilation', total: 31, lessons: LESSON_SETS['09'].map(l => l.h.join('').trim()) }
+  { no: '09', title: 'High-flow, NIV and long-term ventilation', total: 31, lessons: LESSON_SETS['09'].map(l => l.h.join('').trim()) },
+  { no: '10', title: 'Airway and RSI', total: 14, lessons: LESSON_SETS['10'].map(l => l.h.join('').trim()) }
 ];
 
 const VMODES = [
@@ -5182,7 +5907,7 @@ class Component extends DCLogic {
       adminStats: [{ v: String(list.length), l: 'Accounts' }, { v: String(admins), l: 'Admins' }, { v: String(list.length - admins), l: 'Students' }],
       adminUsers: list.map(([u, v]) => { const adm = v.role === 'admin', self = u === me, lastAdm = adm && admins <= 1;
         return { u, e: v.e, role: adm ? 'Admin' : 'Student', roleTone: adm ? 'accent' : 'neutral', you: self ? ' · you' : '',
-          meta: 'Joined ' + d(v.joined) + ' · Last sign-in ' + d(v.last) + (v.lessons != null ? ' · ' + v.lessons + ' of 84 lessons' : ''),
+          meta: 'Joined ' + d(v.joined) + ' · Last sign-in ' + d(v.last) + (v.lessons != null ? ' · ' + v.lessons + ' of 98 lessons' : ''),
           roleLabel: adm ? 'Remove admin' : 'Make admin', canRole: !lastAdm, canRemove: !self,
           toggleRole: upd(u, x => { x[u].role = adm ? 'student' : 'admin'; }, 'role', { role: adm ? 'student' : 'admin' }),
           remove: upd(u, x => { delete x[u]; }, 'delete') }; }) };
@@ -5588,7 +6313,7 @@ class Component extends DCLogic {
       startRun: () => this.setState({ fpRun: true, armed: false }), toggleRun: () => !s.caseId && this.setState(st => ({ fpRun: !st.fpRun })),
       ledColor: s.armed || (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? '#E9B54A' : '#6FBF73', ledLabel: s.armed || (!s.caseId && !s.fpRun) || (s.caseId && !s.ventOn) ? 'STANDBY' : 'ON',
       simParts: [['Free practice', !s.caseId, () => this.setState({ caseId: null, ventOn: true, fpRun: false, su: { ...SU_RESET }, armed: false })], ['Cases', !!s.caseId, () => this.setState({ screen: 'cases' })]].map(([label, on, go]) => ({ label, go, bg: on ? 'var(--surface-page)' : 'transparent', color: on ? 'var(--text-primary)' : 'var(--text-secondary)' })),
-      homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `9 modules · ${d} of 84 lessons done` : '9 modules · 84 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum'], ['live', 'Live session', 'Join the talk on the screen', 'icon-presentation', 'dusk']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
+      homeItems: [['learn', 'Learn', (() => { const d = MODULES.reduce((n, m) => n + this.lessonsDone(m.no), 0); return d ? `10 modules · ${d} of 98 lessons done` : '10 modules · 98 lessons'; })(), 'icon-book-open', 'ochre'], ['sim', 'Simulator', 'Turn the knobs, watch the waves', 'icon-activity', 'grove'], ['cases', 'Cases', 'Ventilated children to manage', 'icon-clipboard-list', 'plum'], ['live', 'Live session', 'Join the talk on the screen', 'icon-presentation', 'dusk']].map(([id, label, sub, icon, chord]) => ({ label, sub, icon, chord, go: go(id) })),
       simRef: this.simRef, lessonRef: this.lessonRef,
       tabs: [['learn', 'Learn', 'icon-book-open'], ['sim', 'Simulator', 'icon-activity'], ['cases', 'Cases', 'icon-clipboard-list']].map(([id, label, icon]) => ({
         label, icon, go: go(id), color: (s.screen === id || (id === 'cases' && (s.screen === 'waves' || s.screen === 'scen')) || (id === 'learn' && (s.screen === 'lesson' || s.screen === 'machines' || s.screen === 'basics'))) ? 'var(--accent)' : 'var(--text-secondary)' })),
