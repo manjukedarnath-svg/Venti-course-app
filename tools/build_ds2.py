@@ -15,13 +15,14 @@ import os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_decks as bd
 import build_niv as bn                     # patches bd.picture so the infant shows as a drawn figure
-from talkkit import title, divider, bullets, table, e
+from talkkit import title, divider, bullets, table, figure, cards, e
+import ds2figs as F
 from deckdata import S, V
 from nivdata import NIV_CASES
 
 APP = bd.APP
-DS, NIV, LTV = 'disease-specific.html', 'niv.html', 'long-term-ventilation.html'
-for f in (DS, NIV, LTV):
+DS, NIV, LTV, CP = 'disease-specific.html', 'niv.html', 'long-term-ventilation.html', 'cp-interactions.html'
+for f in (DS, NIV, LTV, CP):
     bd.SRC[f] = open(os.path.join(APP, 'talks', f)).read()
 CODE = 'DS2'
 VENT = ['VENT']
@@ -94,6 +95,38 @@ EV_BRONCH = evidence('Bronchiolitis · new evidence', 'Bronchiolitis: the 2025 <
     'Bronchiolitis. The 2025 Australasian guideline lowers the oxygen threshold to ninety per cent, ninety-two under six weeks or with a comorbidity, uses high-flow only after low-flow oxygen has failed, and keeps CPAP for impending failure. TRAMONTANE found CPAP better than high-flow as the first support in young infants with moderate to severe bronchiolitis; FIRST-ABC Step-Up, across all PICU children, found high-flow non-inferior. Read together: high-flow first is reasonable, CPAP for the sicker, younger infant. And RSV prevention, nirsevimab and the maternal vaccine, is changing who we see.')
 
 
+# ------------------------------------------------------------------ added 3 Nov: hyperinflation, BP, Tasker -------------
+DHI = figure('Dynamic hyperinflation · why it happens', 'Why the lung cannot <em>empty</em>', 'Dynamic hyperinflation', F.fig_dhi(),
+             'Why it happens. On the left, one breath going out. Passive expiration is exponential: after one time constant, resistance times compliance, 37 per cent of the breath is still in the lung; after three, 5 per cent. In asthma the resistance is high, so the time constant is long. If the next breath arrives at one and a half time constants, 22 per cent of the last breath is still inside. On the right, breath after breath: each one starts from a higher volume, until the volume trapped is large enough that the faster flow out at that volume lets each breath out equal each breath in. That new end-expiratory volume above FRC is the trapped volume, and divided by compliance it is the auto-PEEP. Bigger breaths, a faster rate, a longer Ti or more resistance all raise it; only time to breathe out lowers it.')
+DHI_FIX = cards('Dynamic hyperinflation · what drives it', 'What raises the trapped <em>volume</em>', 'Dynamic hyperinflation',
+                [('VT', ['Bigger breath, more left behind']), ('Rate', ['Less time to breathe out']), ('Ti', ['Takes time from expiration']), ('R', ['Longer time constant'])],
+                'The trapped volume rises with the tidal volume, the rate, the inspiratory time and the resistance. The fix is the same four in reverse: a smaller breath, a slower rate, a short inspiration with a fast flow, and bronchodilators for the resistance. PEEP does not empty the lung. Expiratory time is the treatment; check that the flow trace returns to zero.', size=34)
+BP_ASTHMA = figure('Asthma · why the BP falls', 'Why the blood pressure <em>falls</em> in asthma', 'Heart–lung interaction', F.fig_bp_asthma(),
+                   'The heart–lung interaction in asthma. Top row: trapped gas keeps the chest full; pleural and right atrial pressure rise, venous return falls, preload and blood pressure fall. Middle row: a lung near total lung capacity squeezes the alveolar vessels, so pulmonary vascular resistance rises; the right ventricle dilates and pushes the septum into the left, which fills less. Bottom row, before the tube: huge negative pleural swings raise left ventricular afterload and fill the right heart more in inspiration, which is pulsus paradoxus. After the tube, sedation removes the sympathetic drive, positive pressure adds to the trapping and the child is dry: the crash comes in minutes. Disconnect first, then fluid, then a slower rate and smaller breaths, then a vasopressor.')
+
+TASKER_SRC = 'Tasker · Rimensberger 2015, ch. 50'
+TASKER_TABLE = table('Bronchiolitis · Tasker mechanics', 'Four lungs in a 5 kg <em>infant</em>', TASKER_SRC,
+                     ['Lung', 'Compliance mL/cmH₂O', 'Resistance cmH₂O/mL/s', 'Time constant', 'What it means'],
+                     [['Control', '5.0', '0.06', '0.30 s', 'Empties easily at rate 30'],
+                      ['Bronchiolitis<br><span style="font-size:20px; color:var(--text-secondary);">Derish 1998 · 25 cases</span>', '2.8', '0.08', '0.23 s', 'Compliance halves; resistance near normal'],
+                      ['Obstructive<br><span style="font-size:20px; color:var(--text-secondary);">Hammer 1997 · 27 cases</span>', '2.85', '0.37', '1.05 s', 'Compliance down and resistance ×6: traps at rate 30'],
+                      ['Restrictive<br><span style="font-size:20px; color:var(--text-secondary);">Hammer 1997 · ARDS pattern</span>', '1.9', '0.10', '0.19 s', 'About 1 in 5 ventilated: stiff, empties fast, needs PEEP']],
+                     'Tasker models a five-kilogram infant from published mechanics. Controls: compliance 5 mL per cmH2O, resistance 0.06, time constant 0.3 seconds. Unselected ventilated bronchiolitis, from Derish: compliance falls to 2.8, but resistance is barely raised, so the time constant is actually shorter. The more severe obstructive cases in Hammer\'s series have the same low compliance plus six times the resistance: a time constant over a second. And about one in five ventilated infants has a restrictive, ARDS-like lung: compliance 1.9, time constant 0.19 seconds, and two weeks or more on the ventilator.',
+                     widths=['24%', '15%', '15%', '13%', '33%'], size=26)
+TASKER_WHY = bullets('Bronchiolitis · compliance not resistance', 'A stiff lung more than a narrow <em>airway</em>', TASKER_SRC,
+                     ['Compliance falls by half; measured resistance is often near normal (Otis: equal time constants)',
+                      'Fast, shallow breathing saves elastic work when compliance is low',
+                      'Exhaustion: hyperinflation puts the diaphragm at a mechanical disadvantage',
+                      'Ventilated infants: 73% of the pressure is elastic, 22% resistive, 5% auto-PEEP (Cruces 2017)'],
+                     'Tasker\'s point: we expect bronchiolitis to be a resistance disease, but infants do not prolong expiration, and measured non-elastic resistance is often near normal. When flow is fast through unequally obstructed airways, the resistance you measure is that of the larger pathways: Otis\'s equality of time constants. What is consistently abnormal is compliance, halved by inflammation, fast breathing and above all hyperinflation. Rapid shallow breathing is the economical answer to a stiff lung. The infant tires not because the work is extreme but because a hyperinflated chest leaves the diaphragm flat and unable to shorten. Cruces and colleagues confirmed it in 16 ventilated infants in 2017: almost three quarters of the working pressure was elastic, a fifth resistive, and auto-PEEP only 5 per cent; inspiratory and expiratory time constants were equal, 0.18 seconds.', size=38)
+TASKER_FIG = figure('Bronchiolitis · Tasker curves', 'Same ventilator, four <em>lungs</em>', TASKER_SRC + ' · recalculated', F.fig_tasker(),
+                    'Tasker\'s inflation and deflation curves, recalculated here for a five-kilogram infant on pressure control with passive expiration. The control lung fills to 8 mL per kg in a Ti of 0.21 seconds. In bronchiolitis, with compliance halved, the same pressure needs a Ti of 0.5 seconds to reach 8 mL per kg, and PaCO2 is about 46. The trap: answering that CO2 with more pressure and a faster rate gives 10 mL per kg and a PaCO2 of 31, overventilation. In the obstructive lung, time constant a second, rate 30 leaves gas behind at end-expiration and the tidal volume is under 4 mL per kg: PaCO2 about 109. Slowing to 20 with a Ti of one second, the dashed line, improves the tidal volume: PaCO2 93, still high, but heading the right way. The restrictive lung empties fast; it needs PEEP and recruitment, not time.')
+TASKER_PLAN = cards('Bronchiolitis · ventilate the phenotype', 'Ventilate the <em>phenotype</em>', TASKER_SRC,
+                    [('Targets', ['SpO₂ > 88%, PaO₂ > 60, any PaCO₂ with pH > 7.25']), ('Volume', ['VT 6–8 mL/kg; do not chase the CO₂']),
+                     ('Obstructive', ['Rate under 30, slower (10–15) with a long expiration']), ('Restrictive', ['MAP > 10 and AaDO₂ > 400 in 48 h: recruit with PEEP, VT < 8'])],
+                    'Tasker\'s two guiding principles. Adequate, not normal, gases: oxygen above 60, saturation above 88, and any CO2 that keeps the pH above 7.25. And no overdistension of a hyperinflated lung: tidal volume 6 to 8 mL per kg, the rate under 30, and in the obstructive child as slow as 10 to 15 with a long expiration. If the mean airway pressure is above 10 and the alveolar–arterial gradient above 400 in the first 48 hours, think restrictive disease or ARDS, about one ventilated infant in five, and recruit with PEEP. Uncomplicated cases need 4 to 5 days on the ventilator; longer means another process, often bacterial co-infection.', size=32)
+
+
 def debrief(lab, h, cs, notes):
     return bd.cards_slide(lab, lab, h, cs, notes)
 
@@ -112,13 +145,17 @@ def build():
     # 1 · asthma
     out += divider('Part 1', 'Part 1 · Asthma', 'The <em>full</em> lung', 'Time to empty, not pressure to fill',
                    'Asthma: the lung that cannot empty. Every setting is about expiratory time.')
-    for t in ['Time constant', 'Expiration', 'Dynamic hyperinflation', 'Measure it', 'Asthma on screen', 'When to intubate', 'Before the tube']:
+    for t in ['Time constant', 'Expiration']:
+        out += r(DS, t)
+    out += DHI + r(DS, 'Dynamic hyperinflation') + DHI_FIX
+    for t in ['Measure it', 'Asthma on screen', 'When to intubate', 'Before the tube']:
         out += r(DS, t)
     out += bn.opener_fig('ds2_asthma', 'Case 1 of 4', 'Arjun, <em>5 years</em>', ['20 kg · known asthma, rarely takes his preventer', 'Silent chest after nebulisers, magnesium and steroids; just intubated'], 'child', 'bag',
                          'A five-year-old, twenty kilos, known asthma, rarely takes his preventer. Two days of wheeze; three salbutamol nebulisers, ipratropium, hydrocortisone and magnesium, then drowsy with a silent chest. Just intubated with ketamine and rocuronium, and the bag is stiff. History only: set the ventilator on your phones.')
     out += bd.stage_slides(ASTHMA[0], CODE)
     for t in ['Initial settings', 'PC in asthma', 'Fixing auto-PEEP', 'PEEP in asthma', 'Hypotension']:
         out += r(DS, t)
+    out += BP_ASTHMA + r(CP, 'Pulsus paradoxus')
     out += bd.stage_slides(ASTHMA[1], CODE)
     out += r(DS, 'Drugs') + EV_ASTHMA
     out += debrief('Arjun · debrief', 'Let the lung <em>empty</em>',
@@ -142,7 +179,7 @@ def build():
     # 3 · bronchiolitis
     out += divider('Part 3', 'Part 3 · Bronchiolitis', 'Which <em>day</em> is it?', 'Obstructed first, stiff later',
                    'Bronchiolitis: obstructive on day one, stiff by day four. The support follows the day.')
-    out += r(DS, 'Bronchiolitis phases') + r(DS, 'Bronchiolitis traces') + r(DS, 'Bronchiolitis support')
+    out += r(DS, 'Bronchiolitis phases') + TASKER_TABLE + TASKER_WHY + TASKER_FIG + TASKER_PLAN + r(DS, 'Bronchiolitis traces') + r(DS, 'Bronchiolitis support')
     key, name, lines, age, sup, notes = bn.OPENERS['nb1']
     out += bn.opener_fig(key, 'Case 3 of 4', name, lines, age, sup, notes)
     out += bd.stage_slides(BRONCH[0], CODE)
