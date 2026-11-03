@@ -48,6 +48,7 @@ ASTHMA = [
           mon=[['HR', '170'], ['SpO₂', '78'], ['BP', '70/40'], ['EtCO₂', '30']], note='Chest hyperexpanded and still; neck veins full'),
     short=[['Disconnect: let the chest empty', 'BP 92/55 in 40 s'], ['Needle the chest now', 'Makes the pneumothorax'],
            ['Bag at 40 a minute', 'Stacks more gas'], ['FiO₂ 1.0 and PEEP 10', 'BP 60/35']],
+    setq=S(ifaces=VENT, start=V('VENT', 'VC', vt=140, rr=12, pe=6, ti=1.0, o=50), ask='Set the ventilator after your order'),
     after=S(mode='VC', modeLong='VC · restarted lower', set=[['VT', '120'], ['RR', '10'], ['PEEP', '0'], ['Ti', '1.0'], ['FiO₂', '0.5']],
             meas=[['Plateau', '9'], ['Auto-PEEP', '1'], ['Te', '5 s']], wave='ds2-a4f',
             mon=[['HR', '130'], ['SpO₂', '92'], ['BP', '92/55'], ['EtCO₂', '48']],
@@ -63,9 +64,11 @@ def renamed(d, eyebrow, **k):
 
 _NB = {d['id']: d for d in NIV_CASES}
 _LTV2 = {d['id']: d for d in bd.LTV2}
-OSA = [renamed(bd._BY['so1'], 'OSA · 3 years, 14 kg'), renamed(bd._BY['so2'], 'OSA · night one')]
+ALL = ['MASK', 'HFNC', 'NIV', 'VENT']
+OSA = [renamed(bd._BY['so1'], 'OSA · 3 years, 14 kg', setq=S(ifaces=ALL, start=V('MASK', 'Mask', l=10))),
+       renamed(bd._BY['so2'], 'OSA · night one', setq=S(ifaces=['NIV', 'VENT'], start=V('NIV', 'CPAP', cp=8, o=30)))]
 BRONCH = [renamed(_NB['nb1'], 'Bronchiolitis · 3 months, 5 kg'), renamed(_NB['nb2'], 'Bronchiolitis · night one')]
-NMD = [renamed(_LTV2['sd1'], 'Duchenne · 15 years, 45 kg'), renamed(bd._BY['sd2'], 'Duchenne · night two')]
+NMD = [renamed(_LTV2['sd1'], 'Duchenne · 15 years, 45 kg'), renamed(bd._BY['sd2'], 'Duchenne · night two', setq=S(ifaces=['NIV', 'VENT'], start=V('NIV', 'ST', ip=16, ep=5, br=14, ti=1.2, o=30)))]
 
 
 # ------------------------------------------------------------------ new slides ------------------------------------------
