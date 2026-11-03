@@ -146,6 +146,12 @@
     'aa-as5-a': {"peep": 6.0, "C": 10.0, "R": 60, "rr": 12.0, "window": 15.0, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 1.0, "pause": 0.15},
     'aa-as6': {"peep": 6.0, "C": 10.0, "R": 60, "rr": 12.0, "window": 15.0, "scale": {"v": 224}, "mode": "VC", "vt": 140.0, "ti": 1.0, "pause": 0.15},
     // AA-END
+    // DS2-START (disease-specific Part 2 talk, asthma case: 5 years, 20 kg, C 20, R 90; from tools/build_ds2.py)
+    'ds2-a1p': {"mode": "VC", "vt": 200, "rr": 24, "ti": 0.8, "pause": 0.15, "peep": 5, "C": 20, "R": 90, "window": 8, "scale": {"v": 320, "p": 60}},
+    'ds2-a1f': {"mode": "VC", "vt": 140, "rr": 12, "ti": 1.0, "pause": 0.15, "peep": 4, "C": 20, "R": 90, "window": 15, "scale": {"v": 320, "p": 60}},
+    'ds2-a4p': {"mode": "VC", "vt": 140, "rr": 12, "ti": 1.0, "pause": 0.15, "peep": 6, "C": 12, "R": 250, "window": 15, "scale": {"v": 320, "p": 60}},
+    'ds2-a4f': {"mode": "VC", "vt": 120, "rr": 10, "ti": 1.0, "pause": 0.15, "peep": 0, "C": 20, "R": 28, "window": 15, "scale": {"v": 320, "p": 60}},
+    // DS2-END
     // VS-START (case decks: screens not covered above)
     'vs-bo4f': { mode: 'PS', ps: 8, peep: 6, C: 8, R: 25, rr: 30, window: 5, efforts: eff(reg(30, 5), 6, 0.6) },
     // VS-END
